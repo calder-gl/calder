@@ -1,0 +1,33 @@
+{
+  "name": "calder-gl",
+  "version": "0.0.0",
+  "description": "A library for safely constructing and integrating WebGL shaders.",
+  "engineStrict": true,
+  "engines": {
+    "node": ">= 8.9.0"
+  },
+  "devDependencies": {
+    "@types/jest": "~22.2.2",
+    "@types/node": "~8.10.0",
+    "jest": "~22.4.3",
+    "rimraf": "~2.6.2",
+    "ts-jest": "~22.4.2",
+    "tslint": "~5.9.1",
+    "tslint-microsoft-contrib": "~5.0.3",
+    "tsutils": "~2.24.0",
+    "typescript": "~2.8.1"
+  },
+  "scripts": {
+    "clean": "rimraf coverage build tmp",
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "tslint -t stylish --project \"tsconfig.json\"",
+    "test": "npm run test-only",
+    "test-only": "jest --coverage",
+    "watch": "tsc -w -p tsconfig.build.json"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "tslib": "~1.9.0"
+  }
+}

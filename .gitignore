@@ -1,0 +1,17 @@
+# Coverage
+coverage
+
+# Dependencies
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Miscellaneous
+.DS_Store
+.eslintcache
+
+# Transpiled files
+build/

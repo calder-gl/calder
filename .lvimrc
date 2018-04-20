@@ -1,0 +1,2 @@
+autocmd FileType javascript set tabstop=4|set shiftwidth=4|set softtabstop=4
+autocmd FileType typescript set tabstop=4|set shiftwidth=4|set softtabstop=4

@@ -1,7 +1,7 @@
 {
   "name": "calder-gl",
   "version": "0.0.0",
-  "description": "A library sculpting and manipulating complex 3D structures for web.",
+  "description": "A library for sculpting and manipulating complex 3D structures for the web.",
   "engineStrict": true,
   "engines": {
     "node": ">= 8.9.0"

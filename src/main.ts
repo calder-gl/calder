@@ -4,5 +4,5 @@
  * @returns {string}
  */
 export function boi(): string {
-    return "BOI";
+    return 'BOI';
 }

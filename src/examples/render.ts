@@ -4,7 +4,7 @@ import { mat4 } from 'gl-matrix';
 import { range } from 'lodash';
 
 const renderer = new Renderer(800, 600);
-document.body.appendChild(renderer.canvas3D);
+document.body.appendChild(renderer.stage);
 
 const transform = mat4.create();
 mat4.translate(transform, transform, [0, 0, -8]);
@@ -42,11 +42,10 @@ range(numLat - 1).forEach((lat: number) => {
 
 const colors = vertices.map(() => [1, 0, 0]);
 
-renderer.clear();
-renderer.draw({
+renderer.draw([{
     transform,
     vertices,
     normals,
     colors,
     indices,
-});
+}]);

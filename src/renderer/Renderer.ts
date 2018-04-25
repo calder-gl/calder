@@ -1,4 +1,7 @@
-import { mat4 } from 'gl-matrix';
+import { drawAxes, DrawAxesProps } from './commands/drawAxes';
+import { drawObject, DrawObjectProps } from './commands/drawObject';
+
+import { mat4, vec4 } from 'gl-matrix';
 
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
@@ -14,151 +17,151 @@ export interface RenderObject {
     indices: number[];
 };
 
-interface Uniforms {
-    projection: REGL.Mat4;
-    view: REGL.Mat4;
-    model: REGL.Mat4;
-    numLights: number;
-    lightPositions: REGL.Vec3[];
-    lightColors: REGL.Vec3[];
-    lightIntensities: number[];
-};
-
-interface Attributes {
-    position: REGL.Vec3;
-    normal: REGL.Vec3;
-    color: REGL.Vec3;
-};
-
-interface Props {
-    model: REGL.Mat4;
-    positions: REGL.Vec3[];
-    normals: REGL.Vec3[];
-    colors: REGL.Vec3[];
-    indices: number[];
-};
-
 /**
  * Manages all scene information and is responsible for rendering it to the screen
  */
 export class Renderer {
     public readonly width: number;
     public readonly height: number;
-    public readonly canvas3D: HTMLCanvasElement;
-    public readonly clear: () => void;
+    public readonly stage: HTMLDivElement;
 
-    private drawObject: REGL.DrawCommand<REGL.DefaultContext, Props>;
+    private clearAll: () => void;
+    private clearDepth: () => void;
+    private drawObject: REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps>;
+    private drawAxes: REGL.DrawCommand<REGL.DefaultContext, DrawAxesProps>;
+
     private cameraTransform: mat4 = mat4.create();
     private projectionMatrix: mat4 = mat4.create();
+    private ctx2D: CanvasRenderingContext2D;
 
     constructor(width: number, height: number) {
         this.width = width;
         this.height = height;
 
-        this.canvas3D = document.createElement('canvas');
-        this.canvas3D.width = width;
-        this.canvas3D.height = height;
+        // Create 
+        this.stage = document.createElement('div');
+        this.stage.style.width = `${width}px`;
+        this.stage.style.height = `${width}px`;
+        this.stage.style.position = 'relative';
 
+        const canvas3D = document.createElement('canvas');
+        const canvas2D = document.createElement('canvas');
+
+        // Place both canvases in a container, so we can draw on top of the 3D canvas in 2D
+        [canvas3D, canvas2D].forEach((canvas: HTMLCanvasElement) => {
+            canvas.width = width;
+            canvas.height = height;
+            canvas.style.position = 'absolute';
+            this.stage.appendChild(canvas);
+        });
+
+        // Set up 2D rendering context, for drawing text
+        const ctx2D = canvas2D.getContext('2d');
+        if (!ctx2D) {
+            throw new Error('Couldn\'t get 2D rendering context!');
+        }
+        this.ctx2D = ctx2D;
+        this.ctx2D.font = '14px sans-serif';
+
+        // Set up perspective projection
         const fieldOfView = Math.PI / 4;
         const aspect = width / height;
         const zNear = 1;
         const zFar = 1000;
         mat4.perspective(this.projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
-        const regl: REGL.Regl = REGL(this.canvas3D);
+        // Set up drawing commands
+        const regl: REGL.Regl = REGL(canvas3D);
 
-        this.clear = () => regl.clear({
-            color: [0, 0, 0, 1],
+        this.clearAll = () => {
+            this.ctx2D.clearRect(0, 0, this.width, this.height);
+            regl.clear({
+                color: [0, 0, 0, 1],
+                depth: 1,
+            });
+        };
+
+        this.clearDepth = () => regl.clear({
             depth: 1,
-            stencil: 0
         });
 
-        this.drawObject = regl<Uniforms, Attributes, Props>({
-            vert: `
-                precision mediump float;
-
-                attribute vec3 position;
-                attribute vec3 normal;
-                attribute vec3 color;
-
-                uniform mat4 projection;
-                uniform mat4 view;
-                uniform mat4 model;
-
-                varying vec3 vertexPosition;
-                varying vec3 vertexNormal;
-                varying vec3 vertexColor;
-
-                void main() {
-                    vertexPosition = (view * model * vec4(position, 1.0)).xyz;
-                    vertexNormal = (view * model * vec4(normal, 0.0)).xyz;
-                    vertexColor = color;
-                    gl_Position = projection * vec4(vertexPosition, 1.0);
-                }
-            `,
-            frag: `
-                precision mediump float;
-
-                const int MAX_LIGHTS = 1; // TODO: increase this and have a way to pass in lights
-
-                varying vec3 vertexPosition;
-                varying vec3 vertexNormal;
-                varying vec3 vertexColor;
-
-                uniform mat4 view;
-                uniform int numLights;
-                uniform vec3 lightPositions[MAX_LIGHTS];
-                uniform vec3 lightColors[MAX_LIGHTS];
-                uniform float lightIntensities[MAX_LIGHTS];
-
-                void main() {
-                    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-
-                    vec3 normal = normalize(vertexNormal);
-                    vec3 color = vec3(0.0, 0.0, 0.0);
-
-                    for (int i = 0; i < MAX_LIGHTS; i++) {
-                        if (i >= numLights) break;
-
-                        vec3 lightPosition = (view * vec4(lightPositions[i], 1.0)).xyz;
-                        vec3 lightDir = normalize(lightPosition - vertexPosition);
-                        float lambertian = max(dot(lightDir, normal), 0.0);
-
-                        color += lambertian * vertexColor;
-
-                        vec3 viewDir = normalize(-vertexPosition);
-                        float spec = pow(max(dot(viewDir, reflect(-lightDir, normal)), 0.0), lightIntensities[i]);
-
-                        color += spec * lightColors[i];
-                    }
-                    gl_FragColor = vec4(color, 1.0);
-                }
-            `,
-            attributes: {
-                position: regl.prop('positions'),
-                normal: regl.prop('normals'),
-                color: regl.prop('colors'),
-            },
-            uniforms: {
-                projection: this.projectionMatrix,
-                view: this.cameraTransform,
-                model: regl.prop('model'),
-                numLights: 1, // Note: max 20 lights
-                "lightPositions[0]": [10, 10, 10],
-                "lightIntensities[0]": 256,
-                "lightColors[0]": [1, 1, 1],
-            },
-            elements: regl.prop('indices'),
-        });
+        this.drawObject = drawObject(regl);
+        this.drawAxes = drawAxes(regl);
     }
 
-    public draw(o: RenderObject) {
-        this.drawObject({
+    public draw(objects: RenderObject[], debug: boolean = false) {
+        this.clearAll();
+
+        objects.forEach((o: RenderObject) => this.drawObject({
             model: o.transform,
+            cameraTransform: this.cameraTransform,
+            projectionMatrix: this.projectionMatrix,
             positions: o.vertices,
             normals: o.normals,
             colors: o.colors,
             indices: o.indices,
+        }));
+
+        if (debug) {
+            this.drawCrosshairs();
+        }
+    }
+
+    private drawCrosshairs() {
+        this.clearDepth();
+
+        const [zero, x, y, z] = [
+            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+        ].map((point: number[]) => {
+            // Initially treat these as vectors (w = 0) instead of points (where w would be 1) so that only the direction changes, and they are not translated from the origin
+            const vector = vec4.fromValues(point[0], point[1], point[2], 0);
+
+            // Bring them into camera space
+            vec4.transformMat4(vector, vector, this.cameraTransform);
+
+            // Scale them and place them in the lower left corner of the screen
+            vec4.scale(vector, vector, Math.min(this.width, this.height) * 0.05);
+            vec4.add(vector, vector, [this.width * -0.25, this.height * -0.25, -500, 1]);
+
+            // Project them into 2D coordinates
+            vec4.transformMat4(vector, vector, this.projectionMatrix);
+
+            return vector;
         });
+
+        const colorX = [1, 0, 0];
+        const colorY = [0, 1, 0];
+        const colorZ = [0, 0, 1];
+
+        this.drawAxes({
+            positions: [
+                zero,
+                x,
+                zero,
+                y,
+                zero,
+                z,
+            ],
+            colors: [
+                colorX,
+                colorX,
+                colorY,
+                colorY,
+                colorZ,
+                colorZ,
+            ],
+            count: 6,
+        });
+
+        // Use the 2D projected points to draw text labels for the axes. To convert the GL 3D point to a point where each element is in [0, 1], we use point2D = (point3D / point3D.w + 1) / 2, and then multiply by the width/height of the screen.
+        this.ctx2D.fillStyle = '#FF0000';
+        this.ctx2D.fillText('x', (x[0] / x[3] + 1) / 2 * this.width, (-x[1] / x[3] + 1) / 2 * this.height);
+        this.ctx2D.fillStyle = '#00FF00';
+        this.ctx2D.fillText('y', (y[0] / y[3] + 1) / 2 * this.width, (-y[1] / y[3] + 1) / 2 * this.height);
+        this.ctx2D.fillStyle = '#0000FF';
+        this.ctx2D.fillText('z', (z[0] / z[3] + 1) / 2 * this.width, (-z[1] / z[3] + 1) / 2 * this.height);
     }
 }

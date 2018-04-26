@@ -6,6 +6,8 @@ import { mat4, vec4 } from 'gl-matrix';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 
+// tslint:disable:no-unsafe-any
+
 /*
  * A collection of the properties needed to render something using the default shader
  */
@@ -115,7 +117,8 @@ export class Renderer {
 
         const [zero, x, y, z] = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]].map(
             (point: number[]) => {
-                // Initially treat these as vectors (w = 0) instead of points (where w would be 1) so that only the direction changes, and they are not translated from the origin
+                // Initially treat these as vectors (w = 0) instead of points (where w would be 1)
+                // so that only the direction changes, and they are not translated from the origin
                 const vector = vec4.fromValues(point[0], point[1], point[2], 0);
 
                 // Bring them into camera space
@@ -142,7 +145,10 @@ export class Renderer {
             count: 6
         });
 
-        // Use the 2D projected points to draw text labels for the axes. To convert the GL 3D point to a point where each element is in [0, 1], we use point2D = (point3D / point3D.w + 1) / 2, and then multiply by the width/height of the screen.
+        // Use the 2D projected points to draw text labels for the axes. To convert the GL 3D point
+        // to a point where each element is in [0, 1], we use:
+        //   point2D = (point3D / point3D.w + 1) / 2
+        // ...and then multiply by the width/height of the screen.
         this.ctx2D.fillStyle = '#FF0000';
         this.ctx2D.fillText(
             'x',

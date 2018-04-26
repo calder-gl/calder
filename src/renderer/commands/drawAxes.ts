@@ -1,12 +1,7 @@
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 
-interface Uniforms {
-    projection: REGL.Mat4;
-    view: REGL.Mat4;
-    offset: REGL.Vec2;
-    scale: number;
-}
+// tslint:disable:no-unsafe-any
 
 interface Attributes {
     position: REGL.Vec3;
@@ -26,7 +21,7 @@ export interface DrawAxesProps {
  * Shader to draw axes in the corner of the screen
  */
 export function drawAxes(regl: REGL.Regl): REGL.DrawCommand<REGL.DefaultContext, DrawAxesProps> {
-    return regl<Uniforms, Attributes, DrawAxesProps>({
+    return regl<{}, Attributes, DrawAxesProps>({
         vert: `
             precision mediump float;
 
@@ -36,7 +31,6 @@ export function drawAxes(regl: REGL.Regl): REGL.DrawCommand<REGL.DefaultContext,
             varying vec3 vertexColor;
 
             void main() {
-                //gl_Position = projection * (view * vec4(position, 0.0) * scale + vec4(offset, -500, 1.0));
                 gl_Position = position;
                 vertexColor = color;
             }
@@ -48,7 +42,6 @@ export function drawAxes(regl: REGL.Regl): REGL.DrawCommand<REGL.DefaultContext,
 
             void main() {
                 gl_FragColor = vec4(vertexColor, 1.0);
-                //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
             }
         `,
         primitive: 'lines',

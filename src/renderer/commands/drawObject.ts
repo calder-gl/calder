@@ -1,6 +1,8 @@
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 
+// tslint:disable:no-unsafe-any
+
 interface Uniforms {
     projection: REGL.Mat4;
     view: REGL.Mat4;
@@ -90,7 +92,9 @@ export function drawObject(
                     color += lambertian * vertexColor;
 
                     vec3 viewDir = normalize(-vertexPosition);
-                    float spec = pow(max(dot(viewDir, reflect(-lightDir, normal)), 0.0), lightIntensities[i]);
+                    float spec = pow(
+                        max(dot(viewDir, reflect(-lightDir, normal)), 0.0),
+                        lightIntensities[i]);
 
                     color += spec * lightColors[i];
                 }

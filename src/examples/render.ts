@@ -42,10 +42,12 @@ range(numLat - 1).forEach((lat: number) => {
 
 const colors = vertices.map(() => [1, 0, 0]);
 
-renderer.draw([{
-    transform,
-    vertices,
-    normals,
-    colors,
-    indices,
-}]);
+renderer.draw([
+    {
+        transform,
+        vertices,
+        normals,
+        colors,
+        indices
+    }
+], true);

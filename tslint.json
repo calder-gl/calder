@@ -15,6 +15,7 @@
     "interface-name": false,
     "no-multiline-string": false,
     "no-require-imports": false,
+    "strict-boolean-expressions": false,
     "typedef": [
       true,
       "parameter",

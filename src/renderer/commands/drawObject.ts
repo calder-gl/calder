@@ -9,13 +9,13 @@ interface Uniforms {
     lightPositions: REGL.Vec3[];
     lightColors: REGL.Vec3[];
     lightIntensities: number[];
-};
+}
 
 interface Attributes {
     position: REGL.Vec3;
     normal: REGL.Vec3;
     color: REGL.Vec3;
-};
+}
 
 /*
  * All the information needed to be able to draw an object to the screen
@@ -28,12 +28,14 @@ export interface DrawObjectProps {
     normals: REGL.Vec3[];
     colors: REGL.Vec3[];
     indices: number[];
-};
+}
 
 /*
  * Shader to draw a single object with Phong shading to the screen
  */
-export function drawObject(regl: REGL.regl): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
+export function drawObject(
+    regl: REGL.regl
+): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
     return regl<Uniforms, Attributes, DrawObjectProps>({
         vert: `
             precision mediump float;
@@ -98,17 +100,17 @@ export function drawObject(regl: REGL.regl): REGL.DrawCommand<REGL.DefaultContex
         attributes: {
             position: regl.prop('positions'),
             normal: regl.prop('normals'),
-            color: regl.prop('colors'),
+            color: regl.prop('colors')
         },
         uniforms: {
             projection: regl.prop('projectionMatrix'),
             view: regl.prop('cameraTransform'),
             model: regl.prop('model'),
             numLights: 1, // Note: max 20 lights
-            "lightPositions[0]": [10, 10, 10],
-            "lightIntensities[0]": 256,
-            "lightColors[0]": [1, 1, 1],
+            'lightPositions[0]': [10, 10, 10],
+            'lightIntensities[0]': 256,
+            'lightColors[0]': [1, 1, 1]
         },
-        elements: regl.prop('indices'),
+        elements: regl.prop('indices')
     });
 }

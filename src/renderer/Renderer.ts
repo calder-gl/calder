@@ -40,7 +40,7 @@ export class Renderer {
         this.width = width;
         this.height = height;
 
-        // Create
+        // Create a single element to contain the renderer view
         this.stage = document.createElement('div');
         this.stage.style.width = `${width}px`;
         this.stage.style.height = `${height}px`;

@@ -43,7 +43,7 @@ export class Renderer {
         // Create
         this.stage = document.createElement('div');
         this.stage.style.width = `${width}px`;
-        this.stage.style.height = `${width}px`;
+        this.stage.style.height = `${height}px`;
         this.stage.style.position = 'relative';
 
         const canvas3D: HTMLCanvasElement = document.createElement('canvas');
@@ -59,7 +59,7 @@ export class Renderer {
 
         // Set up 2D rendering context, for drawing text
         const ctx2D = canvas2D.getContext('2d');
-        if (!ctx2D) {
+        if (ctx2D === null) {
             throw new Error("Couldn't get 2D rendering context!");
         }
         this.ctx2D = ctx2D;

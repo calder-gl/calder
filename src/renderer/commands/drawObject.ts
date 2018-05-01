@@ -64,7 +64,7 @@ export function drawObject(
         frag: `
             precision mediump float;
 
-            const int MAX_LIGHTS = 1; // TODO: increase this and have a way to pass in lights
+            const int MAX_LIGHTS = 1; // TODO(davepagurek) [#10] Increase this to allow more lights
 
             varying vec3 vertexPosition;
             varying vec3 vertexNormal;
@@ -108,7 +108,11 @@ export function drawObject(
             projection: regl.prop('projectionMatrix'),
             view: regl.prop('cameraTransform'),
             model: regl.prop('model'),
-            numLights: 1, // Note: max 20 lights
+            numLights: 1, // Note: must be <= MAX_LIGHTS in the shader
+
+            // TODO(davepagurek): [#10] When we increase MAX_LIGHTS, Regl will expect a property
+            // in this object for each array element, even if less than MAX_LIGHTS lights are
+            // passed in, so the rest will have to be filled with zeroed data
             'lightPositions[0]': [10, 10, 10],
             'lightIntensities[0]': 256,
             'lightColors[0]': [1, 1, 1]

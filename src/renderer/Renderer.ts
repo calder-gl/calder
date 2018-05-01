@@ -135,13 +135,16 @@ export class Renderer {
             }
         );
 
-        const colorX = [1, 0, 0];
-        const colorY = [0, 1, 0];
-        const colorZ = [0, 0, 1];
+        const redHex = '#FF0000';
+        const greenHex = '#00FF00';
+        const blueHex = '#0000FF';
+        const redRGB = [1, 0, 0]; // redHex
+        const greenRGB = [0, 1, 0]; // greenHex
+        const blueRGB = [0, 0, 1]; // blueHex
 
         this.drawAxes({
             positions: [zero, x, zero, y, zero, z],
-            colors: [colorX, colorX, colorY, colorY, colorZ, colorZ],
+            colors: [redRGB, redRGB, greenRGB, greenRGB, blueRGB, blueRGB],
             count: 6
         });
 
@@ -149,19 +152,19 @@ export class Renderer {
         // to a point where each element is in [0, 1], we use:
         //   point2D = (point3D / point3D.w + 1) / 2
         // ...and then multiply by the width/height of the screen.
-        this.ctx2D.fillStyle = '#FF0000';
+        this.ctx2D.fillStyle = redHex;
         this.ctx2D.fillText(
             'x',
             (x[0] / x[3] + 1) / 2 * this.width,
             (-x[1] / x[3] + 1) / 2 * this.height
         );
-        this.ctx2D.fillStyle = '#00FF00';
+        this.ctx2D.fillStyle = greenHex;
         this.ctx2D.fillText(
             'y',
             (y[0] / y[3] + 1) / 2 * this.width,
             (-y[1] / y[3] + 1) / 2 * this.height
         );
-        this.ctx2D.fillStyle = '#0000FF';
+        this.ctx2D.fillStyle = blueHex;
         this.ctx2D.fillText(
             'z',
             (z[0] / z[3] + 1) / 2 * this.width,

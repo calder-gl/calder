@@ -77,8 +77,6 @@ export function drawObject(
             uniform float lightIntensities[MAX_LIGHTS];
 
             void main() {
-                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-
                 vec3 normal = normalize(vertexNormal);
                 vec3 color = vec3(0.0, 0.0, 0.0);
 

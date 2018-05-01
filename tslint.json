@@ -12,6 +12,10 @@
     "no-void-expression": false,
     "no-redundant-jsdoc": false,
     "prefer-type-cast": false,
+    "interface-name": false,
+    "no-multiline-string": false,
+    "no-require-imports": false,
+    "no-suspicious-comment": false,
     "typedef": [
       true,
       "parameter",

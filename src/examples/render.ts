@@ -1,9 +1,12 @@
+import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
 
 import { mat4, vec3 } from 'gl-matrix';
 import { flatMap, range } from 'lodash';
 
-const renderer = new Renderer(800, 600, 1);
+const light: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
+const renderer: Renderer = new Renderer(800, 600, 1);
+renderer.addLight(light);
 const transform = mat4.fromTranslation(mat4.create(), [0, 0, -4]);
 const vertices: number[] = [];
 const normals: number[] = [];

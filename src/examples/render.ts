@@ -3,8 +3,7 @@ import { Renderer } from '../renderer/Renderer';
 import { mat4 } from 'gl-matrix';
 import { flatMap, range } from 'lodash';
 
-const renderer = new Renderer(800, 600);
-
+const renderer = new Renderer(800, 600, 1);
 const transform = mat4.fromTranslation(mat4.create(), [0, 0, -8]);
 const vertices: number[] = [];
 const normals: number[] = [];

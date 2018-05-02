@@ -1,6 +1,7 @@
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 import { range } from 'lodash';
+import { blankLightMetadata, LightMetadata } from '../interfaces/LightMetadata';
 
 // tslint:disable:no-unsafe-any
 
@@ -20,7 +21,7 @@ interface Attributes {
     color: REGL.Vec3;
 }
 
-/*
+/**
  * All the information needed to be able to draw an object to the screen
  */
 export interface DrawObjectProps {
@@ -33,22 +34,12 @@ export interface DrawObjectProps {
     indices: number[];
 }
 
-/*
+/**
  * Shader to draw a single object with Phong shading to the screen.
  *
- * @param {REGL.regl} regl: The regl object we're drawing.
- * @param {number} numLights: The number of light points we want filled.
- * @param {number} maxLights: The maximum number of light points that may exist.
+ * @param {REGL.regl} regl The regl object factory to build a function to draw an object.
  */
-export function drawObject(
-    regl: REGL.regl,
-    numLights: number = 1,
-    maxLights: number = 1
-): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
-    if (numLights > maxLights) {
-        throw new RangeError('numLights must be less than or equal to maxLights.');
-    }
-
+export function drawObject(regl: REGL.regl): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
     return regl<Uniforms, Attributes, DrawObjectProps>({
         vert: `
             precision mediump float;
@@ -75,7 +66,7 @@ export function drawObject(
         frag: `
             precision mediump float;
 
-            const int MAX_LIGHTS = ${maxLights};
+            const int MAX_LIGHTS = ${regl.prop('maxLights')};
 
             varying vec3 vertexPosition;
             varying vec3 vertexNormal;
@@ -119,44 +110,43 @@ export function drawObject(
             projection: regl.prop('projectionMatrix'),
             view: regl.prop('cameraTransform'),
             model: regl.prop('model'),
-            numLights: numLights,
-            ...buildLightMetadata(numLights, maxLights)
+            numLights: regl.prop('numLights'),
+            ...buildLightMetadata(regl.prop('maxLights'))
         },
         elements: regl.prop('indices')
     });
 }
 
-/*
+/**
  * Returns JSON metadata for lights to be passed into the `uniforms` object.
  *
  * NOTE: When we increase MAX_LIGHTS, Regl will expect a property in this object for each array
  * element, even if less than MAX_LIGHTS lights are passed in, so the rest will have to be filled
  * with zeroed data.
  *
- * @param {number} numLights: The number of light points we want filled.
- * @param {number} maxLights: The maximum number of light points that may exist.
+ * @param {number} maxLights The maximum number of light points that may exist.
  * @returns {{}} The JSON metadata for the lights.
  */
-export function buildLightMetadata(numLights: number, maxLights: number): {} {
-    const numberOfBlankLights: number = maxLights - numLights;
-
-    const visibleLightsJSON: {}[] = range(numLights).map((index: number) => {
+function buildLightMetadata(maxLights: number): {} {
+    const visibleLightsJSON: {}[] = range(maxLights).map((index: number) => {
         return {
-            [`lightPositions[${index}]`]: [10, 10, 10],
-            [`lightIntensities[${index}]`]: 256,
-            [`lightColors[${index}]`]: [1, 1, 1]
+            [`lightPositions[${index}]`]: (_context, props, _batch_id) => {
+                const light: LightMetadata = props.lights[index];
+
+                return (!light) ? blankLightMetadata.lightPositions : light.lightPositions;
+            },
+            [`lightIntensities[${index}]`]: (_context, props, _batch_id) => {
+                const light: LightMetadata = props.lights[index];
+
+                return (!light) ? blankLightMetadata.lightIntensities : light.lightIntensities;
+            },
+            [`lightColors[${index}]`]: (_context, props, _batch_id) => {
+                const light: LightMetadata = props.lights[index];
+
+                return (!light) ? blankLightMetadata.lightColors : light.lightColors;
+            }
         };
     });
 
-    const nonVisibleLightsJSON: {}[] = range(numberOfBlankLights).map((index: number) => {
-        return {
-            [`lightPositions[${maxLights - index}]`]: [0, 0, 0],
-            [`lightIntensities[${maxLights - index}]`]: 0,
-            [`lightColors[${maxLights - index}]`]: [0, 0, 0]
-        }
-    });
-
-    return visibleLightsJSON
-        .concat(nonVisibleLightsJSON)
-        .reduce((accum: {}, obj: {}) => { return { ...accum, ...obj }; }, {});
+    return visibleLightsJSON.reduce((accum: {}, obj: {}) => { return { ...accum, ...obj }; }, {});
 }

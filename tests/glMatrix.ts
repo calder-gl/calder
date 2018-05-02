@@ -14,40 +14,46 @@ expect.extend({
     toEqualMat4(received: mat4, argument: mat4) {
         if (mat4.equals(received, argument)) {
             return {
-                message: () => `expected ${mat4.str(received)} to not be equal to ${mat4.str(argument)}`,
-                pass: true,
+                message: () =>
+                    `expected ${mat4.str(received)} to not be equal to ${mat4.str(argument)}`,
+                pass: true
             };
         } else {
             return {
-                message: () => `expected ${mat4.str(received)} to be equal to ${mat4.str(argument)}`,
-                pass: false,
+                message: () =>
+                    `expected ${mat4.str(received)} to be equal to ${mat4.str(argument)}`,
+                pass: false
             };
         }
     },
     toEqualVec3(received: vec3, argument: vec3) {
         if (vec3.equals(received, argument)) {
             return {
-                message: () => `expected ${vec3.str(received)} to not be equal to ${vec3.str(argument)}`,
-                pass: true,
+                message: () =>
+                    `expected ${vec3.str(received)} to not be equal to ${vec3.str(argument)}`,
+                pass: true
             };
         } else {
             return {
-                message: () => `expected ${vec3.str(received)} to be equal to ${vec3.str(argument)}`,
-                pass: false,
+                message: () =>
+                    `expected ${vec3.str(received)} to be equal to ${vec3.str(argument)}`,
+                pass: false
             };
         }
     },
     toEqualQuat(received: quat, argument: quat) {
         if (quat.equals(received, argument)) {
             return {
-                message: () => `expected ${quat.str(received)} to not be equal to ${quat.str(argument)}`,
-                pass: true,
+                message: () =>
+                    `expected ${quat.str(received)} to not be equal to ${quat.str(argument)}`,
+                pass: true
             };
         } else {
             return {
-                message: () => `expected ${quat.str(received)} to be equal to ${quat.str(argument)}`,
-                pass: false,
+                message: () =>
+                    `expected ${quat.str(received)} to be equal to ${quat.str(argument)}`,
+                pass: false
             };
         }
-    },
+    }
 });

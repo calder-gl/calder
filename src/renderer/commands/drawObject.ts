@@ -46,7 +46,7 @@ export function drawObject(
     maxLights: number = 1
 ): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
     if (numLights > maxLights) {
-        throw new RangeError(`numLights must be less than or equal to maxLights.`);
+        throw new RangeError('numLights must be less than or equal to maxLights.');
     }
 
     return regl<Uniforms, Attributes, DrawObjectProps>({

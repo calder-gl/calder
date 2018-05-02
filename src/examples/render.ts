@@ -1,10 +1,10 @@
 import { Renderer } from '../renderer/Renderer';
 
-import { mat4 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 import { flatMap, range } from 'lodash';
 
 const renderer = new Renderer(800, 600, 1);
-const transform = mat4.fromTranslation(mat4.create(), [0, 0, -8]);
+const transform = mat4.fromTranslation(mat4.create(), [0, 0, -4]);
 const vertices: number[] = [];
 const normals: number[] = [];
 const indices: number[] = [];
@@ -41,6 +41,9 @@ range(numLat - 1).forEach((lat: number) => {
 colors.push(...flatMap(vertices, () => [1, 0, 0]));
 
 document.body.appendChild(renderer.stage);
+
+renderer.camera.moveTo(vec3.fromValues(0, 0, 4));
+renderer.camera.lookAt(vec3.fromValues(2, 0, -4));
 renderer.draw(
     [
         {

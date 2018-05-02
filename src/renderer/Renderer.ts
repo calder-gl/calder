@@ -1,3 +1,4 @@
+import { Camera } from './Camera';
 import { drawAxes, DrawAxesProps } from './commands/drawAxes';
 import { drawObject, DrawObjectProps } from './commands/drawObject';
 import { LightMetadata } from './interfaces/LightMetadata';
@@ -29,13 +30,14 @@ export class Renderer {
     public readonly maxLights: number;
     public readonly stage: HTMLDivElement;
 
+    public camera: Camera = new Camera();
+
     private clearAll: () => void;
     private clearDepth: () => void;
     private drawObject: REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps>;
     private drawAxes: REGL.DrawCommand<REGL.DefaultContext, DrawAxesProps>;
     private lights: LightMetadata[];
 
-    private cameraTransform: mat4 = mat4.create();
     private projectionMatrix: mat4 = mat4.create();
     private ctx2D: CanvasRenderingContext2D;
 
@@ -103,7 +105,7 @@ export class Renderer {
         objects.forEach((o: RenderObject) =>
             this.drawObject({
                 model: o.transform,
-                cameraTransform: this.cameraTransform,
+                cameraTransform: this.camera.getTransform(),
                 projectionMatrix: this.projectionMatrix,
                 positions: o.vertices,
                 normals: o.normals,
@@ -169,7 +171,7 @@ export class Renderer {
                 const vector = vec4.fromValues(point[0], point[1], point[2], 0);
 
                 // Bring them into camera space
-                vec4.transformMat4(vector, vector, this.cameraTransform);
+                vec4.transformMat4(vector, vector, this.camera.getTransform());
 
                 // Scale them and place them in the lower left corner of the screen
                 vec4.scale(vector, vector, Math.min(this.width, this.height) * 0.05);

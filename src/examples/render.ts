@@ -4,9 +4,15 @@ import { Renderer } from '../renderer/Renderer';
 import { mat4, vec3 } from 'gl-matrix';
 import { flatMap, range } from 'lodash';
 
-const light: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
-const renderer: Renderer = new Renderer(800, 600, 1);
-renderer.addLight(light);
+const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
+const light2: Light = { lightPosition: [700, 500, 50], lightColor: [3, 3, 3], lightIntensity: 100 };
+
+const renderer: Renderer = new Renderer(800, 600, 2);
+
+// Add lights to the renderer
+renderer.addLight(light1);
+renderer.addLight(light2);
+
 const transform = mat4.fromTranslation(mat4.create(), [0, 0, -4]);
 const vertices: number[] = [];
 const normals: number[] = [];

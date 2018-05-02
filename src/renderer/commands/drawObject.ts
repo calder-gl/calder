@@ -1,7 +1,7 @@
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 import { range } from 'lodash';
-import { blankLightMetadata, LightMetadata } from '../interfaces/LightMetadata';
+import { blankLight, Light } from '../interfaces/Light';
 
 // tslint:disable:no-unsafe-any
 
@@ -39,7 +39,7 @@ export interface DrawObjectProps {
  *
  * @param {REGL.regl} regl The regl object factory to build a function to draw an object.
  */
-export function drawObject(regl: REGL.regl): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
+export function drawObject(regl: REGL.regl, maxLights: number): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
     return regl<Uniforms, Attributes, DrawObjectProps>({
         vert: `
             precision mediump float;
@@ -66,7 +66,7 @@ export function drawObject(regl: REGL.regl): REGL.DrawCommand<REGL.DefaultContex
         frag: `
             precision mediump float;
 
-            const int MAX_LIGHTS = ${regl.prop('maxLights')};
+            const int MAX_LIGHTS = ${maxLights};
 
             varying vec3 vertexPosition;
             varying vec3 vertexNormal;
@@ -111,11 +111,15 @@ export function drawObject(regl: REGL.regl): REGL.DrawCommand<REGL.DefaultContex
             view: regl.prop('cameraTransform'),
             model: regl.prop('model'),
             numLights: regl.prop('numLights'),
-            ...buildLightMetadata(regl.prop('maxLights'))
+            ...buildLightMetadata(maxLights)
         },
         elements: regl.prop('indices')
     });
 }
+
+// tslint:disable:newline-before-return
+// tslint:disable:variable-name
+// tslint:disable:typedef
 
 /**
  * Returns JSON metadata for lights to be passed into the `uniforms` object.
@@ -131,19 +135,16 @@ function buildLightMetadata(maxLights: number): {} {
     const visibleLightsJSON: {}[] = range(maxLights).map((index: number) => {
         return {
             [`lightPositions[${index}]`]: (_context, props, _batch_id) => {
-                const light: LightMetadata = props.lights[index];
-
-                return (!light) ? blankLightMetadata.lightPositions : light.lightPositions;
+                const light: Light | undefined = props.lights[index];
+                return light ? light.lightPosition : blankLight.lightPosition;
             },
             [`lightIntensities[${index}]`]: (_context, props, _batch_id) => {
-                const light: LightMetadata = props.lights[index];
-
-                return (!light) ? blankLightMetadata.lightIntensities : light.lightIntensities;
+                const light: Light | undefined = props.lights[index];
+                return light ? light.lightIntensity : blankLight.lightIntensity;
             },
             [`lightColors[${index}]`]: (_context, props, _batch_id) => {
-                const light: LightMetadata = props.lights[index];
-
-                return (!light) ? blankLightMetadata.lightColors : light.lightColors;
+                const light: Light = props.lights[index];
+                return light ? light.lightColor : blankLight.lightColor;
             }
         };
     });

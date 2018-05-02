@@ -1,7 +1,7 @@
 import { Camera } from './Camera';
 import { drawAxes, DrawAxesProps } from './commands/drawAxes';
 import { drawObject, DrawObjectProps } from './commands/drawObject';
-import { LightMetadata } from './interfaces/LightMetadata';
+import { Light } from './interfaces/Light';
 
 import { mat4, vec4 } from 'gl-matrix';
 
@@ -36,7 +36,7 @@ export class Renderer {
     private clearDepth: () => void;
     private drawObject: REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps>;
     private drawAxes: REGL.DrawCommand<REGL.DefaultContext, DrawAxesProps>;
-    private lights: LightMetadata[];
+    private lights: Light[];
 
     private projectionMatrix: mat4 = mat4.create();
     private ctx2D: CanvasRenderingContext2D;
@@ -95,7 +95,7 @@ export class Renderer {
                 depth: 1
             });
 
-        this.drawObject = drawObject(regl);
+        this.drawObject = drawObject(regl, this.maxLights);
         this.drawAxes = drawAxes(regl);
     }
 
@@ -112,8 +112,9 @@ export class Renderer {
                 colors: o.colors,
                 indices: o.indices,
                 numLights: this.lights.length,
-                maxLights: this.maxLights
-            })
+                maxLights: this.maxLights,
+                lights: this.lights
+            }, this.maxLights)
         );
 
         if (debug) {
@@ -124,41 +125,32 @@ export class Renderer {
     /**
      * Adds a light in the `lightPositions` match an entry in the `this.lights` array.
      *
-     * @param {REGL.Vec3} lightPositions A vector of length 3 denoting the x, y, z point where the light resides in the
-     *     vector-space.
-     * @param {REGL.Vec3} lightColors A vector of length 3 denoting _.
-     * @param {REGL.Vec3} lightIntensities A vector of length 3 denoting _.
+     * @param {Light} light A light source to be added to the rendering context.
      * @throws {RangeError} If the number of lights in `this.lights` would exceed `this.maxLights` by appending another
      *     light to `this.lights`.
      */
-    public addLight(lightPositions: REGL.Vec3[], lightColors: REGL.Vec3[], lightIntensities: number[]) {
+    public addLight(light: Light) {
         if (this.lights.length === this.maxLights) {
             throw new RangeError(`Number of lights must be less than or equal to maxLights (${this.maxLights}).`);
         }
-
-        const light: LightMetadata = {
-            lightPositions: lightPositions,
-            lightColors: lightColors,
-            lightIntensities: lightIntensities
-        };
         this.lights.push(light);
     }
 
     /**
-     * Removes a light if the `lightPositions` match an entry in the `this.lights` array.
+     * Removes a light if the entry passed in matches an entry in the `this.lights` array.
      *
-     * @param {REGL.Vec3} lightPositions A vector of length 3 denoting the x, y, z point where the light resides in the
-     *     vector-space.
+     * @param {Light} light A light source to be removed from the rendering context.
      * @throws {RangeError} If the length of `this.lights` is equal to 0.
      */
-    public removeLight(lightPositions: REGL.Vec3[]) {
+    public removeLight(light: Light) {
         if (this.lights.length === 0) {
             throw new RangeError(`Can't remove a light from an empty array.`);
         }
+        this.lights.filter((l: Light) => l === light);
+    }
 
-        this.lights.filter((light: LightMetadata) => {
-            light.lightPositions.every((position: REGL.Vec3, i: number) => position === lightPositions[i])
-        });
+    public getLights(): Light[] {
+        return this.lights;
     }
 
     private drawCrosshairs() {

@@ -1,7 +1,8 @@
+import { blankLight, Light } from '../interfaces/Light';
+
+import { range } from 'lodash';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
-import { range } from 'lodash';
-import { blankLight, Light } from '../interfaces/Light';
 
 // tslint:disable:no-unsafe-any
 
@@ -39,7 +40,10 @@ export interface DrawObjectProps {
  *
  * @param {REGL.regl} regl The regl object factory to build a function to draw an object.
  */
-export function drawObject(regl: REGL.regl, maxLights: number): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
+export function drawObject(
+    regl: REGL.regl,
+    maxLights: number
+): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
     return regl<Uniforms, Attributes, DrawObjectProps>({
         vert: `
             precision mediump float;
@@ -136,18 +140,20 @@ function buildLightMetadata(maxLights: number): {} {
         return {
             [`lightPositions[${index}]`]: (_context, props, _batch_id) => {
                 const light: Light | undefined = props.lights[index];
-                return light ? light.lightPosition : blankLight.lightPosition;
+                return light !== undefined ? light.lightPosition : blankLight.lightPosition;
             },
             [`lightIntensities[${index}]`]: (_context, props, _batch_id) => {
                 const light: Light | undefined = props.lights[index];
-                return light ? light.lightIntensity : blankLight.lightIntensity;
+                return light !== undefined ? light.lightIntensity : blankLight.lightIntensity;
             },
             [`lightColors[${index}]`]: (_context, props, _batch_id) => {
                 const light: Light = props.lights[index];
-                return light ? light.lightColor : blankLight.lightColor;
+                return light !== undefined ? light.lightColor : blankLight.lightColor;
             }
         };
     });
 
-    return visibleLightsJSON.reduce((accum: {}, obj: {}) => { return { ...accum, ...obj }; }, {});
+    return visibleLightsJSON.reduce((accum: {}, obj: {}) => {
+        return { ...accum, ...obj };
+    }, {});
 }

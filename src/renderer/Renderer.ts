@@ -1,6 +1,7 @@
 import { Camera } from './Camera';
 import { drawAxes, DrawAxesProps } from './commands/drawAxes';
 import { drawObject, DrawObjectProps } from './commands/drawObject';
+import { Light } from './interfaces/Light';
 
 import { mat4, vec4 } from 'gl-matrix';
 
@@ -26,6 +27,7 @@ export interface RenderObject {
 export class Renderer {
     public readonly width: number;
     public readonly height: number;
+    public readonly maxLights: number;
     public readonly stage: HTMLDivElement;
 
     public camera: Camera = new Camera();
@@ -34,13 +36,16 @@ export class Renderer {
     private clearDepth: () => void;
     private drawObject: REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps>;
     private drawAxes: REGL.DrawCommand<REGL.DefaultContext, DrawAxesProps>;
+    private lights: Light[];
 
     private projectionMatrix: mat4 = mat4.create();
     private ctx2D: CanvasRenderingContext2D;
 
-    constructor(width: number, height: number) {
+    constructor(width: number, height: number, maxLights: number) {
         this.width = width;
         this.height = height;
+        this.maxLights = maxLights;
+        this.lights = [];
 
         // Create a single element to contain the renderer view
         this.stage = document.createElement('div');
@@ -90,7 +95,7 @@ export class Renderer {
                 depth: 1
             });
 
-        this.drawObject = drawObject(regl);
+        this.drawObject = drawObject(regl, this.maxLights);
         this.drawAxes = drawAxes(regl);
     }
 
@@ -105,13 +110,46 @@ export class Renderer {
                 positions: o.vertices,
                 normals: o.normals,
                 colors: o.colors,
-                indices: o.indices
-            })
+                indices: o.indices,
+                numLights: this.lights.length,
+                lights: this.lights
+            }, this.maxLights)
         );
 
         if (debug) {
             this.drawCrosshairs();
         }
+    }
+
+    /**
+     * Adds a light in the `lightPositions` match an entry in the `this.lights` array.
+     *
+     * @param {Light} light A light source to be added to the rendering context.
+     * @throws {RangeError} If the number of lights in `this.lights` would exceed `this.maxLights` by appending another
+     *     light to `this.lights`.
+     */
+    public addLight(light: Light) {
+        if (this.lights.length === this.maxLights) {
+            throw new RangeError(`Number of lights must be less than or equal to maxLights (${this.maxLights}).`);
+        }
+        this.lights.push(light);
+    }
+
+    /**
+     * Removes a light if the entry passed in matches an entry in the `this.lights` array.
+     *
+     * @param {Light} light A light source to be removed from the rendering context.
+     * @throws {RangeError} If the length of `this.lights` is equal to 0.
+     */
+    public removeLight(light: Light) {
+        if (this.lights.length === 0) {
+            throw new RangeError(`Can't remove a light from an empty array.`);
+        }
+        this.lights.filter((l: Light) => l === light);
+    }
+
+    public getLights(): Light[] {
+        return this.lights;
     }
 
     private drawCrosshairs() {

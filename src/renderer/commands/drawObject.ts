@@ -1,5 +1,7 @@
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
+import { range } from 'lodash';
+import { blankLight, Light } from '../interfaces/Light';
 
 // tslint:disable:no-unsafe-any
 
@@ -19,7 +21,7 @@ interface Attributes {
     color: REGL.Vec3;
 }
 
-/*
+/**
  * All the information needed to be able to draw an object to the screen
  */
 export interface DrawObjectProps {
@@ -32,12 +34,12 @@ export interface DrawObjectProps {
     indices: number[];
 }
 
-/*
- * Shader to draw a single object with Phong shading to the screen
+/**
+ * Shader to draw a single object with Phong shading to the screen.
+ *
+ * @param {REGL.regl} regl The regl object factory to build a function to draw an object.
  */
-export function drawObject(
-    regl: REGL.regl
-): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
+export function drawObject(regl: REGL.regl, maxLights: number): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
     return regl<Uniforms, Attributes, DrawObjectProps>({
         vert: `
             precision mediump float;
@@ -64,7 +66,7 @@ export function drawObject(
         frag: `
             precision mediump float;
 
-            const int MAX_LIGHTS = 1; // TODO(davepagurek) [#10] Increase this to allow more lights
+            const int MAX_LIGHTS = ${maxLights};
 
             varying vec3 vertexPosition;
             varying vec3 vertexNormal;
@@ -108,15 +110,44 @@ export function drawObject(
             projection: regl.prop('projectionMatrix'),
             view: regl.prop('cameraTransform'),
             model: regl.prop('model'),
-            numLights: 1, // Note: must be <= MAX_LIGHTS in the shader
-
-            // TODO(davepagurek): [#10] When we increase MAX_LIGHTS, Regl will expect a property
-            // in this object for each array element, even if less than MAX_LIGHTS lights are
-            // passed in, so the rest will have to be filled with zeroed data
-            'lightPositions[0]': [10, 10, 10],
-            'lightIntensities[0]': 256,
-            'lightColors[0]': [1, 1, 1]
+            numLights: regl.prop('numLights'),
+            ...buildLightMetadata(maxLights)
         },
         elements: regl.prop('indices')
     });
+}
+
+// tslint:disable:newline-before-return
+// tslint:disable:variable-name
+// tslint:disable:typedef
+
+/**
+ * Returns JSON metadata for lights to be passed into the `uniforms` object.
+ *
+ * NOTE: When we increase MAX_LIGHTS, Regl will expect a property in this object for each array
+ * element, even if less than MAX_LIGHTS lights are passed in, so the rest will have to be filled
+ * with zeroed data.
+ *
+ * @param {number} maxLights The maximum number of light points that may exist.
+ * @returns {{}} The JSON metadata for the lights.
+ */
+function buildLightMetadata(maxLights: number): {} {
+    const visibleLightsJSON: {}[] = range(maxLights).map((index: number) => {
+        return {
+            [`lightPositions[${index}]`]: (_context, props, _batch_id) => {
+                const light: Light | undefined = props.lights[index];
+                return light ? light.lightPosition : blankLight.lightPosition;
+            },
+            [`lightIntensities[${index}]`]: (_context, props, _batch_id) => {
+                const light: Light | undefined = props.lights[index];
+                return light ? light.lightIntensity : blankLight.lightIntensity;
+            },
+            [`lightColors[${index}]`]: (_context, props, _batch_id) => {
+                const light: Light = props.lights[index];
+                return light ? light.lightColor : blankLight.lightColor;
+            }
+        };
+    });
+
+    return visibleLightsJSON.reduce((accum: {}, obj: {}) => { return { ...accum, ...obj }; }, {});
 }

@@ -1,3 +1,4 @@
+// tslint:disable-next-line:import-name
 import REGL = require('regl');
 
 export interface Light {

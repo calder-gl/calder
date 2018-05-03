@@ -1,7 +1,8 @@
+import { blankLight, Light } from '../interfaces/Light';
+
+import { range } from 'lodash';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
-import { range } from 'lodash';
-import { blankLight, Light } from '../interfaces/Light';
 
 // tslint:disable:no-unsafe-any
 
@@ -136,15 +137,15 @@ function buildLightMetadata(maxLights: number): {} {
         return {
             [`lightPositions[${index}]`]: (_context, props, _batch_id) => {
                 const light: Light | undefined = props.lights[index];
-                return light ? light.lightPosition : blankLight.lightPosition;
+                return light !== undefined ? light.lightPosition : blankLight.lightPosition;
             },
             [`lightIntensities[${index}]`]: (_context, props, _batch_id) => {
                 const light: Light | undefined = props.lights[index];
-                return light ? light.lightIntensity : blankLight.lightIntensity;
+                return light !== undefined ? light.lightIntensity : blankLight.lightIntensity;
             },
             [`lightColors[${index}]`]: (_context, props, _batch_id) => {
                 const light: Light = props.lights[index];
-                return light ? light.lightColor : blankLight.lightColor;
+                return light !== undefined ? light.lightColor : blankLight.lightColor;
             }
         };
     });

@@ -11,4 +11,4 @@ export const blankLight: Light = {
     lightPosition: [0, 0, 0],
     lightColor: [0, 0, 0],
     lightIntensity: 0
-}
+};

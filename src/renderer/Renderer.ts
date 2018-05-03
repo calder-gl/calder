@@ -103,17 +103,20 @@ export class Renderer {
         this.clearAll();
 
         objects.forEach((o: RenderObject) =>
-            this.drawObject({
-                model: o.transform,
-                cameraTransform: this.camera.getTransform(),
-                projectionMatrix: this.projectionMatrix,
-                positions: o.vertices,
-                normals: o.normals,
-                colors: o.colors,
-                indices: o.indices,
-                numLights: this.lights.length,
-                lights: this.lights
-            }, this.maxLights)
+            this.drawObject(
+                {
+                    model: o.transform,
+                    cameraTransform: this.camera.getTransform(),
+                    projectionMatrix: this.projectionMatrix,
+                    positions: o.vertices,
+                    normals: o.normals,
+                    colors: o.colors,
+                    indices: o.indices,
+                    numLights: this.lights.length,
+                    lights: this.lights
+                },
+                this.maxLights
+            )
         );
 
         if (debug) {
@@ -130,7 +133,9 @@ export class Renderer {
      */
     public addLight(light: Light) {
         if (this.lights.length === this.maxLights) {
-            throw new RangeError(`Number of lights must be less than or equal to maxLights (${this.maxLights}).`);
+            throw new RangeError(
+                `Number of lights must be less than or equal to maxLights (${this.maxLights}).`
+            );
         }
         this.lights.push(light);
     }

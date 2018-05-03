@@ -40,7 +40,10 @@ export interface DrawObjectProps {
  *
  * @param {REGL.regl} regl The regl object factory to build a function to draw an object.
  */
-export function drawObject(regl: REGL.regl, maxLights: number): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
+export function drawObject(
+    regl: REGL.regl,
+    maxLights: number
+): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
     return regl<Uniforms, Attributes, DrawObjectProps>({
         vert: `
             precision mediump float;
@@ -150,5 +153,7 @@ function buildLightMetadata(maxLights: number): {} {
         };
     });
 
-    return visibleLightsJSON.reduce((accum: {}, obj: {}) => { return { ...accum, ...obj }; }, {});
+    return visibleLightsJSON.reduce((accum: {}, obj: {}) => {
+        return { ...accum, ...obj };
+    }, {});
 }

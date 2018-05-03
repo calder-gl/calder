@@ -7,7 +7,7 @@ describe('Renderer', () => {
         lightPosition: [1, 1, 1],
         lightColor: [0, 0, 0],
         lightIntensity: 256
-    }
+    };
 
     xdescribe('addLight', () => {
         it('can append a new light to the `lights` array', () => {
@@ -15,7 +15,6 @@ describe('Renderer', () => {
             expect(renderer.getLights().length).toEqual(0);
             renderer.addLight(light);
             expect(renderer.getLights().length).toEqual(1);
-
         });
     });
 

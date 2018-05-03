@@ -112,7 +112,6 @@ export class Renderer {
                 colors: o.colors,
                 indices: o.indices,
                 numLights: this.lights.length,
-                maxLights: this.maxLights,
                 lights: this.lights
             }, this.maxLights)
         );

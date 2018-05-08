@@ -1,8 +1,8 @@
-import { Camera } from './Camera';
 import { drawAxes, DrawAxesProps } from './commands/drawAxes';
 import { drawObject, DrawObjectProps } from './commands/drawObject';
 import { Light } from './interfaces/Light';
 import { RenderObject } from './interfaces/RenderObject';
+import { Camera } from './Camera';
 
 import { mat4, vec4 } from 'gl-matrix';
 

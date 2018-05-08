@@ -1,12 +1,20 @@
-import { flatMap } from 'lodash';
 import { mat4, vec3 } from 'gl-matrix';
+import { flatMap } from 'lodash';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
 import { Transformation } from './Transformation';
 
+/**
+ * A `Node` in a scene-graph.
+ */
 export class Node {
     public readonly children: Node[];
     protected transformation: Transformation = new Transformation();
 
+    /**
+     * Instantiates a new `Node`.
+     *
+     * @param {Node[]} children
+     */
     constructor(children: Node[] = []) {
         this.children = children;
     }

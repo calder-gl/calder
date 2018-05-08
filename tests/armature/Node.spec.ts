@@ -1,7 +1,7 @@
 import { vec3, vec4 } from 'gl-matrix';
-import { BakedGeometry } from '../../src/geometry/BakedGeometry';
 import { GeometryNode } from '../../src/armature/GeometryNode';
 import { Node } from '../../src/armature/Node';
+import { BakedGeometry } from '../../src/geometry/BakedGeometry';
 import { RenderObject } from '../../src/renderer/interfaces/RenderObject';
 import '../glMatrix';
 

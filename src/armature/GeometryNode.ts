@@ -1,12 +1,21 @@
-import { flatMap } from 'lodash';
 import { mat4 } from 'gl-matrix';
+import { flatMap } from 'lodash';
 import { BakedGeometry } from '../geometry/BakedGeometry';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
 import { Node } from './Node';
 
+/**
+ * A derived `Node` with an additional `geometry` property.
+ */
 export class GeometryNode extends Node {
     public readonly geometry: BakedGeometry;
 
+    /**
+     * Instantiates a new `GeometryNode`.
+     *
+     * @param {BakedGeometry} geometry
+     * @param {Node[]} children
+     */
     constructor(geometry: BakedGeometry, children: Node[] = []) {
         super(children);
         this.geometry = geometry;

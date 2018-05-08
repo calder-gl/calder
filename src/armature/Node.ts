@@ -11,12 +11,17 @@ export class Node {
         this.children = children;
     }
 
+    /**
+     * Gets the node's rotation.
+     *
+     * @returns {vec3}
+     */
     public getRotation(): vec3 {
         return this.transformation.rotation;
     }
 
     /**
-     * Sets the rotation for a particular node by overriding the private `transformation` property.
+     * Sets the rotation for the node by updating the private `transformation` property.
      *
      * @param {vec3} rotation
      */
@@ -24,22 +29,50 @@ export class Node {
         this.transformation.rotation = rotation;
     }
 
+    /**
+     * Gets the node's scale.
+     *
+     * @returns {vec3}
+     */
     public getScale(): vec3 {
         return this.transformation.scale;
     }
 
+    /**
+     * Sets the scale for the node by updating the private `transformation` property.
+     *
+     * @param {vec3} scale
+     */
     public setScale(scale: vec3) {
         this.transformation.scale = scale;
     }
 
+    /**
+     * Gets the node's position.
+     *
+     * @returns {vec3}
+     */
     public getPosition(): vec3 {
         return this.transformation.position;
     }
 
-    public setPosition(translation: vec3) {
-        this.transformation.position = translation;
+    /**
+     * Sets the position for the node by updating the private `transformation`
+     * property.
+     *
+     * @param {vec3} position
+     */
+    public setPosition(position: vec3) {
+        this.transformation.position = position;
     }
 
+    /**
+     * Returns an array of `RenderObject`s denoting `GeometryNode`s
+     * transformations multiplied by the `coordinateSpace` parameter.
+     *
+     * @param {mat4} coordinateSpace
+     * @returns {RenderObject[]}
+     */
     public traverse(coordinateSpace: mat4 = mat4.create()): RenderObject[] {
         const matrix = this.transformation.getTransformation();
         mat4.multiply(matrix, coordinateSpace, matrix);

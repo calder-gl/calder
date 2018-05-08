@@ -8,6 +8,12 @@ export class Transformation {
     public rotation: vec3 = vec3.fromValues(0, 0, 0);
     public scale: vec3 = vec3.fromValues(1, 1, 1);
 
+    /**
+     * Returns a matrix representation of the transformation this object
+     * represents.
+     *
+     * @returns {mat4}
+     */
     public getTransformation(): mat4 {
         const matrix = mat4.fromScaling(mat4.create(), this.scale);
 

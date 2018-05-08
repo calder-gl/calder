@@ -1,10 +1,11 @@
-import { mat4, quat, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 
 declare global {
     namespace jest {
         interface Matchers<R> {
             toEqualMat4(argument: mat4): { pass: boolean; message(): string };
             toEqualVec3(argument: vec3): { pass: boolean; message(): string };
+            toEqualVec4(argument: vec4): { pass: boolean; message(): string };
             toEqualQuat(argument: quat): { pass: boolean; message(): string };
         }
     }
@@ -37,6 +38,21 @@ expect.extend({
             return {
                 message: () =>
                     `expected ${vec3.str(received)} to be equal to ${vec3.str(argument)}`,
+                pass: false
+            };
+        }
+    },
+    toEqualVec4(received: vec4, argument: vec4) {
+        if (vec4.equals(received, argument)) {
+            return {
+                message: () =>
+                    `expected ${vec4.str(received)} to not be equal to ${vec4.str(argument)}`,
+                pass: true
+            };
+        } else {
+            return {
+                message: () =>
+                    `expected ${vec4.str(received)} to be equal to ${vec4.str(argument)}`,
                 pass: false
             };
         }

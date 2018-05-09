@@ -4,6 +4,13 @@
     "tslint-config-prettier"
   ],
   "rules": {
+    "ordered-imports": [
+      true,
+      {
+        "import-sources-order": "lowercase-first",
+        "named-imports-order": "lowercase-first"
+      }
+    ],
     "mocha-no-side-effect-code": false,
     "missing-jsdoc": false,
     "no-relative-imports": false,

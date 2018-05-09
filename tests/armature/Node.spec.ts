@@ -7,7 +7,7 @@ import '../glMatrix';
 
 describe('Node', () => {
     describe('traverse', () => {
-        it('flattens the parent\'s coordinate space and returns an array of `RenderObject`s', () => {
+        it("flattens the parent's coordinate space and returns an array of `RenderObject`s", () => {
             const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };
             const geometryChild = new GeometryNode(geometry);
             const nodeChild = new Node([geometryChild]);

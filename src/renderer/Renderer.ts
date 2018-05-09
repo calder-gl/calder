@@ -1,7 +1,8 @@
-import { Camera } from './Camera';
 import { drawAxes, DrawAxesProps } from './commands/drawAxes';
 import { drawObject, DrawObjectProps } from './commands/drawObject';
 import { Light } from './interfaces/Light';
+import { RenderObject } from './interfaces/RenderObject';
+import { Camera } from './Camera';
 
 import { mat4, vec4 } from 'gl-matrix';
 
@@ -9,17 +10,6 @@ import { mat4, vec4 } from 'gl-matrix';
 import REGL = require('regl');
 
 // tslint:disable:no-unsafe-any
-
-/*
- * A collection of the properties needed to render something using the default shader
- */
-export interface RenderObject {
-    transform: REGL.Mat4;
-    vertices: REGL.Vec3[];
-    normals: REGL.Vec3[];
-    colors: REGL.Vec3[];
-    indices: number[];
-}
 
 /**
  * Manages all scene information and is responsible for rendering it to the screen

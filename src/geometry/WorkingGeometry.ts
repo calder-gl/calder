@@ -1,4 +1,5 @@
 import { vec3, vec4 } from 'gl-matrix';
+import { BakedGeometry } from './BakedGeometry';
 
 /**
  * A representation of a surface on an object.
@@ -44,22 +45,19 @@ export class WorkingGeometry {
      *
      * @returns {BakedGeometry}
      */
-    public bake() {
+    public bake(): BakedGeometry {
         const bakedVertices = this.vertices.map((workingVec: vec4) =>
             vec3.fromValues(workingVec[0], workingVec[1], workingVec[2])
         );
         const bakedIndecies = this.faces.reduce((accum: number[], face: Face) => {
             return accum.concat(face.indices);
         }, []);
-        const bakedNormals = this.faces.map((face: Face) => face.normal);
+        const bakedNormals = this.faces.map((face: Face) => {
+            return vec3.fromValues(face.normal[0], face.normal[1], face.normal[2]);
+        });
 
         // Make all of the baked shapes red for now.
-        const color = vec3.fromValues(255, 0, 0);
-        const bakedColors: vec3[] = [];
-        const numVertices = this.vertices.length;
-        for (let i = 0; i < numVertices; i += 1) {
-            bakedColors.push(color);
-        }
+        const bakedColors: vec3[] = bakedVertices.map(() => vec3.fromValues(1, 0, 0));
 
         return {
             vertices: bakedVertices,

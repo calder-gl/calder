@@ -1,8 +1,8 @@
 import { mat4 } from 'gl-matrix';
-import { flatMap } from 'lodash';
 import { BakedGeometry } from '../geometry/BakedGeometry';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
 import { Node } from './Node';
+import { NodeRenderObject } from './NodeRenderObject';
 
 /**
  * A derived `Node` with an additional `geometry` property.
@@ -31,19 +31,32 @@ export class GeometryNode extends Node {
     public traverse(
         coordinateSpace: mat4 = mat4.create(),
         makeBones: boolean = false
-    ): RenderObject[] {
+    ): NodeRenderObject {
         const matrix = this.transformation.getTransformation();
         mat4.multiply(matrix, coordinateSpace, matrix);
 
+        const nodeRenderObject: NodeRenderObject = this.children.reduce(
+            (n: NodeRenderObject, c: Node) => {
+                const childRenderObject: NodeRenderObject = c.traverse(matrix, makeBones);
+
+                return {
+                    renderObjects: [...n.renderObjects, ...childRenderObject.renderObjects],
+                    bones: [...n.bones, ...childRenderObject.bones]
+                };
+            },
+            { renderObjects: [], bones: [] }
+        );
+
         const renderObjects: RenderObject[] = [
             { ...this.geometry, transform: matrix },
-            ...flatMap(this.children, (c: Node) => c.traverse(matrix, makeBones))
+            ...nodeRenderObject.renderObjects
         ];
+        const bones: RenderObject[] = nodeRenderObject.bones;
 
         if (makeBones) {
-            this.appendBoneRenderObject(coordinateSpace, renderObjects);
+            bones.push(this.boneRenderObject(coordinateSpace));
         }
 
-        return renderObjects;
+        return { renderObjects, bones };
     }
 }

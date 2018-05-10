@@ -31,7 +31,7 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(1, 0, 1, 1);
 
-            const renderObjects: RenderObject[] = root.traverse();
+            const renderObjects: RenderObject[] = root.traverse().renderObjects;
 
             expect(renderObjects.length).toBe(1);
 
@@ -58,7 +58,7 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(0, 1, 0, 1);
 
-            const renderObjects: RenderObject[] = root.traverse();
+            const renderObjects: RenderObject[] = root.traverse().renderObjects;
 
             expect(renderObjects.length).toBe(1);
 

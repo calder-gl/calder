@@ -92,29 +92,33 @@ export class Renderer {
         this.drawAxes = createDrawAxes(regl);
     }
 
-    public draw(objects: Node[], debug: DebugParams = {}) {
+    public draw(
+        objects: Node[],
+        debug: DebugParams = { drawAxes: false, drawArmatureBones: false }
+    ) {
         this.clearAll();
 
         this.drawObject(
-            flatMap(objects, (n: Node) => n.traverse(mat4.create(), debug.drawArmatureBones)).map(
-                (o: RenderObject) => {
-                    return {
-                        model: o.transform,
-                        cameraTransform: this.camera.getTransform(),
-                        projectionMatrix: this.projectionMatrix,
-                        positions: o.vertices,
-                        normals: o.normals,
-                        colors: o.colors,
-                        indices: o.indices,
-                        isShadeless: !!o.isShadeless,
-                        numLights: this.lights.length,
-                        lights: this.lights
-                    };
-                }
-            )
+            flatMap(
+                objects,
+                (n: Node) => n.traverse(mat4.create(), debug.drawArmatureBones).renderObjects
+            ).map((o: RenderObject) => {
+                return {
+                    model: o.transform,
+                    cameraTransform: this.camera.getTransform(),
+                    projectionMatrix: this.projectionMatrix,
+                    positions: o.vertices,
+                    normals: o.normals,
+                    colors: o.colors,
+                    indices: o.indices,
+                    isShadeless: !!o.isShadeless,
+                    numLights: this.lights.length,
+                    lights: this.lights
+                };
+            })
         );
 
-        if (debug) {
+        if (debug.drawAxes) {
             this.drawCrosshairs();
         }
     }

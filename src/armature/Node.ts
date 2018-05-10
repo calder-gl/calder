@@ -1,7 +1,7 @@
 import { mat4, vec3 } from 'gl-matrix';
-import { flatMap } from 'lodash';
 import { BakedGeometry } from '../geometry/BakedGeometry';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
+import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
 
 /**
@@ -27,14 +27,7 @@ export class Node {
             vec3.fromValues(0, 0, 1),
             vec3.fromValues(1, 0, 0)
         ],
-        indices: [
-            0, 1, 2,
-            0, 2, 3,
-            0, 3, 4,
-            5, 2, 1,
-            5, 3, 2,
-            5, 4, 3
-        ],
+        indices: [0, 1, 2, 0, 2, 3, 0, 3, 4, 5, 2, 1, 5, 3, 2, 5, 4, 3],
         colors: Node.boneVertices.map(() => vec3.fromValues(1, 1, 1))
     };
 
@@ -116,25 +109,36 @@ export class Node {
     public traverse(
         coordinateSpace: mat4 = mat4.create(),
         makeBones: boolean = false
-    ): RenderObject[] {
+    ): NodeRenderObject {
         const matrix = this.transformation.getTransformation();
         mat4.multiply(matrix, coordinateSpace, matrix);
 
-        const renderObjects: RenderObject[] = flatMap(this.children, (c: Node) =>
-            c.traverse(matrix, makeBones)
+        const nodeRenderObject: NodeRenderObject = this.children.reduce(
+            (n: NodeRenderObject, c: Node) => {
+                const childRenderObject: NodeRenderObject = c.traverse(matrix, makeBones);
+
+                return {
+                    renderObjects: [...n.renderObjects, ...childRenderObject.renderObjects],
+                    bones: [...n.bones, ...childRenderObject.bones]
+                };
+            },
+            { renderObjects: [], bones: [] }
         );
 
+        const renderObjects: RenderObject[] = nodeRenderObject.renderObjects;
+        const bones: RenderObject[] = nodeRenderObject.bones;
+
         if (makeBones) {
-            this.appendBoneRenderObject(coordinateSpace, renderObjects);
+            bones.push(this.boneRenderObject(coordinateSpace));
         }
 
-        return renderObjects;
+        return { renderObjects, bones };
     }
 
     /**
      * TODO:
      */
-    protected appendBoneRenderObject(parentMatrix: mat4, renderObjects: RenderObject[]) {
+    protected boneRenderObject(parentMatrix: mat4): RenderObject {
         const transform: Transformation = new Transformation(
             vec3.fromValues(0, 0, 0),
             vec3.fromValues(
@@ -145,8 +149,8 @@ export class Node {
             vec3.fromValues(
                 Math.sqrt(
                     Math.pow(this.transformation.position[0], 2) +
-                    Math.pow(this.transformation.position[1], 2) +
-                    Math.pow(this.transformation.position[2], 2)
+                        Math.pow(this.transformation.position[1], 2) +
+                        Math.pow(this.transformation.position[2], 2)
                 ),
                 1,
                 1
@@ -155,7 +159,6 @@ export class Node {
         const transformationMatrix = mat4.create();
         mat4.multiply(transformationMatrix, parentMatrix, transform.getTransformation());
 
-        const boneRenderObject: RenderObject = { ...Node.bone, transform: transformationMatrix };
-        renderObjects.push(boneRenderObject);
+        return { ...Node.bone, transform: transformationMatrix, isShadeless: true };
     }
 }

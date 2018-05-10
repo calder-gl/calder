@@ -1,5 +1,6 @@
-import { drawAxes, DrawAxesProps } from './commands/drawAxes';
-import { drawObject, DrawObjectProps } from './commands/drawObject';
+import { flatMap } from 'lodash';
+import { createDrawAxes, DrawAxesProps } from './commands/createDrawAxes';
+import { createDrawObject, DrawObjectProps } from './commands/createDrawObject';
 import { Light } from './interfaces/Light';
 import { RenderObject } from './interfaces/RenderObject';
 import { Camera } from './Camera';
@@ -8,6 +9,7 @@ import { mat4, vec4 } from 'gl-matrix';
 
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
+import { Node } from '../armature/Node';
 
 // tslint:disable:no-unsafe-any
 
@@ -85,16 +87,16 @@ export class Renderer {
                 depth: 1
             });
 
-        this.drawObject = drawObject(regl, this.maxLights);
-        this.drawAxes = drawAxes(regl);
+        this.drawObject = createDrawObject(regl, this.maxLights);
+        this.drawAxes = createDrawAxes(regl);
     }
 
-    public draw(objects: RenderObject[], debug: boolean = false) {
+    public draw(objects: Node[], debug: boolean = false) {
         this.clearAll();
 
-        objects.forEach((o: RenderObject) =>
-            this.drawObject(
-                {
+        this.drawObject(
+            flatMap(objects, (n: Node) => n.traverse()).map((o: RenderObject) => {
+                return {
                     model: o.transform,
                     cameraTransform: this.camera.getTransform(),
                     projectionMatrix: this.projectionMatrix,
@@ -104,9 +106,8 @@ export class Renderer {
                     indices: o.indices,
                     numLights: this.lights.length,
                     lights: this.lights
-                },
-                this.maxLights
-            )
+                };
+            })
         );
 
         if (debug) {

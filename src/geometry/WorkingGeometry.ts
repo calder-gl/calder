@@ -53,10 +53,19 @@ export class WorkingGeometry {
         }, []);
         const bakedNormals = this.faces.map((face: Face) => face.normal);
 
+        // Make all of the baked shapes red for now.
+        const color = vec3.fromValues(255, 0, 0);
+        const bakedColors: vec3[] = [];
+        const numVertices = this.vertices.length;
+        for (let i = 0; i < numVertices; i += 1) {
+            bakedColors.push(color);
+        }
+
         return {
             vertices: bakedVertices,
             normals: bakedNormals,
-            indices: bakedIndecies
+            indices: bakedIndecies,
+            colors: bakedColors
         };
     }
 }

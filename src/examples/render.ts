@@ -1,8 +1,9 @@
 import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
 
-import { mat4, vec3 } from 'gl-matrix';
-import { flatMap, range } from 'lodash';
+import { vec3 } from 'gl-matrix';
+import { range } from 'lodash';
+import { GeometryNode } from '../armature/GeometryNode';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
 const light2: Light = { lightPosition: [700, 500, 50], lightColor: [3, 3, 3], lightIntensity: 100 };
@@ -13,15 +14,16 @@ const renderer: Renderer = new Renderer(800, 600, 2);
 renderer.addLight(light1);
 renderer.addLight(light2);
 
-const transform = mat4.fromTranslation(mat4.create(), [0, 0, -4]);
-const vertices: number[] = [];
-const normals: number[] = [];
+const transform = vec3.fromValues(0, 0, -4);
+const vertices: vec3[] = [];
+const normals: vec3[] = [];
 const indices: number[] = [];
-const colors: number[] = [];
+const colors: vec3[] = [];
 
 const numLat = 20;
 const numLong = 20;
 
+// Generate the normals and vertices arrays
 range(numLat).forEach((lat: number) => {
     const theta = lat * Math.PI / numLat;
 
@@ -31,8 +33,8 @@ range(numLat).forEach((lat: number) => {
         const y = Math.cos(theta);
         const z = Math.sin(phi) * Math.sin(theta);
 
-        normals.push(x, y, z);
-        vertices.push(x, y, z);
+        normals.push(vec3.fromValues(x, y, z));
+        vertices.push(vec3.fromValues(x, y, z));
     });
 });
 
@@ -47,21 +49,16 @@ range(numLat - 1).forEach((lat: number) => {
     });
 });
 
-colors.push(...flatMap(vertices, () => [1, 0, 0]));
+colors.push(...vertices.map(() => vec3.fromValues(1, 0, 0)));
 
 document.body.appendChild(renderer.stage);
 
 renderer.camera.moveTo(vec3.fromValues(0, 0, 4));
 renderer.camera.lookAt(vec3.fromValues(2, 0, -4));
-renderer.draw(
-    [
-        {
-            transform,
-            vertices,
-            normals,
-            colors,
-            indices
-        }
-    ],
-    true
-);
+
+// Create the armature
+const geometryNode = new GeometryNode({ vertices, normals, indices, colors });
+geometryNode.setPosition(transform);
+
+// Draw the armature
+renderer.draw([geometryNode], true);

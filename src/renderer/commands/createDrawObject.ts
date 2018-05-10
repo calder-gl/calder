@@ -40,7 +40,7 @@ export interface DrawObjectProps {
  *
  * @param {REGL.regl} regl The regl object factory to build a function to draw an object.
  */
-export function drawObject(
+export function createDrawObject(
     regl: REGL.regl,
     maxLights: number
 ): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {

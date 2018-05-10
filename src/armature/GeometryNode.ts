@@ -28,13 +28,22 @@ export class GeometryNode extends Node {
      * @param {mat4} coordinateSpace
      * @returns {RenderObject[]}
      */
-    public traverse(coordinateSpace: mat4 = mat4.create()): RenderObject[] {
+    public traverse(
+        coordinateSpace: mat4 = mat4.create(),
+        makeBones: boolean = false
+    ): RenderObject[] {
         const matrix = this.transformation.getTransformation();
         mat4.multiply(matrix, coordinateSpace, matrix);
 
-        return [
+        const renderObjects: RenderObject[] = [
             { ...this.geometry, transform: matrix },
-            ...flatMap(this.children, (c: Node) => c.traverse(matrix))
+            ...flatMap(this.children, (c: Node) => c.traverse(matrix, makeBones))
         ];
+
+        if (makeBones) {
+            this.appendBoneRenderObject(coordinateSpace, renderObjects);
+        }
+
+        return renderObjects;
     }
 }

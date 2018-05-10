@@ -1,5 +1,6 @@
 import { mat4, vec3 } from 'gl-matrix';
 import { flatMap } from 'lodash';
+import { BakedGeometry } from '../geometry/BakedGeometry';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
 import { Transformation } from './Transformation';
 
@@ -7,6 +8,36 @@ import { Transformation } from './Transformation';
  * A `Node` in a scene-graph.
  */
 export class Node {
+    private static boneVertices: vec3[] = [
+        vec3.fromValues(0, 0, 0),
+        vec3.fromValues(0.5, 0.25, 0),
+        vec3.fromValues(0.5, 0, -0.25),
+        vec3.fromValues(0.5, -0.25, 0),
+        vec3.fromValues(0.5, 0, 0.25),
+        vec3.fromValues(1, 0, 0)
+    ];
+
+    private static bone: BakedGeometry = {
+        vertices: Node.boneVertices,
+        normals: [
+            vec3.fromValues(-1, 0, 0),
+            vec3.fromValues(0, 1, 0),
+            vec3.fromValues(0, 0, -1),
+            vec3.fromValues(0, -1, 0),
+            vec3.fromValues(0, 0, 1),
+            vec3.fromValues(1, 0, 0)
+        ],
+        indices: [
+            0, 1, 2,
+            0, 2, 3,
+            0, 3, 4,
+            5, 2, 1,
+            5, 3, 2,
+            5, 4, 3
+        ],
+        colors: Node.boneVertices.map(() => vec3.fromValues(1, 1, 1))
+    };
+
     public readonly children: Node[];
     protected transformation: Transformation = new Transformation();
 
@@ -29,7 +60,8 @@ export class Node {
     }
 
     /**
-     * Sets the rotation for the node by updating the private `transformation` property.
+     * Sets the rotation for the node by updating the private `transformation`
+     * property.
      *
      * @param {vec3} rotation
      */
@@ -81,10 +113,49 @@ export class Node {
      * @param {mat4} coordinateSpace
      * @returns {RenderObject[]}
      */
-    public traverse(coordinateSpace: mat4 = mat4.create()): RenderObject[] {
+    public traverse(
+        coordinateSpace: mat4 = mat4.create(),
+        makeBones: boolean = false
+    ): RenderObject[] {
         const matrix = this.transformation.getTransformation();
         mat4.multiply(matrix, coordinateSpace, matrix);
 
-        return flatMap(this.children, (c: Node) => c.traverse(matrix));
+        const renderObjects: RenderObject[] = flatMap(this.children, (c: Node) =>
+            c.traverse(matrix, makeBones)
+        );
+
+        if (makeBones) {
+            this.appendBoneRenderObject(coordinateSpace, renderObjects);
+        }
+
+        return renderObjects;
+    }
+
+    /**
+     * TODO:
+     */
+    protected appendBoneRenderObject(parentMatrix: mat4, renderObjects: RenderObject[]) {
+        const transform: Transformation = new Transformation(
+            vec3.fromValues(0, 0, 0),
+            vec3.fromValues(
+                0,
+                Math.atan2(this.transformation.position[2], this.transformation.position[0]),
+                Math.atan2(this.transformation.position[1], this.transformation.position[0])
+            ),
+            vec3.fromValues(
+                Math.sqrt(
+                    Math.pow(this.transformation.position[0], 2) +
+                    Math.pow(this.transformation.position[1], 2) +
+                    Math.pow(this.transformation.position[2], 2)
+                ),
+                1,
+                1
+            )
+        );
+        const transformationMatrix = mat4.create();
+        mat4.multiply(transformationMatrix, parentMatrix, transform.getTransformation());
+
+        const boneRenderObject: RenderObject = { ...Node.bone, transform: transformationMatrix };
+        renderObjects.push(boneRenderObject);
     }
 }

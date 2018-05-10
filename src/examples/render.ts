@@ -4,6 +4,7 @@ import { Renderer } from '../renderer/Renderer';
 import { vec3 } from 'gl-matrix';
 import { range } from 'lodash';
 import { GeometryNode } from '../armature/GeometryNode';
+import { Node } from '../armature/Node';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
 const light2: Light = { lightPosition: [700, 500, 50], lightColor: [3, 3, 3], lightIntensity: 100 };
@@ -14,7 +15,6 @@ const renderer: Renderer = new Renderer(800, 600, 2);
 renderer.addLight(light1);
 renderer.addLight(light2);
 
-const transform = vec3.fromValues(0, 0, -4);
 const vertices: vec3[] = [];
 const normals: vec3[] = [];
 const indices: number[] = [];
@@ -53,12 +53,15 @@ colors.push(...vertices.map(() => vec3.fromValues(1, 0, 0)));
 
 document.body.appendChild(renderer.stage);
 
-renderer.camera.moveTo(vec3.fromValues(0, 0, 4));
+renderer.camera.moveTo(vec3.fromValues(0, 0, 8));
 renderer.camera.lookAt(vec3.fromValues(2, 0, -4));
 
 // Create the armature
 const geometryNode = new GeometryNode({ vertices, normals, indices, colors });
-geometryNode.setPosition(transform);
+geometryNode.setPosition(vec3.fromValues(0, 1, 0));
+
+const parentNode = new Node([geometryNode]);
+parentNode.setPosition(vec3.fromValues(0, 1, 0));
 
 // Draw the armature
-renderer.draw([geometryNode], true);
+renderer.draw([parentNode], { drawAxes: true, drawArmatureBones: true });

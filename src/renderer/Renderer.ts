@@ -10,6 +10,7 @@ import { mat4, vec4 } from 'gl-matrix';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 import { Node } from '../armature/Node';
+import { DebugParams } from './interfaces/DebugParams';
 
 // tslint:disable:no-unsafe-any
 
@@ -91,23 +92,26 @@ export class Renderer {
         this.drawAxes = createDrawAxes(regl);
     }
 
-    public draw(objects: Node[], debug: boolean = false) {
+    public draw(objects: Node[], debug: DebugParams = {}) {
         this.clearAll();
 
         this.drawObject(
-            flatMap(objects, (n: Node) => n.traverse()).map((o: RenderObject) => {
-                return {
-                    model: o.transform,
-                    cameraTransform: this.camera.getTransform(),
-                    projectionMatrix: this.projectionMatrix,
-                    positions: o.vertices,
-                    normals: o.normals,
-                    colors: o.colors,
-                    indices: o.indices,
-                    numLights: this.lights.length,
-                    lights: this.lights
-                };
-            })
+            flatMap(objects, (n: Node) => n.traverse(mat4.create(), debug.drawArmatureBones)).map(
+                (o: RenderObject) => {
+                    return {
+                        model: o.transform,
+                        cameraTransform: this.camera.getTransform(),
+                        projectionMatrix: this.projectionMatrix,
+                        positions: o.vertices,
+                        normals: o.normals,
+                        colors: o.colors,
+                        indices: o.indices,
+                        isShadeless: !!o.isShadeless,
+                        numLights: this.lights.length,
+                        lights: this.lights
+                    };
+                }
+            )
         );
 
         if (debug) {

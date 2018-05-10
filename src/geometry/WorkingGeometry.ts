@@ -1,4 +1,4 @@
-import { vec4 } from 'gl-matrix';
+import { vec3, vec4 } from 'gl-matrix';
 
 /**
  * A representation of a surface on an object.
@@ -38,4 +38,25 @@ export class WorkingGeometry {
      * must be equal to 0 to ensure that it is a point in Affine space.
      */
     public controlPoints: vec4[];
+
+    /**
+     * Return the BakedGeometry representing the current state of the WorkingGeomtry.
+     *
+     * @returns {BakedGeometry}
+     */
+    public bake() {
+        const bakedVertices = this.vertices.map((workingVec: vec4) =>
+            vec3.fromValues(workingVec[0], workingVec[1], workingVec[2])
+        );
+        const bakedIndecies = this.faces.reduce((accum: number[], face: Face) => {
+            return accum.concat(face.indices);
+        }, []);
+        const bakedNormals = this.faces.map((face: Face) => face.normal);
+
+        return {
+            vertices: bakedVertices,
+            normals: bakedNormals,
+            indices: bakedIndecies
+        };
+    }
 }

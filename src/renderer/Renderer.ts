@@ -95,21 +95,20 @@ export class Renderer {
         this.clearAll();
 
         this.drawObject(
-            flatMap(objects, (n: Node) => n.traverse())
-                .map((o: RenderObject) => {
-                    return {
-                        model: o.transform,
-                        cameraTransform: this.camera.getTransform(),
-                        projectionMatrix: this.projectionMatrix,
-                        positions: o.vertices,
-                        normals: o.normals,
-                        colors: o.colors,
-                        indices: o.indices,
-                        numLights: this.lights.length,
-                        lights: this.lights
-                    }
-                })
-        )
+            flatMap(objects, (n: Node) => n.traverse()).map((o: RenderObject) => {
+                return {
+                    model: o.transform,
+                    cameraTransform: this.camera.getTransform(),
+                    projectionMatrix: this.projectionMatrix,
+                    positions: o.vertices,
+                    normals: o.normals,
+                    colors: o.colors,
+                    indices: o.indices,
+                    numLights: this.lights.length,
+                    lights: this.lights
+                };
+            })
+        );
 
         if (debug) {
             this.drawCrosshairs();

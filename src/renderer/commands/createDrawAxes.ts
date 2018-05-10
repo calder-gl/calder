@@ -20,7 +20,9 @@ export interface DrawAxesProps {
 /*
  * Shader to draw axes in the corner of the screen
  */
-export function createDrawAxes(regl: REGL.Regl): REGL.DrawCommand<REGL.DefaultContext, DrawAxesProps> {
+export function createDrawAxes(
+    regl: REGL.Regl
+): REGL.DrawCommand<REGL.DefaultContext, DrawAxesProps> {
     return regl<{}, Attributes, DrawAxesProps>({
         vert: `
             precision mediump float;

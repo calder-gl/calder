@@ -100,7 +100,11 @@ export class Renderer {
 
         const renderObjects = objects.reduce(
             (accum: NodeRenderObject, node: Node) => {
-                const childObjects = node.traverse(mat4.create(), true, debug.drawArmatureBones === true);
+                const childObjects = node.traverse(
+                    mat4.create(),
+                    true,
+                    debug.drawArmatureBones === true
+                );
                 accum.geometry.push(...childObjects.geometry);
                 accum.bones.push(...childObjects.bones);
 

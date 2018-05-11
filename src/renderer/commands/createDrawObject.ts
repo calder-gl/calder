@@ -14,7 +14,7 @@ interface Uniforms {
     lightPositions: REGL.Vec3[];
     lightColors: REGL.Vec3[];
     lightIntensities: number[];
-    inShaded: boolean;
+    isShadeless: boolean;
 }
 
 interface Attributes {
@@ -34,7 +34,7 @@ export interface DrawObjectProps {
     normals: REGL.Vec3[];
     colors: REGL.Vec3[];
     indices: number[];
-    inShaded: boolean;
+    isShadeless: boolean;
 }
 
 /**

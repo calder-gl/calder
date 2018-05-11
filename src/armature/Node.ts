@@ -125,16 +125,19 @@ export class Node {
         mat4.multiply(currentMatrix, parentMatrix, currentMatrix);
 
         const objects: NodeRenderObject = this.children.reduce(
-            (n: NodeRenderObject, c: Node) => {
-                const childRenderObject: NodeRenderObject = c.traverse(
+            (accum: NodeRenderObject, child: Node) => {
+                const childRenderObject: NodeRenderObject = child.traverse(
                     currentMatrix,
                     false,
                     makeBones
                 );
-                n.geometry.push(...childRenderObject.geometry);
-                n.bones.push(...childRenderObject.bones);
 
-                return n;
+                // Merge the geometry and bones from each child into one long list of geometry and
+                // one long list of bones for all children
+                accum.geometry.push(...childRenderObject.geometry);
+                accum.bones.push(...childRenderObject.bones);
+
+                return accum;
             },
             { geometry: [], bones: [] }
         );
@@ -157,12 +160,19 @@ export class Node {
      */
     protected boneRenderObject(parentMatrix: mat4): RenderObject {
         const transform: Transformation = new Transformation(
+            // Since the bone will start at the parent node's origin, we do not need to translate it
             vec3.fromValues(0, 0, 0),
+
+            // Rotate the bone so it points from the parent node's origin to the current node's
+            // origin
             vec3.fromValues(
                 0,
                 Math.atan2(this.transformation.position[2], this.transformation.position[0]),
                 Math.atan2(this.transformation.position[1], this.transformation.position[0])
             ),
+
+            // Scale the bone so its length is equal to the length between the parent node's origin
+            // and the current node's origin
             vec3.fromValues(
                 Math.sqrt(
                     Math.pow(this.transformation.position[0], 2) +

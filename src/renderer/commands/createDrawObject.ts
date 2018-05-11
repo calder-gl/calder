@@ -14,6 +14,7 @@ interface Uniforms {
     lightPositions: REGL.Vec3[];
     lightColors: REGL.Vec3[];
     lightIntensities: number[];
+    isShadeless: boolean;
 }
 
 interface Attributes {
@@ -33,6 +34,7 @@ export interface DrawObjectProps {
     normals: REGL.Vec3[];
     colors: REGL.Vec3[];
     indices: number[];
+    isShadeless: boolean;
 }
 
 /**
@@ -81,27 +83,34 @@ export function createDrawObject(
             uniform vec3 lightPositions[MAX_LIGHTS];
             uniform vec3 lightColors[MAX_LIGHTS];
             uniform float lightIntensities[MAX_LIGHTS];
+            uniform bool isShadeless;
 
             void main() {
                 vec3 normal = normalize(vertexNormal);
                 vec3 color = vec3(0.0, 0.0, 0.0);
 
-                for (int i = 0; i < MAX_LIGHTS; i++) {
-                    if (i >= numLights) break;
+                if (isShadeless) {
+                    color = vertexColor;
+                } else {
+                    // Use the renderer lights in the shader
+                    for (int i = 0; i < MAX_LIGHTS; i++) {
+                        if (i >= numLights) break;
 
-                    vec3 lightPosition = (view * vec4(lightPositions[i], 1.0)).xyz;
-                    vec3 lightDir = normalize(lightPosition - vertexPosition);
-                    float lambertian = max(dot(lightDir, normal), 0.0);
+                        vec3 lightPosition = (view * vec4(lightPositions[i], 1.0)).xyz;
+                        vec3 lightDir = normalize(lightPosition - vertexPosition);
+                        float lambertian = max(dot(lightDir, normal), 0.0);
 
-                    color += lambertian * vertexColor;
+                        color += lambertian * vertexColor;
 
-                    vec3 viewDir = normalize(-vertexPosition);
-                    float spec = pow(
-                        max(dot(viewDir, reflect(-lightDir, normal)), 0.0),
-                        lightIntensities[i]);
+                        vec3 viewDir = normalize(-vertexPosition);
+                        float spec = pow(
+                            max(dot(viewDir, reflect(-lightDir, normal)), 0.0),
+                            lightIntensities[i]);
 
-                    color += spec * lightColors[i];
+                        color += spec * lightColors[i];
+                    }
                 }
+
                 gl_FragColor = vec4(color, 1.0);
             }
         `,
@@ -115,6 +124,7 @@ export function createDrawObject(
             view: regl.prop('cameraTransform'),
             model: regl.prop('model'),
             numLights: regl.prop('numLights'),
+            isShadeless: regl.prop('isShadeless'),
             ...buildLightMetadata(maxLights)
         },
         elements: regl.prop('indices')

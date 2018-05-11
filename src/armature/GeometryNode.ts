@@ -1,8 +1,7 @@
 import { mat4 } from 'gl-matrix';
-import { flatMap } from 'lodash';
 import { BakedGeometry } from '../geometry/BakedGeometry';
-import { RenderObject } from '../renderer/interfaces/RenderObject';
 import { Node } from './Node';
+import { NodeRenderObject } from './NodeRenderObject';
 
 /**
  * A derived `Node` with an additional `geometry` property.
@@ -28,13 +27,14 @@ export class GeometryNode extends Node {
      * @param {mat4} coordinateSpace
      * @returns {RenderObject[]}
      */
-    public traverse(coordinateSpace: mat4 = mat4.create()): RenderObject[] {
-        const matrix = this.transformation.getTransformation();
-        mat4.multiply(matrix, coordinateSpace, matrix);
+    public traverse(coordinateSpace: mat4, isRoot: boolean, makeBones: boolean): NodeRenderObject {
+        const { currentMatrix, objects } = this.traverseChildren(
+            coordinateSpace,
+            isRoot,
+            makeBones
+        );
+        objects.geometry.push({ ...this.geometry, transform: currentMatrix });
 
-        return [
-            { ...this.geometry, transform: matrix },
-            ...flatMap(this.children, (c: Node) => c.traverse(matrix))
-        ];
+        return objects;
     }
 }

@@ -1,4 +1,4 @@
-import { vec3, vec4 } from 'gl-matrix';
+import { mat4, vec3, vec4 } from 'gl-matrix';
 import { GeometryNode } from '../../src/armature/GeometryNode';
 import { Node } from '../../src/armature/Node';
 import { BakedGeometry } from '../../src/geometry/BakedGeometry';
@@ -31,7 +31,8 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(1, 0, 1, 1);
 
-            const renderObjects: RenderObject[] = root.traverse().renderObjects;
+            const renderObjects: RenderObject[] = root.traverse(mat4.create(), true, false)
+                .geometry;
 
             expect(renderObjects.length).toBe(1);
 
@@ -58,13 +59,46 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(0, 1, 0, 1);
 
-            const renderObjects: RenderObject[] = root.traverse().renderObjects;
+            const renderObjects: RenderObject[] = root.traverse(mat4.create(), true, false)
+                .geometry;
 
             expect(renderObjects.length).toBe(1);
 
             const transformedPoint = vec4.create();
             vec4.transformMat4(transformedPoint, inputPoint, renderObjects[0].transform);
             expect(transformedPoint).toEqualVec4(expectedPoint);
+        });
+
+        it('shows bones when asked', () => {
+            const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };
+            const geometryChild = new GeometryNode(geometry);
+            const root = new Node([geometryChild]);
+
+            geometryChild.setPosition(vec3.fromValues(1, 1, 0));
+
+            /**
+             * The bone should start at the root position (0, 0, 0) and stretch to the base of the
+             * geometry node (1, 1, 0). Here we create a point representing the base of the bone
+             * (which is (0, 0, 0) in its relative coordinate space) and the tip of the bone (which
+             * is (1, 0, 0)), and the expected positions for these points in world space so that we
+             * can assert that the endpoints get transformed to the expected world space points.
+             */
+            const boneSpaceBase = vec4.fromValues(0, 0, 0, 1);
+            const boneSpaceTip = vec4.fromValues(1, 0, 0, 1);
+
+            const expectedWorldSpaceBase = vec4.fromValues(0, 0, 0, 1);
+            const expectedWorldSpaceTip = vec4.fromValues(1, 1, 0, 1);
+
+            const bones: RenderObject[] = root.traverse(mat4.create(), true, true).bones;
+            expect(bones.length).toBe(1);
+
+            const transformedBase = vec4.create();
+            vec4.transformMat4(transformedBase, boneSpaceBase, bones[0].transform);
+            expect(transformedBase).toEqualVec4(expectedWorldSpaceBase);
+
+            const transformedTip = vec4.create();
+            vec4.transformMat4(transformedTip, boneSpaceTip, bones[0].transform);
+            expect(transformedTip).toEqualVec4(expectedWorldSpaceTip);
         });
     });
 });

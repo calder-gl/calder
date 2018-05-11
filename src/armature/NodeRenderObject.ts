@@ -1,6 +1,6 @@
 import { RenderObject } from '../renderer/interfaces/RenderObject';
 
 export type NodeRenderObject = {
-    renderObjects: RenderObject[];
+    geometry: RenderObject[];
     bones: RenderObject[];
 };

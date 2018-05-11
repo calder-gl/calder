@@ -25,12 +25,13 @@ export class Transformation {
      * @returns {mat4}
      */
     public getTransformation(): mat4 {
-        const matrix = mat4.fromScaling(mat4.create(), this.scale);
+        const matrix = mat4.create();
 
+        mat4.translate(matrix, matrix, this.position);
         mat4.rotateX(matrix, matrix, this.rotation[0]);
         mat4.rotateY(matrix, matrix, this.rotation[1]);
         mat4.rotateZ(matrix, matrix, this.rotation[2]);
-        mat4.translate(matrix, matrix, this.position);
+        mat4.scale(matrix, matrix, this.scale);
 
         return matrix;
     }

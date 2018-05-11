@@ -1,4 +1,4 @@
-import { flatMap } from 'lodash';
+import { NodeRenderObject } from '../armature/NodeRenderObject';
 import { createDrawAxes, DrawAxesProps } from './commands/createDrawAxes';
 import { createDrawObject, DrawObjectProps } from './commands/createDrawObject';
 import { Light } from './interfaces/Light';
@@ -98,11 +98,19 @@ export class Renderer {
     ) {
         this.clearAll();
 
+        const renderObjects = objects.reduce(
+            (accum: NodeRenderObject, node: Node) => {
+                const childObjects = node.traverse(mat4.create(), true, debug.drawArmatureBones === true);
+                accum.geometry.push(...childObjects.geometry);
+                accum.bones.push(...childObjects.bones);
+
+                return accum;
+            },
+            { geometry: [], bones: [] }
+        );
+
         this.drawObject(
-            flatMap(
-                objects,
-                (n: Node) => n.traverse(mat4.create(), debug.drawArmatureBones).renderObjects
-            ).map((o: RenderObject) => {
+            renderObjects.geometry.map((o: RenderObject) => {
                 return {
                     model: o.transform,
                     cameraTransform: this.camera.getTransform(),
@@ -111,14 +119,35 @@ export class Renderer {
                     normals: o.normals,
                     colors: o.colors,
                     indices: o.indices,
-                    isShadeless: !!o.isShadeless,
+                    isShadeless: o.isShadeless === true,
                     numLights: this.lights.length,
                     lights: this.lights
                 };
             })
         );
 
-        if (debug.drawAxes) {
+        if (debug.drawArmatureBones === true && renderObjects.bones.length > 0) {
+            this.clearDepth();
+
+            this.drawObject(
+                renderObjects.bones.map((o: RenderObject) => {
+                    return {
+                        model: o.transform,
+                        cameraTransform: this.camera.getTransform(),
+                        projectionMatrix: this.projectionMatrix,
+                        positions: o.vertices,
+                        normals: o.normals,
+                        colors: o.colors,
+                        indices: o.indices,
+                        isShadeless: o.isShadeless === true,
+                        numLights: this.lights.length,
+                        lights: this.lights
+                    };
+                })
+            );
+        }
+
+        if (debug.drawAxes === true) {
             this.drawCrosshairs();
         }
     }

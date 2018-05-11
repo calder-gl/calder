@@ -58,7 +58,7 @@ renderer.camera.lookAt(vec3.fromValues(2, 0, -4));
 
 // Create the armature
 const geometryNode = new GeometryNode({ vertices, normals, indices, colors });
-geometryNode.setPosition(vec3.fromValues(0, 1, 0));
+geometryNode.setPosition(vec3.fromValues(1, 1, 0));
 
 const parentNode = new Node([geometryNode]);
 parentNode.setPosition(vec3.fromValues(0, 1, 0));

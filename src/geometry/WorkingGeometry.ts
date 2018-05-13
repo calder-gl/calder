@@ -1,4 +1,5 @@
 import { vec3, vec4 } from 'gl-matrix';
+import { Affine } from '../utils/affine';
 import { BakedGeometry } from './BakedGeometry';
 
 /**
@@ -16,6 +17,17 @@ export class Face {
      * n[3] = 1 to ensure that it is a vector in Affine space.
      */
     public normal: vec4;
+
+    /**
+     * @param {number[]} indices: Reference indeces of vertices in a WorkingGeometry.
+     * @param {vec4} normal: A fector representing the direction out of the face.
+     * @return {Face}
+     */
+    constructor(indices: number[], normal: vec3) {
+        // TODO(pbardea): Verify length of indices here.
+        this.indices = indices;
+        this.normal = Affine.createVector(normal);
+    }
 }
 
 /**
@@ -39,6 +51,21 @@ export class WorkingGeometry {
      * must be equal to 0 to ensure that it is a point in Affine space.
      */
     public controlPoints: vec4[];
+
+    /**
+     * Creates a working geometry from a given set of vertices, faces, and control points.
+     *
+     * @param {vec3[]} vertices: The points that make up the geometry.
+     * @param {Face[]} faces: The surfaces of the object, relating the vertices to eachother.
+     * @param {vec3[]} controlPoints: A set of points to snap to or reference.
+     * @return {WorkingGeometry}
+     */
+    constructor(vertices: vec3[] = [], faces: Face[] = [], controlPoints: vec3[] = []) {
+        // TODO(pbardea): Check if max(indecies) of all faces is <= the len(vertices)
+        this.vertices = vertices.map(Affine.createPoint);
+        this.faces = faces;
+        this.controlPoints = controlPoints.map(Affine.createPoint);
+    }
 
     /**
      * Return the BakedGeometry representing the current state of the WorkingGeomtry.

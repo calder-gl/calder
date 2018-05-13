@@ -112,7 +112,7 @@ export class WorkingGeometry {
     }
 
     /**
-     * Merge the child objects into the current one updating the current vertices, faces, and
+     * Merge the child objects into the current one by updating the current vertices, faces, and
      * control points.
      */
     protected combine() {

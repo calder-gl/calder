@@ -129,10 +129,6 @@ describe('WorkingGeometry', () => {
             const indexStride = 3;
             const normalCount = bakedObject.indices.length / indexStride;
             const expectedNormals: vec3[] = range(normalCount).map(() => vec3.fromValues(0, 0, 1));
-            const expectedNormals: vec3[] = [];
-            for (let i = 0; i < normalCount; i += 1) {
-                expectedNormals.push(vec3.fromValues(0, 0, 1));
-            }
             expect(bakedObject.normals).toEqual(expectedNormals);
         });
     });

@@ -112,8 +112,8 @@ export class WorkingGeometry {
     }
 
     /**
-     * Update the current vertices, faces, and control points performing the computation of merging
-     * child objects.
+     * Merge the child objects into the current one updating the current vertices, faces, and
+     * control points.
      */
     protected combine() {
         this.mergedObjects.forEach((child: WorkingGeometry) => {

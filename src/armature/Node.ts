@@ -125,7 +125,9 @@ export class Node {
      * Returns an array of `RenderObject`s denoting `GeometryNode`s
      * transformations multiplied by the `coordinateSpace` parameter.
      *
-     * @param {mat4} coordinateSpace
+     * @param {mat4} coordinateSpace The coordinate space this node resides in.
+     * @param {boolean} isRoot Whether or not this node is attached to another armature node.
+     * @param {boolean} makeBones Whether or not the armature heirarchy should be visualized.
      * @returns {NodeRenderObject} The geometry for this armature subtree, and possibly geometry
      * representing the armature itself.
      */
@@ -233,8 +235,11 @@ export class GeometryNode extends Node {
      * Returns an array of `RenderObject`s denoting `GeometryNode`s
      * transformations multiplied by the `coordinateSpace` parameter.
      *
-     * @param {mat4} coordinateSpace
-     * @returns {RenderObject[]}
+     * @param {mat4} coordinateSpace The coordinate space this node resides in.
+     * @param {boolean} isRoot Whether or not this node is attached to another armature node.
+     * @param {boolean} makeBones Whether or not the armature heirarchy should be visualized.
+     * @returns {NodeRenderObject} The geometry for this armature subtree, and possibly geometry
+     * representing the armature itself.
      */
     public traverse(coordinateSpace: mat4, isRoot: boolean, makeBones: boolean): NodeRenderObject {
         const { currentMatrix, objects } = this.traverseChildren(
@@ -248,20 +253,40 @@ export class GeometryNode extends Node {
     }
 }
 
+/**
+ * A point on an armature that other armature nodes can attach to.
+ */
 class Point {
     public readonly node: Node;
     public readonly position: vec3;
 
+    /**
+     * @param {Node} node The node that this point is in the coordinate space of.
+     * @param {vec3} position The position of this point relative to its node's origin.
+     */
     constructor(node: Node, position: vec3) {
         this.node = node;
         this.position = position;
     }
 
+    /**
+     * Attaches the current node to the specified target node at the given point.
+     *
+     * @param {Point} target The point on another node that the current one should be attached to.
+     */
     public stickTo(target: Point) {
+        if (target.node === this.node) {
+            throw new Error('Cannot attach a point to another point on the same node');
+        }
         target.node.addChild(this.node);
         this.node.setPosition(vec3.subtract(vec3.create(), target.position, this.position));
     }
 
+    /**
+     * Attaches the specified geometry to the current point on a node.
+     *
+     * @param {BakedGeometry} geometry The geometry to attach to the current point.
+     */
     public attach(geometry: BakedGeometry) {
         const geometryNode = new GeometryNode(geometry);
         geometryNode.setPosition(this.position);

@@ -1,11 +1,38 @@
 import { mat4, vec3, vec4 } from 'gl-matrix';
-import { GeometryNode } from '../../src/armature/GeometryNode';
-import { Node } from '../../src/armature/Node';
+import { Armature } from '../../src/armature/Armature';
+import { GeometryNode, Node } from '../../src/armature/Node';
 import { BakedGeometry } from '../../src/geometry/BakedGeometry';
 import { RenderObject } from '../../src/renderer/interfaces/RenderObject';
 import '../glMatrix';
 
+const bone = Armature.define((root: Node) => {
+    root.createPoint('base', vec3.fromValues(0, 0, 0));
+    root.createPoint('tip', vec3.fromValues(0, 1, 0));
+});
+
 describe('Node', () => {
+    describe('stickTo', () => {
+        it('positions the current node in the proper position in the parent coordinate space', () => {
+            const parent = bone();
+            const child = bone();
+
+            child.point('base').stickTo(parent.point('tip'));
+            expect(parent.children.length).toBe(1);
+            expect(child.getPosition()).toEqualVec3(vec3.fromValues(0, 1, 0));
+        });
+    });
+
+    describe('attach', () => {
+        it('creates a GeometryNode for the attached geometry', () => {
+            const parent = bone();
+            const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };
+
+            parent.point('tip').attach(geometry);
+            expect(parent.children.length).toBe(1);
+            expect(parent.children[0].getPosition()).toEqualVec3(vec3.fromValues(0, 1, 0));
+        });
+    });
+
     describe('traverse', () => {
         it("flattens the parent's coordinate space and returns an array of `RenderObject`s", () => {
             const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };

@@ -27,12 +27,17 @@ export class Node {
             vec3.fromValues(0, 0, 1),
             vec3.fromValues(1, 0, 0)
         ],
-        indices: [0, 1, 2, 0, 2, 3, 0, 3, 4, 5, 2, 1, 5, 3, 2, 5, 4, 3],
-        colors: Node.boneVertices.map(() => vec3.fromValues(1, 1, 1))
+        indices: [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1, 5, 2, 1, 5, 3, 2, 5, 4, 3, 5, 1, 4],
+
+        // Map x, y, z to r, g, b to give a sense of bone orientation
+        colors: Node.boneVertices.map((v: vec3) =>
+            vec3.fromValues(v[0], v[1] / 0.1 + 0.1, v[2] / 0.1 + 0.1)
+        )
     };
 
     public readonly children: Node[];
     protected transformation: Transformation = new Transformation();
+    private points: { [key: string]: Point } = {};
 
     /**
      * Instantiates a new `Node`.
@@ -41,6 +46,23 @@ export class Node {
      */
     constructor(children: Node[] = []) {
         this.children = children;
+    }
+
+    public createPoint(name: string, position: vec3) {
+        this.points[name] = new Point(this, position);
+    }
+
+    public point(name: string): Point {
+        const point = this.points[name];
+        if (point === undefined) {
+            throw new Error(`Could not find a point named ${name}`);
+        }
+
+        return point;
+    }
+
+    public addChild(child: Node) {
+        this.children.push(child);
     }
 
     /**
@@ -187,5 +209,62 @@ export class Node {
         mat4.multiply(transformationMatrix, parentMatrix, transform.getTransformation());
 
         return { ...Node.bone, transform: transformationMatrix, isShadeless: true };
+    }
+}
+
+/**
+ * A derived `Node` with an additional `geometry` property.
+ */
+export class GeometryNode extends Node {
+    public readonly geometry: BakedGeometry;
+
+    /**
+     * Instantiates a new `GeometryNode`.
+     *
+     * @param {BakedGeometry} geometry
+     * @param {Node[]} children
+     */
+    constructor(geometry: BakedGeometry, children: Node[] = []) {
+        super(children);
+        this.geometry = geometry;
+    }
+
+    /**
+     * Returns an array of `RenderObject`s denoting `GeometryNode`s
+     * transformations multiplied by the `coordinateSpace` parameter.
+     *
+     * @param {mat4} coordinateSpace
+     * @returns {RenderObject[]}
+     */
+    public traverse(coordinateSpace: mat4, isRoot: boolean, makeBones: boolean): NodeRenderObject {
+        const { currentMatrix, objects } = this.traverseChildren(
+            coordinateSpace,
+            isRoot,
+            makeBones
+        );
+        objects.geometry.push({ ...this.geometry, transform: currentMatrix });
+
+        return objects;
+    }
+}
+
+class Point {
+    public readonly node: Node;
+    public readonly position: vec3;
+
+    constructor(node: Node, position: vec3) {
+        this.node = node;
+        this.position = position;
+    }
+
+    public stickTo(target: Point) {
+        target.node.addChild(this.node);
+        this.node.setPosition(vec3.subtract(vec3.create(), target.position, this.position));
+    }
+
+    public attach(geometry: BakedGeometry) {
+        const geometryNode = new GeometryNode(geometry);
+        geometryNode.setPosition(this.position);
+        this.node.addChild(geometryNode);
     }
 }

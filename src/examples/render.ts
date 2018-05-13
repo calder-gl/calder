@@ -1,15 +1,19 @@
+import { Armature } from '../armature/Armature';
+import { Node } from '../armature/Node';
 import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
 
 import { vec3 } from 'gl-matrix';
 import { range } from 'lodash';
-import { GeometryNode } from '../armature/GeometryNode';
-import { Node } from '../armature/Node';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
 const light2: Light = { lightPosition: [700, 500, 50], lightColor: [3, 3, 3], lightIntensity: 100 };
 
 const renderer: Renderer = new Renderer(800, 600, 2);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Step 1: create geometry
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Add lights to the renderer
 renderer.addLight(light1);
@@ -24,7 +28,7 @@ const numLat = 20;
 const numLong = 20;
 
 // Generate the normals and vertices arrays
-range(numLat).forEach((lat: number) => {
+range(numLat + 1).forEach((lat: number) => {
     const theta = lat * Math.PI / numLat;
 
     range(numLong).forEach((long: number) => {
@@ -35,33 +39,61 @@ range(numLat).forEach((lat: number) => {
 
         normals.push(vec3.fromValues(x, y, z));
         vertices.push(vec3.fromValues(x, y, z));
+        colors.push(vec3.fromValues(Math.random(), Math.random(), Math.random()));
     });
 });
 
 // Generate indices array
 range(numLat - 1).forEach((lat: number) => {
-    range(numLong - 1).forEach((long: number) => {
-        const first = lat * numLong + long;
-        const second = first + numLong;
+    range(numLong).forEach((long: number) => {
+        const topLeft = lat * numLong + long;
+        const bottomLeft = topLeft + numLong;
+        const topRight = ((lat + 1) % numLat) * numLong + (long + 1) % numLong;
+        const bottomRight = topRight + numLong;
 
-        indices.push(first, second, first + 1);
-        indices.push(second, second + 1, first + 1);
+        indices.push(topLeft, bottomLeft, topRight);
+        indices.push(bottomLeft, bottomRight, topRight);
     });
 });
 
-colors.push(...vertices.map(() => vec3.fromValues(1, 0, 0)));
+const sphere = { vertices, normals, indices, colors };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Step 2: create armature
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+const bone = Armature.define((root: Node) => {
+    root.createPoint('base', vec3.fromValues(0, 0, 0));
+    root.createPoint('tip', vec3.fromValues(0, 1, 0));
+});
+
+const tower = bone();
+
+let top = tower;
+range(5).forEach(() => {
+    const nextPiece = bone();
+    nextPiece.point('base').stickTo(top.point('tip'));
+    nextPiece.point('base').attach(sphere);
+    nextPiece.setRotation(vec3.fromValues(Math.random() - 0.5, Math.random() - 0.5, 0));
+
+    top = nextPiece;
+});
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Step 3: set up renderer
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 document.body.appendChild(renderer.stage);
 
 renderer.camera.moveTo(vec3.fromValues(0, 0, 8));
-renderer.camera.lookAt(vec3.fromValues(2, 0, -4));
-
-// Create the armature
-const geometryNode = new GeometryNode({ vertices, normals, indices, colors });
-geometryNode.setPosition(vec3.fromValues(1, 1, 0));
-
-const parentNode = new Node([geometryNode]);
-parentNode.setPosition(vec3.fromValues(0, 1, 0));
+renderer.camera.lookAt(vec3.fromValues(2, 2, -4));
 
 // Draw the armature
-renderer.draw([parentNode], { drawAxes: true, drawArmatureBones: true });
+let rotation = 0;
+const draw = () => {
+    rotation += 0.01;
+    tower.setRotation(vec3.fromValues(0, rotation, 0));
+    renderer.draw([tower], { drawAxes: true, drawArmatureBones: true });
+    window.requestAnimationFrame(draw);
+};
+draw();

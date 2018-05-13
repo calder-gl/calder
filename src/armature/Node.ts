@@ -49,6 +49,7 @@ export class Node {
     }
 
     public createPoint(name: string, position: vec3) {
+        // tslint:disable-next-line:no-use-before-declare
         this.points[name] = new Point(this, position);
     }
 

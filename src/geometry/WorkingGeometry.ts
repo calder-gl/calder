@@ -53,6 +53,11 @@ export class WorkingGeometry {
     public controlPoints: vec4[];
 
     /**
+     * A set of merged objects which are only collapsed into the parent object during baking.
+     */
+    private mergedObjects: WorkingGeometry[];
+
+    /**
      * Creates a working geometry from a given set of vertices, faces, and control points.
      *
      * @param {vec3[]} vertices: The points that make up the geometry.
@@ -65,6 +70,16 @@ export class WorkingGeometry {
         this.vertices = vertices.map(Affine.createPoint);
         this.faces = faces;
         this.controlPoints = controlPoints.map(Affine.createPoint);
+        this.mergedObjects = [];
+    }
+
+    /**
+     * Merge a WorkingGeometry into the current one.
+     *
+     * @param {WorkingGeometry} child: The geometry to be merged.
+     */
+    public merge(child: WorkingGeometry) {
+        this.mergedObjects.push(child);
     }
 
     /**
@@ -73,6 +88,8 @@ export class WorkingGeometry {
      * @returns {BakedGeometry}
      */
     public bake(): BakedGeometry {
+        this.combine();
+
         const bakedVertices = this.vertices.map((workingVec: vec4) =>
             vec3.fromValues(workingVec[0], workingVec[1], workingVec[2])
         );
@@ -83,7 +100,7 @@ export class WorkingGeometry {
             return vec3.fromValues(face.normal[0], face.normal[1], face.normal[2]);
         });
 
-        // Make all of the baked shapes red for now.
+        // Make all of the baked shapes red for now
         const bakedColors: vec3[] = bakedVertices.map(() => vec3.fromValues(1, 0, 0));
 
         return {
@@ -92,5 +109,26 @@ export class WorkingGeometry {
             indices: bakedIndecies,
             colors: bakedColors
         };
+    }
+
+    /**
+     * Merge the child objects into the current one by updating the current vertices, faces, and
+     * control points.
+     */
+    protected combine() {
+        this.mergedObjects.forEach((child: WorkingGeometry) => {
+            child.combine();
+        });
+        let vertexCount = this.vertices.length;
+        for (const child of this.mergedObjects) {
+            this.vertices = this.vertices.concat(child.vertices);
+            child.faces.forEach((face: Face) => {
+                const newIndices = face.indices.map((i: number) => i + vertexCount);
+                face.indices = newIndices;
+            });
+            this.faces = this.faces.concat(child.faces);
+            this.controlPoints = this.controlPoints.concat(child.controlPoints);
+            vertexCount += child.vertices.length;
+        }
     }
 }

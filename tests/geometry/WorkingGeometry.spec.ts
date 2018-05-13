@@ -2,6 +2,7 @@ import { Face, WorkingGeometry } from '../../src/geometry/WorkingGeometry';
 import { TestHelper } from '../utils/helper';
 
 import { vec3, vec4 } from 'gl-matrix';
+import { range } from 'lodash';
 
 import '../glMatrix';
 
@@ -127,6 +128,7 @@ describe('WorkingGeometry', () => {
             // Normals should be an array of 8 (indices/3) [0, 0, 1] vectors
             const indexStride = 3;
             const normalCount = bakedObject.indices.length / indexStride;
+            const expectedNormals: vec3[] = range(normalCount).map(() => vec3.fromValues(0, 0, 1));
             const expectedNormals: vec3[] = [];
             for (let i = 0; i < normalCount; i += 1) {
                 expectedNormals.push(vec3.fromValues(0, 0, 1));

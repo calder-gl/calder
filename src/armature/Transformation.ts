@@ -8,7 +8,11 @@ export class Transformation {
     private rotation: vec3 | (() => vec3);
     private scale: vec3 | (() => vec3);
 
-    constructor(position: vec3 | (() => vec3), rotation: vec3 | (() => vec3), scale: vec3 | (() => vec3)) {
+    constructor(
+        position: vec3 | (() => vec3),
+        rotation: vec3 | (() => vec3),
+        scale: vec3 | (() => vec3)
+    ) {
         this.position = position;
         this.rotation = rotation;
         this.scale = scale;
@@ -22,7 +26,7 @@ export class Transformation {
      */
     public getTransformation(): mat4 {
         const matrix = mat4.create();
-        const rotation = this.getRotation()
+        const rotation = this.getRotation();
 
         mat4.translate(matrix, matrix, this.getPosition());
         mat4.rotateX(matrix, matrix, rotation[0]);
@@ -34,7 +38,7 @@ export class Transformation {
     }
 
     public getPosition(): vec3 {
-        return (this.position instanceof Function) ? this.position() : this.position;
+        return this.position instanceof Function ? this.position() : this.position;
     }
 
     public setPosition(position: vec3 | (() => vec3)) {
@@ -42,7 +46,7 @@ export class Transformation {
     }
 
     public getRotation(): vec3 {
-        return (this.rotation instanceof Function) ? this.rotation() : this.rotation;
+        return this.rotation instanceof Function ? this.rotation() : this.rotation;
     }
 
     public setRotation(rotation: vec3 | (() => vec3)) {
@@ -50,7 +54,7 @@ export class Transformation {
     }
 
     public getScale(): vec3 {
-        return (this.scale instanceof Function) ? this.scale() : this.scale;
+        return this.scale instanceof Function ? this.scale() : this.scale;
     }
 
     public setScale(scale: vec3 | (() => vec3)) {

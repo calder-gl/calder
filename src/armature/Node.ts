@@ -207,9 +207,7 @@ export class Node {
             // and the current node's origin
             vec3.fromValues(
                 Math.sqrt(
-                    Math.pow(position[0], 2) +
-                    Math.pow(position[1], 2) +
-                    Math.pow(position[2], 2)
+                    Math.pow(position[0], 2) + Math.pow(position[1], 2) + Math.pow(position[2], 2)
                 ),
                 1,
                 1

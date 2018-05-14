@@ -36,7 +36,7 @@ export class Node {
     };
 
     public readonly children: Node[];
-    protected transformation: Transformation = new Transformation();
+    protected transformation: Transformation;
     private points: { [key: string]: Point } = {};
 
     /**
@@ -44,8 +44,14 @@ export class Node {
      *
      * @param {Node[]} children
      */
-    constructor(children: Node[] = []) {
+    constructor(
+        children: Node[] = [],
+        position: vec3 | (() => vec3) = vec3.fromValues(0, 0, 0),
+        rotation: vec3 | (() => vec3) = vec3.fromValues(0, 0, 0),
+        scale: vec3 | (() => vec3) = vec3.fromValues(1, 1, 1)
+    ) {
         this.children = children;
+        this.transformation = new Transformation(position, rotation, scale);
     }
 
     public createPoint(name: string, position: vec3) {
@@ -72,7 +78,7 @@ export class Node {
      * @returns {vec3}
      */
     public getRotation(): vec3 {
-        return this.transformation.rotation;
+        return this.transformation.getRotation();
     }
 
     /**
@@ -81,8 +87,8 @@ export class Node {
      *
      * @param {vec3} rotation
      */
-    public setRotation(rotation: vec3) {
-        this.transformation.rotation = rotation;
+    public setRotation(rotation: vec3 | (() => vec3)) {
+        this.transformation.setRotation(rotation);
     }
 
     /**
@@ -91,7 +97,7 @@ export class Node {
      * @returns {vec3}
      */
     public getScale(): vec3 {
-        return this.transformation.scale;
+        return this.transformation.getScale();
     }
 
     /**
@@ -99,8 +105,8 @@ export class Node {
      *
      * @param {vec3} scale
      */
-    public setScale(scale: vec3) {
-        this.transformation.scale = scale;
+    public setScale(scale: vec3 | (() => vec3)) {
+        this.transformation.setScale(scale);
     }
 
     /**
@@ -109,7 +115,7 @@ export class Node {
      * @returns {vec3}
      */
     public getPosition(): vec3 {
-        return this.transformation.position;
+        return this.transformation.getPosition();
     }
 
     /**
@@ -118,8 +124,8 @@ export class Node {
      *
      * @param {vec3} position
      */
-    public setPosition(position: vec3) {
-        this.transformation.position = position;
+    public setPosition(position: vec3 | (() => vec3)) {
+        this.transformation.setPosition(position);
     }
 
     /**
@@ -184,6 +190,7 @@ export class Node {
      * to the current node's origin.
      */
     protected boneRenderObject(parentMatrix: mat4): RenderObject {
+        const position = this.getPosition();
         const transform: Transformation = new Transformation(
             // Since the bone will start at the parent node's origin, we do not need to translate it
             vec3.fromValues(0, 0, 0),
@@ -192,17 +199,17 @@ export class Node {
             // origin
             vec3.fromValues(
                 0,
-                Math.atan2(this.transformation.position[2], this.transformation.position[0]),
-                Math.atan2(this.transformation.position[1], this.transformation.position[0])
+                Math.atan2(position[2], position[0]),
+                Math.atan2(position[1], position[0])
             ),
 
             // Scale the bone so its length is equal to the length between the parent node's origin
             // and the current node's origin
             vec3.fromValues(
                 Math.sqrt(
-                    Math.pow(this.transformation.position[0], 2) +
-                        Math.pow(this.transformation.position[1], 2) +
-                        Math.pow(this.transformation.position[2], 2)
+                    Math.pow(position[0], 2) +
+                    Math.pow(position[1], 2) +
+                    Math.pow(position[2], 2)
                 ),
                 1,
                 1

@@ -24,6 +24,7 @@
     "no-require-imports": false,
     "no-suspicious-comment": false,
     "no-import-side-effect": false,
+    "insecure-random": false,
     "typedef": [
       true,
       "parameter",

@@ -1,18 +1,15 @@
 import { mat4, vec3 } from 'gl-matrix';
+import { vector3 } from '../types/VectorTypes';
 
 /**
  * Not intended to be user facing.
  */
 export class Transformation {
-    private position: vec3 | (() => vec3);
-    private rotation: vec3 | (() => vec3);
-    private scale: vec3 | (() => vec3);
+    private position: vector3;
+    private rotation: vector3;
+    private scale: vector3;
 
-    constructor(
-        position: vec3 | (() => vec3),
-        rotation: vec3 | (() => vec3),
-        scale: vec3 | (() => vec3)
-    ) {
+    constructor(position: vector3, rotation: vector3, scale: vector3) {
         this.position = position;
         this.rotation = rotation;
         this.scale = scale;
@@ -41,7 +38,7 @@ export class Transformation {
         return this.position instanceof Function ? this.position() : this.position;
     }
 
-    public setPosition(position: vec3 | (() => vec3)) {
+    public setPosition(position: vector3) {
         this.position = position;
     }
 
@@ -49,7 +46,7 @@ export class Transformation {
         return this.rotation instanceof Function ? this.rotation() : this.rotation;
     }
 
-    public setRotation(rotation: vec3 | (() => vec3)) {
+    public setRotation(rotation: vector3) {
         this.rotation = rotation;
     }
 
@@ -57,7 +54,7 @@ export class Transformation {
         return this.scale instanceof Function ? this.scale() : this.scale;
     }
 
-    public setScale(scale: vec3 | (() => vec3)) {
+    public setScale(scale: vector3) {
         this.scale = scale;
     }
 }

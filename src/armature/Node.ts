@@ -3,6 +3,7 @@ import { BakedGeometry } from '../geometry/BakedGeometry';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
+import { vector3 } from '../types/VectorTypes';
 
 /**
  * A `Node` in a scene-graph.
@@ -46,9 +47,9 @@ export class Node {
      */
     constructor(
         children: Node[] = [],
-        position: vec3 | (() => vec3) = vec3.fromValues(0, 0, 0),
-        rotation: vec3 | (() => vec3) = vec3.fromValues(0, 0, 0),
-        scale: vec3 | (() => vec3) = vec3.fromValues(1, 1, 1)
+        position: vector3 = vec3.fromValues(0, 0, 0),
+        rotation: vector3 = vec3.fromValues(0, 0, 0),
+        scale: vector3 = vec3.fromValues(1, 1, 1)
     ) {
         this.children = children;
         this.transformation = new Transformation(position, rotation, scale);
@@ -87,7 +88,7 @@ export class Node {
      *
      * @param {vec3} rotation
      */
-    public setRotation(rotation: vec3 | (() => vec3)) {
+    public setRotation(rotation: vector3) {
         this.transformation.setRotation(rotation);
     }
 
@@ -105,7 +106,7 @@ export class Node {
      *
      * @param {vec3} scale
      */
-    public setScale(scale: vec3 | (() => vec3)) {
+    public setScale(scale: vector3) {
         this.transformation.setScale(scale);
     }
 
@@ -124,7 +125,7 @@ export class Node {
      *
      * @param {vec3} position
      */
-    public setPosition(position: vec3 | (() => vec3)) {
+    public setPosition(position: vector3) {
         this.transformation.setPosition(position);
     }
 

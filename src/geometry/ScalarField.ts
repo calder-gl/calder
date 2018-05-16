@@ -1,8 +1,6 @@
 import { range } from 'lodash';
 import { vec3 } from 'gl-matrix';
 
-// TODO(abhimadan): add a more extensive interface around this. It's not ideal
-// to have to access the grid directly.
 export class ScalarField {
     protected readonly dim: number;
     protected readonly length: number;

@@ -1,5 +1,6 @@
-import { range } from 'lodash';
 import { vec3 } from 'gl-matrix';
+import { range } from 'lodash';
+
 import { ScalarField } from './ScalarField';
 
 const triTable: number[][] = [
@@ -261,7 +262,7 @@ const triTable: number[][] = [
     []
 ];
 
-let edgeCoords: number[][] = [
+const edgeCoords: number[][] = [
     [-1, 0, 0],
     [1, 0, -1],
     [0, 0, -1],
@@ -277,37 +278,38 @@ let edgeCoords: number[][] = [
 ];
 
 export function genIsoSurface(scalarField: ScalarField): vec3[] {
-    let vertices: vec3[] = [];
-    const genIsoSurfaceVertices = function(voxel: number[][][], x: number, y: number, z: number) {
+    const vertices: vec3[] = [];
+    const genIsoSurfaceVertices = (voxel: number[][][], x: number, y: number, z: number) => {
         let triTableIdx = 0;
         range(2).forEach((dx: number) => {
             range(2).forEach((dy: number) => {
                 range(2).forEach((dz: number) => {
-                    const iso = voxel[dx][dy][dz] <= 0.001 ? 1 : 0;
-                    triTableIdx |= iso << (dy * 4 + dz * 2 + dx);
+                    if (voxel[dx][dy][dz] <= 0.001) {
+                        triTableIdx += Math.pow(2, dy * 4 + dz * 2 + dx);
+                    }
                 });
             });
         });
 
-        let triTableEntry = triTable[triTableIdx];
+        const triTableEntry = triTable[triTableIdx];
 
-        for (let i = 0; i < triTableEntry.length; i++) {
+        range(triTableEntry).forEach((i: number) => {
             let [ex, ey, ez] = edgeCoords[triTableEntry[i]];
-            if (ex == -1) {
-                let dx = voxel[1][ey][ez] - voxel[0][ey][ez];
+            if (ex === -1) {
+                const dx = voxel[1][ey][ez] - voxel[0][ey][ez];
                 ex = -voxel[0][ey][ez] / dx;
-            } else if (ey == -1) {
-                let dy = voxel[ex][1][ez] - voxel[ex][0][ez];
+            } else if (ey === -1) {
+                const dy = voxel[ex][1][ez] - voxel[ex][0][ez];
                 ey = -voxel[ex][0][ez] / dy;
-            } else if (ez == -1) {
-                let dz = voxel[ex][ey][1] - voxel[ex][ey][0];
+            } else if (ez === -1) {
+                const dz = voxel[ex][ey][1] - voxel[ex][ey][0];
                 ez = -voxel[ex][ey][0] / dz;
             } else {
                 throw new Error('Invalid edge vertex');
             }
             const vertex = scalarField.indexToModel(ex + x, ey + y, ez + z);
             vertices.push(vertex);
-        }
+        });
     };
 
     scalarField.forEachVoxel(genIsoSurfaceVertices);

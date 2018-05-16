@@ -1,6 +1,12 @@
-import { range } from 'lodash';
 import { vec3 } from 'gl-matrix';
+import { range } from 'lodash';
 
+/**
+ * A scalar field represents a function that takes a coordinate in 3D space and
+ * returns a scalar. It can be used to represent surfaces as level sets: the set
+ * of all coordinates that map to the same scalar value, which we assume to be
+ * 0.
+ */
 export class ScalarField {
     protected readonly dim: number;
     protected readonly length: number;
@@ -30,7 +36,7 @@ export class ScalarField {
         range(this.dim - 1).forEach((xIdx: number) => {
             range(this.dim - 1).forEach((yIdx: number) => {
                 range(this.dim - 1).forEach((zIdx: number) => {
-                    let voxel: number[][][] = [];
+                    const voxel: number[][][] = [];
 
                     range(2).forEach((dx: number) => {
                         voxel.push([]);
@@ -49,7 +55,7 @@ export class ScalarField {
     }
 
     public indexToModel(x: number, y: number, z: number): vec3 {
-        let model = vec3.create();
+        const model = vec3.create();
         model[0] = (x - (this.dim - 1) / 2) * this.resolution;
         model[1] = (y - (this.dim - 1) / 2) * this.resolution;
         model[2] = (z - (this.dim - 1) / 2) * this.resolution;

@@ -1,8 +1,8 @@
 import { Armature } from '../armature/Armature';
 import { Node } from '../armature/Node';
+import { genSphere } from '../geometry/Sphere';
 import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
-import { genSphere } from '../geometry/Sphere';
 
 import { vec3 } from 'gl-matrix';
 import { range } from 'lodash';
@@ -20,7 +20,7 @@ const renderer: Renderer = new Renderer(800, 600, 2);
 renderer.addLight(light1);
 renderer.addLight(light2);
 
-let sphere = genSphere();
+const sphere = genSphere();
 sphere.colors = sphere.vertices.map(() => vec3.fromValues(1, 0, 0));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

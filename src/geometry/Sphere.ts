@@ -1,22 +1,23 @@
-import { range } from 'lodash';
 import { vec3 } from 'gl-matrix';
+import { range } from 'lodash';
 
 import { BakedGeometry } from './BakedGeometry';
-import { ScalarField } from './ScalarField';
 import { genIsoSurface } from './MarchingCubes';
+import { ScalarField } from './ScalarField';
 
-const Radius = 1;
-const Dim = 25;
-const Length = 2.5;
+const RADIUS = 1;
+const DIM = 25;
+const LENGTH = 2.5;
 
 function sphereSignedDistFunc(coord: vec3): number {
-    return Math.sqrt(coord[0] * coord[0] + coord[1] * coord[1] + coord[2] * coord[2]) - Radius;
+    return Math.sqrt(coord[0] * coord[0] + coord[1] * coord[1] + coord[2] * coord[2]) - RADIUS;
 }
 
 // TODO(abhimadan): Create WorkingGeometry here instead
 export function genSphere(): BakedGeometry {
-    const sphere = new ScalarField(Dim, Length, sphereSignedDistFunc);
+    const sphere = new ScalarField(DIM, LENGTH, sphereSignedDistFunc);
     const vertices = genIsoSurface(sphere);
+
     return {
         vertices: vertices,
         normals: vertices,

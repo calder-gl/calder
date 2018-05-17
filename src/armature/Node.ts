@@ -1,5 +1,6 @@
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { BakedGeometry } from '../geometry/BakedGeometry';
+import { closestPointOnLine, vec3From4 } from '../math/utils';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
@@ -36,8 +37,11 @@ export class Node {
     };
 
     public readonly children: Node[];
+    protected parent: Node | null = null;
     protected transformation: Transformation = new Transformation();
     private points: { [key: string]: Point } = {};
+    private held: vec3 | null = null;
+    private grabbed: vec3 | null = null;
 
     /**
      * Instantiates a new `Node`.
@@ -62,16 +66,94 @@ export class Node {
         return point;
     }
 
+    /**
+     * Holds the current node in place at a given point so that it can be manipulated about
+     * that point.
+     *
+     * @param {Point | vec3} point The point to be held, either as a local coordinate, or a
+     * control point on the current or any other node.
+     *
+     * @returns {Node} The current node, for method chaining.
+     */
+    public hold(point: Point | vec3): Node {
+        this.held = this.localPointCoordinate(point);
+
+        return this;
+    }
+
+    /**
+     * Removes all held points so that new transformation constraints can be applied.
+     *
+     * @returns {Node} The current node, for method chaining.
+     */
+    public release(): Node {
+        this.held = null;
+        this.grabbed = null;
+
+        return this;
+    }
+
+    /**
+     * Marks a point as grabbed so that it can be used to push or pull the node
+     *
+     * @param {Point | vec3} point The point to grab.
+     *
+     * @returns {Node} The current node, for method chaining.
+     */
+    public grab(point: Point | vec3): Node {
+        this.grabbed = this.localPointCoordinate(point);
+
+        return this;
+    }
+
+    public pointAt(point: Point | vec3): Node {
+        if (this.grabbed === null) {
+            throw new Error('You must grab a point before pointing it at something');
+        }
+
+        const target3 = this.localPointCoordinate(point);
+        const target = vec4.fromValues(target3[0], target3[1], target3[2], 1);
+        const anchor3 = this.getPosition();
+        const anchor = vec4.fromValues(anchor3[0], anchor3[1], anchor3[2], 1);
+        const grabbed = vec4.fromValues(this.grabbed[0], this.grabbed[1], this.grabbed[2], 1);
+
+        if (this.held !== null) {
+            const axis = vec4.sub(
+                vec4.create(),
+                vec4.fromValues(this.held[0], this.held[1], this.held[2], 1),
+                anchor
+            );
+
+            const closestOnAxisToGrab = closestPointOnLine(grabbed, anchor, axis);
+            const normal = vec4.sub(vec4.create(), grabbed, closestOnAxisToGrab);
+            vec4.normalize(normal, normal);
+
+            const closestOnAxisToTarget = closestPointOnLine(target, anchor, axis);
+            const targetVector = vec4.sub(vec4.create(), target, closestOnAxisToTarget);
+            vec4.normalize(targetVector, targetVector);
+
+            this.setRotation(quat.multiply(quat.create(), this.getRotation(), quat.rotationTo(quat.create(), vec3From4(normal), vec3From4(targetVector))));
+
+            //const angleToRotate = vec3.angle(vec3From4(normal), vec3From4(targetVector));
+            //const rotation = mat4.fromRotation(mat4.create(), angleToRotate, vec3From4(axis));
+            //const currentRotation = this.getRotation();
+            //this.setRotation(mat4.multiply(mat4.create(), currentRotation, rotation));
+        }
+
+        return this;
+    }
+
     public addChild(child: Node) {
         this.children.push(child);
+        child.parent = this;
     }
 
     /**
      * Gets the node's rotation.
      *
-     * @returns {vec3}
+     * @returns {quat}
      */
-    public getRotation(): vec3 {
+    public getRotation(): quat {
         return this.transformation.rotation;
     }
 
@@ -79,9 +161,9 @@ export class Node {
      * Sets the rotation for the node by updating the private `transformation`
      * property.
      *
-     * @param {vec3} rotation
+     * @param {quat} rotation
      */
-    public setRotation(rotation: vec3) {
+    public setRotation(rotation: quat) {
         this.transformation.rotation = rotation;
     }
 
@@ -190,11 +272,7 @@ export class Node {
 
             // Rotate the bone so it points from the parent node's origin to the current node's
             // origin
-            vec3.fromValues(
-                0,
-                Math.atan2(this.transformation.position[2], this.transformation.position[0]),
-                Math.atan2(this.transformation.position[1], this.transformation.position[0])
-            ),
+            quat.rotationTo(quat.create(), vec3.fromValues(1, 0, 0), vec3.normalize(vec3.create(), this.transformation.position)),
 
             // Scale the bone so its length is equal to the length between the parent node's origin
             // and the current node's origin
@@ -212,6 +290,43 @@ export class Node {
         mat4.multiply(transformationMatrix, parentMatrix, transform.getTransformation());
 
         return { ...Node.bone, transform: transformationMatrix, isShadeless: true };
+    }
+
+    private getGlobalTransform(): mat4 {
+        if (this.parent === null) {
+            return this.transformation.getTransformation();
+        } else {
+            return mat4.multiply(
+                mat4.create(),
+                this.parent.getGlobalTransform(),
+                this.transformation.getTransformation()
+            );
+        }
+    }
+
+    private localPointCoordinate(point: Point | vec3): vec3 {
+        if (point instanceof Point) {
+            if (point.node === this) {
+                return point.position;
+            } else {
+                const pointToGlobal = mat4.invert(mat4.create(), point.node.getGlobalTransform());
+                if (pointToGlobal === null) {
+                    throw new Error('Point is in a coordinate space that cannot be inverted');
+                }
+                const pointToLocal = mat4.multiply(
+                    mat4.create(),
+                    this.getGlobalTransform(),
+                    pointToGlobal
+                );
+
+                const local = vec4.fromValues(point[0], point[1], point[2], 1);
+                vec4.transformMat4(local, local, pointToLocal);
+
+                return vec3.fromValues(local[0], local[1], local[2]);
+            }
+        } else {
+            return point;
+        }
     }
 }
 

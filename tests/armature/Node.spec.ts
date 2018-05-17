@@ -1,4 +1,4 @@
-import { mat4, vec3, vec4 } from 'gl-matrix';
+import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { Armature } from '../../src/armature/Armature';
 import { GeometryNode, Node } from '../../src/armature/Node';
 import { BakedGeometry } from '../../src/geometry/BakedGeometry';
@@ -44,7 +44,8 @@ describe('Node', () => {
             root.setPosition(vec3.fromValues(1, 0, 0));
 
             // Rotate this child matrix 90 degrees about the x-axis.
-            nodeChild.setRotation(vec3.fromValues(Math.PI / 2, 0, 0));
+            const rotation = quat.fromEuler(quat.create(), 90, 0, 0);
+            nodeChild.setRotation(rotation);
 
             /**
              * Here we're defining a test point and what we expect the result of

@@ -25,6 +25,11 @@ export class Transformation {
      * @returns {mat4}
      */
     public getTransformation(): mat4 {
-        return mat4.fromRotationTranslationScale(mat4.create(), this.rotation, this.position, this.scale);
+        return mat4.fromRotationTranslationScale(
+            mat4.create(),
+            this.rotation,
+            this.position,
+            this.scale
+        );
     }
 }

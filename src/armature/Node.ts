@@ -107,34 +107,56 @@ export class Node {
         return this;
     }
 
+    /**
+     * Given the current constraints on the node, rotates the node to look at a point.
+     *
+     * @param {Point | vec3} point The point to rotate towards.
+     */
     public pointAt(point: Point | vec3): Node {
         if (this.grabbed === null) {
             throw new Error('You must grab a point before pointing it at something');
         }
+        const grabbed = vec3ToPoint(this.grabbed);
 
+        // Constrained points must stay in the same location before and after the rotation
         const constrainedPoints: vec3[] = [...this.held];
+
+        // If the node is attached to a parent node with an anchor, add it to the list of
+        // constrained points.
         if (this.anchor !== null) {
             constrainedPoints.push(this.anchor);
         }
 
+        // Bring the target point into local coordinates
         const target3 = this.localPointCoordinate(point);
         const target = vec3ToPoint(target3);
 
-        // If this node is not anchored to a parent, use the first held point as the anchor
+        // Use the last constrained point as an anchor. If this node was attached to a parent, then
+        // this will be `this.anchor`. Otherwise, it will be some other arbitrary held point.
         const anchor3 = constrainedPoints.pop();
         if (anchor3 === undefined) {
             throw new Error('At least one point must be held or attached to another node');
         }
         const anchor = vec3ToPoint(anchor3);
-        const grabbed = vec3ToPoint(this.grabbed);
 
         if (constrainedPoints.length === 0) {
+            // After having popped one constrained point, if there are no remaining points, then
+            // there are two degrees of freedom
+
+            // Create vectors going from the anchor to the
             const toGrabbed = vec3.sub(vec3.create(), this.grabbed, anchor3);
             const toTarget = vec3.sub(vec3.create(), target3, anchor3);
+
+            // We want to rotate about an axis perpendicular to the plane defined by the anchor,
+            // the grabbed point, and the target point
             const axis = vec3.cross(vec3.create(), toGrabbed, toTarget);
             vec3.normalize(axis, axis);
+
+            // We need to rotate the angle between the vector from anchor to grab point and the
+            // vector from anchor to target point
             const angle = vec3.angle(toGrabbed, toTarget);
 
+            // Create a quaternion from the axis and angle
             this.setRotation(
                 quat.multiply(
                     quat.create(),
@@ -143,20 +165,34 @@ export class Node {
                 )
             );
         } else if (constrainedPoints.length === 1) {
+            // After having popped one constraine dpoint, if there is another remaining point, then
+            // we only have one degree of freedom, so rotation will be about the axis between the
+            // anchor point and the remaining constrained point
+
+            // Compute the axis between the two constrained points
             const heldAxis = vec4.sub(vec4.create(), vec3ToPoint(constrainedPoints[0]), anchor);
             vec4.normalize(heldAxis, heldAxis);
 
+            // Get the vector from the axis to the grabbed point
             const closestOnAxisToGrab = closestPointOnLine(grabbed, anchor, heldAxis);
             const toGrabbed = vec4.sub(vec4.create(), grabbed, closestOnAxisToGrab);
 
+            // Get the vector from the axis to the target
             const closestOnAxisToTarget = closestPointOnLine(target, anchor, heldAxis);
             const toTarget = vec4.sub(vec4.create(), target, closestOnAxisToTarget);
 
+            // Create an axis that is perpendicular to the vector from axis to target and the vector
+            // from axis to grab point. Even though we already have an axis, it could be pointing
+            // positively or negatively, depending on the order hold points were added. By using
+            // the cross product, we will always have the axis face the same way relative to the two
+            // vectors.
             const axis = vec3.cross(vec3.create(), vec3From4(toGrabbed), vec3From4(toTarget));
             vec3.normalize(axis, axis);
 
+            // Get the angle between the vector to the grab point and the vector to the target
             const angle = vec3.angle(vec3From4(toGrabbed), vec3From4(toTarget));
 
+            // Create a quaternion from the axis and angle
             this.setRotation(
                 quat.multiply(
                     quat.create(),
@@ -180,6 +216,12 @@ export class Node {
         child.parent = this;
     }
 
+    /**
+     * Sets a fixed point that must not change position. This is like a held point, but it persists
+     * between operations. This is used when the node is added as a child of another node.
+     *
+     * @param {vec3 | null} position The point to fix in place.
+     */
     public setAnchor(position: vec3 | null) {
         this.anchor = position;
     }
@@ -240,10 +282,17 @@ export class Node {
         this.transformation.position = position;
     }
 
+    /**
+     * @returns {mat4} A matrix that brings local coordinate into the parent coordinate space.
+     */
     public getTransformation(): mat4 {
         return this.transformation.getTransformation();
     }
 
+    /**
+     * @returns {mat4} A matrix that brings local coordinates into the global coordinate
+     * space.
+     */
     public localToGlobalTransform(): mat4 {
         const transform = this.transformation.getTransformation();
         if (this.parent !== null) {
@@ -253,6 +302,10 @@ export class Node {
         return transform;
     }
 
+    /**
+     * @returns {mat4} A matrix that brings global coordinates into the local coordinate
+     * space.
+     */
     public globalToLocalTransform(): mat4 {
         const transform = this.transformation.getTransformation();
         mat4.invert(transform, transform);
@@ -356,14 +409,31 @@ export class Node {
         return { ...Node.bone, transform: transformationMatrix, isShadeless: true };
     }
 
+    /**
+     * Given a point, convert it into the local coordinate space of the current node.
+     *
+     * @param {Point | vec3} point The point to convert. A raw vec3 is considered to be in global
+     * coordinate space.
+     *
+     * @returns {vec3} The point in the current node's local coordinate space.
+     */
     private localPointCoordinate(point: Point | vec3): vec3 {
+        // tslint:disable-next-line:no-use-before-declare
         const pointRelative = vec3ToPoint(point instanceof Point ? point.position : point);
 
         const pointToLocal = mat4.create();
+
+        // tslint:disable-next-line:no-use-before-declare
         if (point instanceof Point && point.node !== this) {
+            // If the point was given in a coordinate space other than this node's space, first bring
+            // it out of its own node's space into global space
             mat4.multiply(pointToLocal, point.node.localToGlobalTransform(), pointToLocal);
         }
+        // tslint:disable-next-line:no-use-before-declare
         if (!(point instanceof Point) || point.node !== this) {
+            // If the point was given in a coordenate space other than this node's space, it is now
+            // in global space after the previous matrix multiply, so we now need to bring it from
+            // global into this node's local space.
             mat4.multiply(pointToLocal, this.globalToLocalTransform(), pointToLocal);
         }
         const local = vec4.transformMat4(vec4.create(), pointRelative, pointToLocal);

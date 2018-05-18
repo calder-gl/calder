@@ -143,34 +143,7 @@ export class Node {
                 )
             );
         } else if (constrainedPoints.length === 1) {
-            //const axis = vec4.sub(
-                //vec4.create(),
-                //vec3ToPoint(constrainedPoints[0]),
-                //anchor
-            //);
-            //vec4.normalize(axis, axis);
-
-            //const closestOnAxisToGrab = closestPointOnLine(grabbed, anchor, axis);
-            //const toGrabbed = vec4.sub(vec4.create(), grabbed, closestOnAxisToGrab);
-
-            //const closestOnAxisToTarget = closestPointOnLine(target, anchor, axis);
-            //const toTarget = vec4.sub(vec4.create(), target, closestOnAxisToTarget);
-
-            //const angle = vec3.angle(vec3From4(toGrabbed), vec3From4(toTarget));
-
-            //this.setRotation(
-                //quat.multiply(
-                    //quat.create(),
-                    //quat.setAxisAngle(quat.create(), vec3From4(axis), angle),
-                    //this.getRotation()
-                //)
-            //);
-
-            const heldAxis = vec4.sub(
-                vec4.create(),
-                vec3ToPoint(constrainedPoints[0]),
-                anchor
-            );
+            const heldAxis = vec4.sub(vec4.create(), vec3ToPoint(constrainedPoints[0]), anchor);
             vec4.normalize(heldAxis, heldAxis);
 
             const closestOnAxisToGrab = closestPointOnLine(grabbed, anchor, heldAxis);
@@ -192,7 +165,11 @@ export class Node {
                 )
             );
         } else {
-            throw new Error(`There are too many held points (${constrainedPoints.length}), so the node can't be rotated`);
+            throw new Error(
+                `There are too many held points (${
+                    constrainedPoints.length
+                }), so the node can't be rotated`
+            );
         }
 
         return this;
@@ -270,11 +247,7 @@ export class Node {
     public localToGlobalTransform(): mat4 {
         const transform = this.transformation.getTransformation();
         if (this.parent !== null) {
-            mat4.multiply(
-                transform,
-                transform,
-                this.parent.localToGlobalTransform()
-            );
+            mat4.multiply(transform, transform, this.parent.localToGlobalTransform());
         }
 
         return transform;
@@ -285,11 +258,7 @@ export class Node {
         mat4.invert(transform, transform);
 
         if (this.parent !== null) {
-            mat4.multiply(
-                transform,
-                transform,
-                this.parent.globalToLocalTransform(),
-            );
+            mat4.multiply(transform, transform, this.parent.globalToLocalTransform());
         }
 
         return transform;
@@ -385,7 +354,7 @@ export class Node {
         mat4.multiply(transformationMatrix, parentMatrix, transform.getTransformation());
 
         return { ...Node.bone, transform: transformationMatrix, isShadeless: true };
-    } 
+    }
 
     private localPointCoordinate(point: Point | vec3): vec3 {
         const pointRelative = vec3ToPoint(point instanceof Point ? point.position : point);
@@ -469,7 +438,7 @@ class Point {
         }
         target.node.addChild(this.node);
         this.node.setAnchor(this.position);
-        this.node.setPosition(vec3.subtract(vec3.create(), target.position, this.position))
+        this.node.setPosition(vec3.subtract(vec3.create(), target.position, this.position));
     }
 
     /**

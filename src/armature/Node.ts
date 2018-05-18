@@ -40,7 +40,8 @@ export class Node {
     protected parent: Node | null = null;
     protected transformation: Transformation = new Transformation();
     private points: { [key: string]: Point } = {};
-    private held: vec3 | null = null;
+    private anchor: vec3 | null = null;
+    private held: vec3[] = [];
     private grabbed: vec3 | null = null;
 
     /**
@@ -76,7 +77,7 @@ export class Node {
      * @returns {Node} The current node, for method chaining.
      */
     public hold(point: Point | vec3): Node {
-        this.held = this.localPointCoordinate(point);
+        this.held.push(this.localPointCoordinate(point));
 
         return this;
     }
@@ -87,7 +88,7 @@ export class Node {
      * @returns {Node} The current node, for method chaining.
      */
     public release(): Node {
-        this.held = null;
+        this.held = [];
         this.grabbed = null;
 
         return this;
@@ -111,13 +112,23 @@ export class Node {
             throw new Error('You must grab a point before pointing it at something');
         }
 
-        const target3 = this.localPointCoordinate(point);
-        const target = vec4.fromValues(target3[0], target3[1], target3[2], 1);
-        const anchor3 = vec3.fromValues(0, 0, 0);
-        const anchor = vec4.fromValues(anchor3[0], anchor3[1], anchor3[2], 1);
-        const grabbed = vec4.fromValues(this.grabbed[0], this.grabbed[1], this.grabbed[2], 1);
+        const constrainedPoints: vec3[] = [...this.held];
+        if (this.anchor !== null) {
+            constrainedPoints.push(this.anchor);
+        }
 
-        if (this.held === null) {
+        const target3 = this.localPointCoordinate(point);
+        const target = vec3ToPoint(target3);
+
+        // If this node is not anchored to a parent, use the first held point as the anchor
+        const anchor3 = constrainedPoints.pop();
+        if (anchor3 === undefined) {
+            throw new Error('At least one point must be held or attached to another node');
+        }
+        const anchor = vec3ToPoint(anchor3);
+        const grabbed = vec3ToPoint(this.grabbed);
+
+        if (constrainedPoints.length === 0) {
             const toGrabbed = vec3.sub(vec3.create(), this.grabbed, anchor3);
             const toTarget = vec3.sub(vec3.create(), target3, anchor3);
             const axis = vec3.cross(vec3.create(), toGrabbed, toTarget);
@@ -131,28 +142,57 @@ export class Node {
                     this.getRotation()
                 )
             );
-        } else {
-            const axis = vec4.sub(
+        } else if (constrainedPoints.length === 1) {
+            //const axis = vec4.sub(
+                //vec4.create(),
+                //vec3ToPoint(constrainedPoints[0]),
+                //anchor
+            //);
+            //vec4.normalize(axis, axis);
+
+            //const closestOnAxisToGrab = closestPointOnLine(grabbed, anchor, axis);
+            //const toGrabbed = vec4.sub(vec4.create(), grabbed, closestOnAxisToGrab);
+
+            //const closestOnAxisToTarget = closestPointOnLine(target, anchor, axis);
+            //const toTarget = vec4.sub(vec4.create(), target, closestOnAxisToTarget);
+
+            //const angle = vec3.angle(vec3From4(toGrabbed), vec3From4(toTarget));
+
+            //this.setRotation(
+                //quat.multiply(
+                    //quat.create(),
+                    //quat.setAxisAngle(quat.create(), vec3From4(axis), angle),
+                    //this.getRotation()
+                //)
+            //);
+
+            const heldAxis = vec4.sub(
                 vec4.create(),
-                vec4.fromValues(this.held[0], this.held[1], this.held[2], 1),
+                vec3ToPoint(constrainedPoints[0]),
                 anchor
             );
+            vec4.normalize(heldAxis, heldAxis);
 
-            const closestOnAxisToGrab = closestPointOnLine(grabbed, anchor, axis);
-            const normal = vec4.sub(vec4.create(), grabbed, closestOnAxisToGrab);
-            vec4.normalize(normal, normal);
+            const closestOnAxisToGrab = closestPointOnLine(grabbed, anchor, heldAxis);
+            const toGrabbed = vec4.sub(vec4.create(), grabbed, closestOnAxisToGrab);
 
-            const closestOnAxisToTarget = closestPointOnLine(target, anchor, axis);
-            const targetVector = vec4.sub(vec4.create(), target, closestOnAxisToTarget);
-            vec4.normalize(targetVector, targetVector);
+            const closestOnAxisToTarget = closestPointOnLine(target, anchor, heldAxis);
+            const toTarget = vec4.sub(vec4.create(), target, closestOnAxisToTarget);
+
+            const axis = vec3.cross(vec3.create(), vec3From4(toGrabbed), vec3From4(toTarget));
+            vec3.normalize(axis, axis);
+
+            const angle = vec3.angle(vec3From4(toGrabbed), vec3From4(toTarget));
 
             this.setRotation(
                 quat.multiply(
                     quat.create(),
-                    quat.rotationTo(quat.create(), vec3From4(targetVector), vec3From4(normal)),
+                    quat.setAxisAngle(quat.create(), axis, angle),
                     this.getRotation()
                 )
             );
+        } else {
+            throw new Error(`There are too many held points (${constrainedPoints.length}), so the node can't be rotated`);
         }
 
         return this;
@@ -161,6 +201,10 @@ export class Node {
     public addChild(child: Node) {
         this.children.push(child);
         child.parent = this;
+    }
+
+    public setAnchor(position: vec3 | null) {
+        this.anchor = position;
     }
 
     /**
@@ -244,7 +288,7 @@ export class Node {
             mat4.multiply(
                 transform,
                 transform,
-                this.parent.globalToLocalTransform()
+                this.parent.globalToLocalTransform(),
             );
         }
 
@@ -348,10 +392,10 @@ export class Node {
 
         const pointToLocal = mat4.create();
         if (point instanceof Point && point.node !== this) {
-            mat4.multiply(pointToLocal, point.node.globalToLocalTransform(), pointToLocal);
+            mat4.multiply(pointToLocal, point.node.localToGlobalTransform(), pointToLocal);
         }
         if (!(point instanceof Point) || point.node !== this) {
-            mat4.multiply(pointToLocal, this.localToGlobalTransform(), pointToLocal);
+            mat4.multiply(pointToLocal, this.globalToLocalTransform(), pointToLocal);
         }
         const local = vec4.transformMat4(vec4.create(), pointRelative, pointToLocal);
 
@@ -424,7 +468,8 @@ class Point {
             throw new Error('Cannot attach a point to another point on the same node');
         }
         target.node.addChild(this.node);
-        this.node.setPosition(vec3.subtract(vec3.create(), target.position, this.position));
+        this.node.setAnchor(this.position);
+        this.node.setPosition(vec3.subtract(vec3.create(), target.position, this.position))
     }
 
     /**
@@ -434,6 +479,7 @@ class Point {
      */
     public attach(geometry: BakedGeometry) {
         const geometryNode = new GeometryNode(geometry);
+        geometryNode.setAnchor(vec3.fromValues(0, 0, 0));
         geometryNode.setPosition(this.position);
         this.node.addChild(geometryNode);
     }

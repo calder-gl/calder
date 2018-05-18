@@ -50,17 +50,19 @@ describe('Node', () => {
              */
 
             node
+                .hold(node.point('base'))
                 .hold(node.point('tip'))
                 .grab(node.point('handle'))
                 .pointAt(vec3.fromValues(0, 0, 2))
                 .release();
 
-            expect(node.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 0, 90, 0));
+            expect(node.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 0, -90, 0));
         });
 
         it('rotates a node with two degrees of freedom', () => {
             const node = bone();
             node
+                .hold(node.point('base'))
                 .grab(node.point('tip'))
                 .pointAt(vec3.fromValues(0, 0, 2))
                 .release();
@@ -68,29 +70,76 @@ describe('Node', () => {
             expect(node.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, 0, 0));
         });
 
-        it('can point at a global coordinate space node', () => {
+        it('can rotate a node to look at a global coordinate space point', () => {
             const parent = bone();
             const child = bone();
-
-            expect(child.getTransformation()).toEqualMat4(mat4.create());
             child.point('base').stickTo(parent.point('tip'));
 
             parent
+                .hold(parent.point('base'))
                 .grab(parent.point('tip'))
                 .pointAt(vec3.fromValues(0, 0, -2))
                 .release();
-
-            expect(vec4.transformMat4(vec4.create(), vec4.fromValues(0, 1, -1, 1), parent.globalToLocalTransform())).toEqualVec4(vec4.fromValues(0, 1, 1, 1));
-            expect(child.getTransformation()).toEqualMat4(mat4.fromTranslation(mat4.create(), [0, 1, 0]));
-            expect(vec4.transformMat4(vec4.create(), vec4.fromValues(0, 1, -1, 1), child.globalToLocalTransform())).toEqualVec4(vec4.fromValues(0, 0, 1, 1));
-            expect(parent.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), -90, 0, 0));
 
             child
                 .grab(child.point('tip'))
                 .pointAt(vec3.fromValues(0, 1, -1))
                 .release();
 
-            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), -90, 0, 0));
+            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, 0, 0));
+        });
+
+        it('can rotate constrained to an axis a node to look at a point in another node', () => {
+            const parent = bone();
+            const child = bone();
+            child.createPoint('handle', vec3.fromValues(1, 0.5, 0));
+            child.point('base').stickTo(parent.point('tip'));
+
+            const targetParent = bone();
+            const target = bone();
+            target.point('base').stickTo(targetParent.point('tip'));
+            targetParent.setPosition(vec3.fromValues(0, -1, -1));
+
+            parent
+                .hold(parent.point('base'))
+                .grab(parent.point('tip'))
+                .pointAt(vec3.fromValues(0, 0, -2))
+                .release();
+
+            child
+                .grab(child.point('tip'))
+                .pointAt(target.point('tip'))
+                .release();
+
+            child
+                .hold(child.point('tip'))
+                .grab(child.point('handle'))
+                .pointAt(target.point('tip'))
+                .release();
+
+            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, -90, 0));
+        });
+
+        it('can rotate a node to look at a point in another node', () => {
+            const parent = bone();
+            const child = bone();
+            child.point('base').stickTo(parent.point('tip'));
+
+            const target = bone();
+            target.setPosition(vec3.fromValues(0, 0, -1));
+
+            parent
+                .hold(parent.point('base'))
+                .grab(parent.point('tip'))
+                .pointAt(vec3.fromValues(0, 0, -2))
+                .release();
+
+            child
+                .grab(child.point('tip'))
+                .pointAt(target.point('tip'))
+                .release();
+
+            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, 0, 0));
         });
     });
 

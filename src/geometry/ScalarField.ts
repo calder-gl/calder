@@ -54,6 +54,8 @@ export class ScalarField {
         });
     }
 
+    // Converts an index into the scalar field array to a position in model
+    // space. This should only be used during voxel iteration.
     public indexToModel(x: number, y: number, z: number): vec3 {
         const model = vec3.create();
         model[0] = (x - (this.dim - 1) / 2) * this.resolution;

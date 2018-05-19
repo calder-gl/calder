@@ -1,4 +1,4 @@
-import { vec3, vec4 } from 'gl-matrix';
+import { vec3, vec4, quat, mat4 } from 'gl-matrix';
 import { Affine } from '../utils/affine';
 import { BakedGeometry } from './BakedGeometry';
 
@@ -54,7 +54,7 @@ export class WorkingGeometry {
      * Creates a working geometry from a given set of vertices, faces, and control points.
      *
      * @param {vec3[]} vertices: The points that make up the geometry.
-     * @param {Face[]} faces: The surfaces of the object, relating the vertices to eachother.
+     * @param {Face[]} faces: The surfaces of the object, relating the vertices to each other.
      * @param {vec3[]} controlPoints: A set of points to snap to or reference.
      * @return {WorkingGeometry}
      */
@@ -129,5 +129,78 @@ export class WorkingGeometry {
             this.controlPoints = this.controlPoints.concat(child.controlPoints);
             vertexCount += child.vertices.length;
         }
+    }
+
+    /**
+     * Iteratively perform transforms on all vertices
+     *
+     * @param {mat4} matrix: transformation matrix
+     */
+    private transform(matrix: mat4) {
+        this.vertices = this.vertices.map((workingVec: vec4) =>
+            vec4.transformMat4(vec4.create(), workingVec, matrix)
+        );
+    }
+
+
+    /**
+     * Translate
+     *
+     * @param {vec3} v: translation vector
+     */
+    public translate(v: vec3) {
+        let translationMatrix: mat4 = mat4.fromTranslation(mat4.create(), v);
+        this.transform(translationMatrix);
+    }
+
+    /**
+     * Rotate
+     *
+     * @param {vec3} axis: axis of rotation
+     * @param {number} angle: amount to rotate in radians
+     * @param {vec3} hold_point: point to rotate from, default to true origin
+     */
+    public rotate(axis: vec3, angle: number, hold_point: vec3 = vec3.create()) {
+        let quartonion = quat.setAxisAngle(quat.create(), axis, angle);
+        let rotationMatrix: mat4 = mat4.fromRotationTranslationScaleOrigin(
+            mat4.create(),
+            quartonion,
+            vec3.create(),
+            vec3.create(),
+            hold_point
+        );
+        this.transform(rotationMatrix);
+    }
+
+    /**
+     * Scale
+     *
+     * @param {vec3} pull_point: point that scales to destination_point after transformation
+     * @param {vec3} destination_point: point that is the result of pull_point after transformation
+     * @param {vec3} hold_point: point to scale from, default to true origin
+     */
+    public scale(pull_point: vec3, destination_point: vec3, hold_point: vec3 = vec3.create()) {
+        let scalingVector: vec3 = vec3.sub(vec3.create(), pull_point, destination_point);
+        let scalingMatrix: mat4 = mat4.fromRotationTranslationScaleOrigin(
+            mat4.create(), quat.create(), vec3.create(), scalingVector, hold_point
+        );
+        this.transform(scalingMatrix);
+    }
+
+    /**
+     * Scale
+     *
+     * @param {number} factor: scaling factor
+     * @param {vec3} pull_point: point that scales to destination_point after transformation
+     * @param {vec3} hold_point: point to scale from, default to true origin
+     */
+    public scaleByFactor(factor: number, pull_point: vec3, hold_point: vec3 = vec3.create()) {
+        let scalingDirection: vec3 = vec3.sub(vec3.create(), hold_point, pull_point);
+        let factorVector: vec3 = vec3.fromValues(factor, factor, factor);
+        let scalingVector: vec3 = vec3.mul(vec3.create(), scalingDirection, factorVector);
+        let scalingMatrix: mat4 = mat4.fromRotationTranslationScaleOrigin(
+            mat4.create(), quat.create(), vec3.create(), scalingVector, hold_point
+        );
+        this.transform(scalingMatrix);
     }
 }

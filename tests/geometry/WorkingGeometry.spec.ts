@@ -146,4 +146,70 @@ describe('WorkingGeometry', () => {
             childCube1.merge(grandChildCube3);
         });
     });
+    describe('translate', () => {
+        it('can translate on the positive x, y, z axes', () => {
+            const cube = TestHelper.cube();
+            const v = vec3.fromValues(1, 2, 3);
+
+            cube.translate(v);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqual(result.vertices);
+        });
+        it('can translate on the negative x, y, z axes', () => {
+            const cube = TestHelper.cube();
+            const v = vec3.fromValues(-3, -2, -1);
+
+            cube.translate(v);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqual(result.vertices);
+        });
+        it('can translate with arbitrary values on the x, y, z axes', () => {
+            const cube = TestHelper.cube();
+            const v = vec3.fromValues(1.2, -3.5, 6.2);
+
+            cube.translate(v);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqual(result.vertices);
+        });
+        it('can translate with the zero vector and remain unchanged', () => {
+            const cube = TestHelper.cube();
+            const v = vec3.fromValues(0, 0, 0);
+
+            cube.translate(v);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqual(result.vertices);
+        });
+    });
+    describe('rotate', () => {
+        it('can rotate on the x axis by 90 degrees about origin', () => {
+        });
+        it('can rotate on an arbitrary axis by 90 degrees about origin', () => {
+        });
+        it('can rotate on the x axis by 90 degrees about (1, 0, 0)', () => {
+        });
+        it('can rotate on x, y, z axes and reverse the rotation to remain unchanged', () => {
+        });
+        it('can rotate 360 degrees and remain unchanged', () => {
+        });
+    });
+    describe('scale', () => {
+        it('can scale from (1, 1, 1) to (2, 2, 2) about origin', () => {
+        });
+        it('can scale from (0, 0, 0) to (-1, -1, -1) about (1, 1, 1)', () => {
+        });
+        it('can scale to itself and remain unchanged', () => {
+        });
+    });
+    describe('scaleByFactor', () => {
+        it('can scale by a factor of 2 on the positive axes about origin', () => {
+        });
+        it('can scale by a factor of 2 on the negative axes about (1, 1, 1)', () => {
+        });
+        it('can scale by a factor of 1 and remain unchanged', () => {
+        });
+    });
 });

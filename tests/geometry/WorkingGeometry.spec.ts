@@ -190,14 +190,58 @@ describe('WorkingGeometry', () => {
     });
     describe('rotate', () => {
         it('can rotate on the x axis by 90 degrees about origin', () => {
+            const cube = TestHelper.cube();
+            const xAxis = vec3.fromValues(1, 0, 0);
+
+            cube.rotate(xAxis, Math.PI/2);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqual(result.vertices);
         });
         it('can rotate on an arbitrary axis by 90 degrees about origin', () => {
+            const cube = TestHelper.cube();
+            const xAxis = vec3.fromValues(1, 2, 3);
+
+            cube.rotate(xAxis, Math.PI/2);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqual(result.vertices);
         });
         it('can rotate on the x axis by 90 degrees about (1, 0, 0)', () => {
+            const cube = TestHelper.cube();
+            const xAxis = vec3.fromValues(1, 2, 3);
+
+            cube.rotate(xAxis, Math.PI/2, vec3.fromValues(1, 0, 0));
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqual(result.vertices);
         });
         it('can rotate on x, y, z axes and reverse the rotation to remain unchanged', () => {
+            const cube = TestHelper.cube();
+            const xAxis = vec3.fromValues(1, 0, 0);
+            const yAxis = vec3.fromValues(0, 1, 0);
+            const zAxis = vec3.fromValues(0, 0, 1);
+            const rotationAmount = 0.34;
+
+            cube.rotate(xAxis, rotationAmount);
+            cube.rotate(yAxis, rotationAmount);
+            cube.rotate(zAxis, rotationAmount);
+
+            cube.rotate(xAxis, -1 * rotationAmount);
+            cube.rotate(yAxis, -1 * rotationAmount);
+            cube.rotate(zAxis, -1 * rotationAmount);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqual(TestHelper.cube().vertices);
         });
         it('can rotate 360 degrees and remain unchanged', () => {
+            const cube = TestHelper.cube();
+            const xAxis = vec3.fromValues(1, 0, 0);
+
+            cube.rotate(xAxis, 2 * Math.PI);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqual(TestHelper.cube().vertices);
         });
     });
     describe('scale', () => {

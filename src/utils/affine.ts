@@ -10,7 +10,7 @@ export namespace Affine {
      * @return {vec4}: The point in Affine space.
      */
     export function createPoint(point: vec3): vec4 {
-        return vec4.fromValues(point[0], point[1], point[2], 0);
+        return vec4.fromValues(point[0], point[1], point[2], 1);
     }
 
     /**
@@ -19,6 +19,6 @@ export namespace Affine {
      * @return {vec4}: The vector in Affine space.
      */
     export function createVector(vector: vec3): vec4 {
-        return vec4.fromValues(vector[0], vector[1], vector[2], 1);
+        return vec4.fromValues(vector[0], vector[1], vector[2], 0);
     }
 }

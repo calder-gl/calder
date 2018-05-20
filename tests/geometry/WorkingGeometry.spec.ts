@@ -16,7 +16,7 @@ describe('Face', () => {
             const face = new Face(indices, normalVec3);
 
             expect(face.indices).toEqual(indices);
-            expect(face.normal).toEqualVec4(vec4.fromValues(n[0], n[1], n[2], 1));
+            expect(face.normal).toEqualVec4(vec4.fromValues(n[0], n[1], n[2], 0));
         });
     });
 });
@@ -43,13 +43,13 @@ describe('WorkingGeometry', () => {
             const geo = new WorkingGeometry(vertices, faces, controlPoints);
 
             expect(geo.vertices).toEqual([
-                vec4.fromValues(0, 0, 0, 0),
-                vec4.fromValues(0, 1, 0, 0),
-                vec4.fromValues(1, 1, 0, 0),
-                vec4.fromValues(1, 0, 0, 0)
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, 1, 0, 1),
+                vec4.fromValues(1, 1, 0, 1),
+                vec4.fromValues(1, 0, 0, 1)
             ]);
             expect(geo.faces).toEqual(faces);
-            expect(geo.controlPoints).toEqual([vec4.fromValues(0, 0, 0, 0)]);
+            expect(geo.controlPoints).toEqual([vec4.fromValues(0, 0, 0, 1)]);
         });
     });
     describe('bake', () => {

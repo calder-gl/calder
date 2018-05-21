@@ -1,4 +1,4 @@
-import { mat4, vec3, vec4 } from 'gl-matrix';
+import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { Armature } from '../../src/armature/Armature';
 import { GeometryNode, Node } from '../../src/armature/Node';
 import { BakedGeometry } from '../../src/geometry/BakedGeometry';
@@ -33,6 +33,116 @@ describe('Node', () => {
         });
     });
 
+    describe('pointAt', () => {
+        it('rotates a node about an axis', () => {
+            const node = bone();
+            node.createPoint('handle', vec3.fromValues(1, 0.5, 0));
+
+            /*
+             * Node's control points:
+             *
+             * X      <-- tip
+             * |
+             * |----X <-- handle
+             * |
+             * X      <-- base (at the origin)
+             *
+             */
+
+            node
+                .hold(node.point('base'))
+                .hold(node.point('tip'))
+                .grab(node.point('handle'))
+                .pointAt(vec3.fromValues(0, 0, 2))
+                .release();
+
+            expect(node.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 0, -90, 0));
+        });
+
+        it('rotates a node with two degrees of freedom', () => {
+            const node = bone();
+            node
+                .hold(node.point('base'))
+                .grab(node.point('tip'))
+                .pointAt(vec3.fromValues(0, 0, 2))
+                .release();
+
+            expect(node.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, 0, 0));
+        });
+
+        it('can rotate a node to look at a global coordinate space point', () => {
+            const parent = bone();
+            const child = bone();
+            child.point('base').stickTo(parent.point('tip'));
+
+            parent
+                .hold(parent.point('base'))
+                .grab(parent.point('tip'))
+                .pointAt(vec3.fromValues(0, 0, -2))
+                .release();
+
+            child
+                .grab(child.point('tip'))
+                .pointAt(vec3.fromValues(0, 1, -1))
+                .release();
+
+            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, 0, 0));
+        });
+
+        it('can rotate constrained to an axis a node to look at a point in another node', () => {
+            const parent = bone();
+            const child = bone();
+            child.createPoint('handle', vec3.fromValues(1, 0.5, 0));
+            child.point('base').stickTo(parent.point('tip'));
+
+            const targetParent = bone();
+            const target = bone();
+            target.point('base').stickTo(targetParent.point('tip'));
+            targetParent.setPosition(vec3.fromValues(0, -1, -1));
+
+            parent
+                .hold(parent.point('base'))
+                .grab(parent.point('tip'))
+                .pointAt(vec3.fromValues(0, 0, -2))
+                .release();
+
+            child
+                .grab(child.point('tip'))
+                .pointAt(target.point('tip'))
+                .release();
+
+            child
+                .hold(child.point('tip'))
+                .grab(child.point('handle'))
+                .pointAt(target.point('tip'))
+                .release();
+
+            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, -90, 0));
+        });
+
+        it('can rotate a node to look at a point in another node', () => {
+            const parent = bone();
+            const child = bone();
+            child.point('base').stickTo(parent.point('tip'));
+
+            const target = bone();
+            target.setPosition(vec3.fromValues(0, 0, -1));
+
+            parent
+                .hold(parent.point('base'))
+                .grab(parent.point('tip'))
+                .pointAt(vec3.fromValues(0, 0, -2))
+                .release();
+
+            child
+                .grab(child.point('tip'))
+                .pointAt(target.point('tip'))
+                .release();
+
+            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, 0, 0));
+        });
+    });
+
     describe('traverse', () => {
         it("flattens the parent's coordinate space and returns an array of `RenderObject`s", () => {
             const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };
@@ -44,7 +154,8 @@ describe('Node', () => {
             root.setPosition(vec3.fromValues(1, 0, 0));
 
             // Rotate this child matrix 90 degrees about the x-axis.
-            nodeChild.setRotation(vec3.fromValues(Math.PI / 2, 0, 0));
+            const rotation = quat.fromEuler(quat.create(), 90, 0, 0);
+            nodeChild.setRotation(rotation);
 
             /**
              * Here we're defining a test point and what we expect the result of

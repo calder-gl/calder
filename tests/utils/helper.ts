@@ -26,10 +26,7 @@ export namespace TestHelper {
             vec3.fromValues(1, 1, 0),
             vec3.fromValues(1, 0, 0)
         ];
-        const faces = [
-            new Face([0, 1, 2], vec3.fromValues(0, 0, 1)),
-            new Face([0, 2, 3], vec3.fromValues(0, 0, 1))
-        ];
+        const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
         const controlPoints = [start];
 
         const vertices = unitVertices.map((vertex: vec3) => {
@@ -79,23 +76,23 @@ export namespace TestHelper {
         ];
         const faces = [
             // Front side
-            new Face([0, 1, 2], vec3.fromValues(0, 0, -1)),
-            new Face([0, 2, 3], vec3.fromValues(0, 0, -1)),
+            new Face([0, 1, 2]),
+            new Face([0, 2, 3]),
             // Left side
-            new Face([0, 1, 5], vec3.fromValues(-1, 0, 0)),
-            new Face([1, 4, 5], vec3.fromValues(-1, 0, 0)),
+            new Face([0, 1, 5]),
+            new Face([1, 4, 5]),
             // Right side
-            new Face([3, 2, 6], vec3.fromValues(1, 0, 0)),
-            new Face([3, 6, 7], vec3.fromValues(1, 0, 0)),
+            new Face([3, 2, 6]),
+            new Face([3, 6, 7]),
             // Back side
-            new Face([4, 5, 6], vec3.fromValues(0, 0, 1)),
-            new Face([4, 6, 7], vec3.fromValues(0, 0, 1)),
+            new Face([4, 5, 6]),
+            new Face([4, 6, 7]),
             // Top side
-            new Face([1, 2, 6], vec3.fromValues(0, 1, 0)),
-            new Face([1, 5, 6], vec3.fromValues(0, 1, 0)),
+            new Face([1, 2, 6]),
+            new Face([1, 5, 6]),
             // Bottom side
-            new Face([0, 4, 7], vec3.fromValues(0, -1, 0)),
-            new Face([0, 3, 7], vec3.fromValues(0, -1, 0))
+            new Face([0, 4, 7]),
+            new Face([0, 3, 7])
         ];
         const controlPoints = [start];
 

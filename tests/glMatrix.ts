@@ -3,14 +3,8 @@ import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 declare global {
     namespace jest {
         interface Matchers<R> {
-            toEqualArrVec3(
-                received: vec4[],
-                argument: vec4[]
-            ): { pass: boolean; message(): string };
-            toEqualArrVec4(
-                received: vec4[],
-                argument: vec4[]
-            ): { pass: boolean; message(): string };
+            toEqualArrVec3(argument: vec3[]): { pass: boolean; message(): string };
+            toEqualArrVec4(argument: vec4[]): { pass: boolean; message(): string };
             toEqualMat4(argument: mat4): { pass: boolean; message(): string };
             toEqualVec3(argument: vec3): { pass: boolean; message(): string };
             toEqualVec4(argument: vec4): { pass: boolean; message(): string };

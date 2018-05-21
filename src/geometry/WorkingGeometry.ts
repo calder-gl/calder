@@ -172,6 +172,24 @@ export class WorkingGeometry {
         this.transform(rotationMatrix);
     }
 
+    private scalingDivide(a: number, b: number): number {
+        if (b == 0 && a == 0) {
+            return 0;
+        } else if (b == 0 || a == 0) {
+            // throw something? idk
+            return -1;
+        } else {
+            return a / b;
+        }
+    }
+
+    private scalingVector(destination: vec3, pull: vec3): vec3 {
+        const x: number = this.scalingDivide(destination[0], pull[0]);
+        const y: number = this.scalingDivide(destination[1], pull[1]);
+        const z: number = this.scalingDivide(destination[2], pull[2]);
+        return vec3.fromValues(x, y, z);
+    }
+
     /**
      * Scale
      *
@@ -179,10 +197,12 @@ export class WorkingGeometry {
      * @param {vec3} destination_point: point that is the result of pull_point after transformation
      * @param {vec3} hold_point: point to scale from, default to true origin
      */
-    public scale(pull_point: vec3, destination_point: vec3, hold_point: vec3 = vec3.create()) {
-        let scalingVector: vec3 = vec3.sub(vec3.create(), pull_point, destination_point);
+    public scale(pullPoint: vec3, destinationPoint: vec3, holdPoint: vec3 = vec3.create()) {
+        let destinationVector: vec3 = vec3.sub(vec3.create(), destinationPoint, holdPoint);
+        let pullVector: vec3 = vec3.sub(vec3.create(), pullPoint, holdPoint);
+        let scalingVector: vec3 = this.scalingVector(destinationVector, pullVector);
         let scalingMatrix: mat4 = mat4.fromRotationTranslationScaleOrigin(
-            mat4.create(), quat.create(), vec3.create(), scalingVector, hold_point
+            mat4.create(), quat.create(), vec3.create(), scalingVector, holdPoint
         );
         this.transform(scalingMatrix);
     }

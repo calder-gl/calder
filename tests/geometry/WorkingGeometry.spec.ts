@@ -186,6 +186,13 @@ describe('WorkingGeometry', () => {
     });
     describe('rotate', () => {
         it('can rotate on the x axis by 90 degrees about origin', () => {
+            const square = TestHelper.square();
+            const xAxis = vec3.fromValues(1, 0, 0);
+
+            square.rotate(xAxis, Math.PI/2);
+
+            // expect(square.vertices).toEqual([
+            // ]);
         });
         it('can rotate on an arbitrary axis by 90 degrees about origin', () => {
         });
@@ -197,11 +204,36 @@ describe('WorkingGeometry', () => {
         });
     });
     describe('scale', () => {
-        it('can scale from (1, 1, 1) to (2, 2, 2) about origin', () => {
+        it('can scale from (1, 1, 0) to (2, 2, 0) about origin', () => {
+            const square = TestHelper.square();
+
+            square.scale(vec3.fromValues(1, 1, 0), vec3.fromValues(2, 2, 0));
+
+            expect(square.vertices).toEqual([
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, 2, 0, 1),
+                vec4.fromValues(2, 2, 0, 1),
+                vec4.fromValues(2, 0, 0, 1)
+            ]);
         });
-        it('can scale from (0, 0, 0) to (-1, -1, -1) about (1, 1, 1)', () => {
+        it('can scale from (0, 0, 0) to (-1, -1, 0) about (1, 1, 0)', () => {
+            const square = TestHelper.square();
+
+            square.scale(vec3.fromValues(0, 0, 0), vec3.fromValues(-1, -1, 0), vec3.fromValues(1, 1, 0));
+
+            expect(square.vertices).toEqual([
+                vec4.fromValues(-1, -1, 0, 1),
+                vec4.fromValues(-1, 1, 0, 1),
+                vec4.fromValues(1, 1, 0, 1),
+                vec4.fromValues(1, -1, 0, 1)
+            ]);
         });
         it('can scale to itself and remain unchanged', () => {
+            const square = TestHelper.square();
+
+            square.scale(vec3.fromValues(1, 1, 0), vec3.fromValues(1, 1, 0));
+
+            expect(square.vertices).toEqual(TestHelper.square().vertices);
         });
     });
     describe('scaleByFactor', () => {

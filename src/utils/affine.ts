@@ -21,4 +21,13 @@ export namespace Affine {
     export function createVector(vector: vec3): vec4 {
         return vec4.fromValues(vector[0], vector[1], vector[2], 0);
     }
+
+    /**
+     * Convert a vector from Affine space to 3D space.
+     * @param {vec4} vector: The vector to truncate.
+     * @return {vec3}: The vector without the last element.
+     */
+    export function to3D(vector: vec4): vec3 {
+        return vec3.fromValues(vector[0], vector[1], vector[2]);
+    }
 }

@@ -13,20 +13,13 @@ export class Face {
     public indices: number[];
 
     /**
-     * A vector representing the direction out of the front of the face. The normal n should have
-     * n[3] = 1 to ensure that it is a vector in Affine space.
-     */
-    public normal: vec4;
-
-    /**
      * @param {number[]} indices: Reference indeces of vertices in a WorkingGeometry.
      * @param {vec4} normal: A fector representing the direction out of the face.
      * @return {Face}
      */
-    constructor(indices: number[], normal: vec3) {
+    constructor(indices: number[]) {
         // TODO(pbardea): Verify length of indices here.
         this.indices = indices;
-        this.normal = Affine.createVector(normal);
     }
 }
 
@@ -97,7 +90,13 @@ export class WorkingGeometry {
             return accum.concat(face.indices);
         }, []);
         const bakedNormals = this.faces.map((face: Face) => {
-            return vec3.fromValues(face.normal[0], face.normal[1], face.normal[2]);
+            const p1: vec4 = this.vertices[face.indices[0]];
+            const p2: vec4 = this.vertices[face.indices[1]];
+            const p3: vec4 = this.vertices[face.indices[2]];
+            const v1: vec3 = Affine.to3D(vec4.subtract(vec4.create(), p1, p2));
+            const v2: vec3 = Affine.to3D(vec4.subtract(vec4.create(), p2, p3));
+
+            return vec3.cross(vec3.create(), v1, v2);
         });
 
         // Make all of the baked shapes red for now

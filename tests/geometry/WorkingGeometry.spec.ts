@@ -62,12 +62,10 @@ describe('WorkingGeometry', () => {
             const bakedSquare = square.bake();
 
             // Not testing the colors yet since they don't do anything useful
+            const expectedNormal = vec3.fromValues(0, 0, -1);
             expect(bakedSquare.indices).toEqual([0, 1, 2, 0, 2, 3]);
             expect(bakedSquare.vertices).toEqual(vertices);
-            expect(bakedSquare.normals).toEqual([
-                vec3.fromValues(-0, -0, -1),
-                vec3.fromValues(-0, 0, -1)
-            ]);
+            expect(bakedSquare.normals).toEqualArrVec3([expectedNormal, expectedNormal]);
         });
         it('can bake a WorkingGeometry that has many merged objects', () => {
             const rootSquare = TestHelper.square();
@@ -126,11 +124,8 @@ describe('WorkingGeometry', () => {
             // Normals should be an array of 8 (indices/3) [0, 0, 1] vectors
             const indexStride = 3;
             const normalCount = bakedObject.indices.length / indexStride;
-            const expectedNormals: vec3[] = range(normalCount).map(
-                (i: number) =>
-                    i % 2 === 0 ? vec3.fromValues(-0, -0, -1) : vec3.fromValues(-0, 0, -1)
-            );
-            expect(bakedObject.normals).toEqual(expectedNormals);
+            const expectedNormals: vec3[] = range(normalCount).map(() => vec3.fromValues(0, 0, -1));
+            expect(bakedObject.normals).toEqualArrVec3(expectedNormals);
         });
     });
     describe('merge', () => {

@@ -73,7 +73,6 @@ export class Node {
      *
      * @param {Point | vec3} point The point to be held, either as a local coordinate, or a
      * control point on the current or any other node.
-     *
      * @returns {Node} The current node, for method chaining.
      */
     public hold(point: Point | vec3): Node {
@@ -98,7 +97,6 @@ export class Node {
      * Marks a point as grabbed so that it can be used to push or pull the node
      *
      * @param {Point | vec3} point The point to grab.
-     *
      * @returns {Node} The current node, for method chaining.
      */
     public grab(point: Point | vec3): Node {
@@ -374,7 +372,6 @@ export class Node {
      *
      * @param {mat4} parentMatrix A matrix to translate points into the coordinate space of the
      * parent node.
-     *
      * @returns {RenderObject} A RenderObject for a bone stretching from the parent node's origin
      * to the current node's origin.
      */
@@ -414,7 +411,6 @@ export class Node {
      *
      * @param {Point | vec3} point The point to convert. A raw vec3 is considered to be in global
      * coordinate space.
-     *
      * @returns {vec3} The point in the current node's local coordinate space.
      */
     private localPointCoordinate(point: Point | vec3): vec3 {

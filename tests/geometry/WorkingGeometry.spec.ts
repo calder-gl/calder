@@ -189,19 +189,15 @@ describe('WorkingGeometry', () => {
             const square = TestHelper.square();
             const xAxis = vec3.fromValues(1, 0, 0);
 
-            square.rotate(xAxis, Math.PI/2);
+            square.rotate(xAxis, Math.PI / 2);
 
             // expect(square.vertices).toEqual([
             // ]);
         });
-        it('can rotate on an arbitrary axis by 90 degrees about origin', () => {
-        });
-        it('can rotate on the x axis by 90 degrees about (1, 0, 0)', () => {
-        });
-        it('can rotate on x, y, z axes and reverse the rotation to remain unchanged', () => {
-        });
-        it('can rotate 360 degrees and remain unchanged', () => {
-        });
+        it('can rotate on an arbitrary axis by 90 degrees about origin', () => {});
+        it('can rotate on the x axis by 90 degrees about (1, 0, 0)', () => {});
+        it('can rotate on x, y, z axes and reverse the rotation to remain unchanged', () => {});
+        it('can rotate 360 degrees and remain unchanged', () => {});
     });
     describe('scale', () => {
         it('can scale from (1, 1, 0) to (2, 2, 0) about origin', () => {
@@ -219,7 +215,11 @@ describe('WorkingGeometry', () => {
         it('can scale from (0, 0, 0) to (-1, -1, 0) about (1, 1, 0)', () => {
             const square = TestHelper.square();
 
-            square.scale(vec3.fromValues(0, 0, 0), vec3.fromValues(-1, -1, 0), vec3.fromValues(1, 1, 0));
+            square.scale(
+                vec3.fromValues(0, 0, 0),
+                vec3.fromValues(-1, -1, 0),
+                vec3.fromValues(1, 1, 0)
+            );
 
             expect(square.vertices).toEqual([
                 vec4.fromValues(-1, -1, 0, 1),
@@ -238,10 +238,35 @@ describe('WorkingGeometry', () => {
     });
     describe('scaleByFactor', () => {
         it('can scale by a factor of 2 on the positive axes about origin', () => {
+            const square = TestHelper.square();
+
+            square.scaleByFactor(2, vec3.fromValues(1, 1, 0));
+
+            expect(square.vertices).toEqual([
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, 2, 0, 1),
+                vec4.fromValues(2, 2, 0, 1),
+                vec4.fromValues(2, 0, 0, 1)
+            ]);
         });
-        it('can scale by a factor of 2 on the negative axes about (1, 1, 1)', () => {
+        it('can scale by a factor of 2 on the negative axes about (1, 1, 0)', () => {
+            const square = TestHelper.square();
+
+            square.scaleByFactor(2, vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 0));
+
+            expect(square.vertices).toEqual([
+                vec4.fromValues(-1, -1, 0, 1),
+                vec4.fromValues(-1, 1, 0, 1),
+                vec4.fromValues(1, 1, 0, 1),
+                vec4.fromValues(1, -1, 0, 1)
+            ]);
         });
         it('can scale by a factor of 1 and remain unchanged', () => {
+            const square = TestHelper.square();
+
+            square.scaleByFactor(1, vec3.fromValues(1, 1, 0));
+
+            expect(square.vertices).toEqual(TestHelper.square().vertices);
         });
     });
 });

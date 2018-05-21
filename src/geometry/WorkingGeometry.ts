@@ -128,12 +128,12 @@ export class WorkingGeometry {
      * @param {vec3} holdPoint: point to rotate from, default to true origin
      */
     public rotate(axis: vec3, angle: number, holdPoint: vec3 = vec3.create()) {
-        const quartonion = quat.setAxisAngle(quat.create(), axis, angle);
+        const quartnion = quat.setAxisAngle(quat.create(), axis, angle);
         const rotationMatrix: mat4 = mat4.fromRotationTranslationScaleOrigin(
             mat4.create(),
-            quartonion,
+            quartnion,
             vec3.create(),
-            vec3.create(),
+            vec3.fromValues(1, 1, 1),
             holdPoint
         );
         this.transform(rotationMatrix);
@@ -182,7 +182,7 @@ export class WorkingGeometry {
         );
         this.transform(scalingMatrix);
     }
-    
+
     /**
      * Merge the child objects into the current one by updating the current vertices, faces, and
      * control points.
@@ -203,7 +203,6 @@ export class WorkingGeometry {
             vertexCount += child.vertices.length;
         }
     }
-
 
     /**
      * Special divide for scaling vectors. Treats undeterminate as 0.
@@ -238,7 +237,6 @@ export class WorkingGeometry {
         return vec3.fromValues(x, y, z);
     }
 
-
     /**
      * Iteratively perform transforms on all vertices
      *
@@ -246,7 +244,18 @@ export class WorkingGeometry {
      */
     private transform(matrix: mat4) {
         this.vertices = this.vertices.map((workingVec: vec4) =>
-            vec4.transformMat4(vec4.create(), workingVec, matrix)
+            this.sanitizeValues(vec4.transformMat4(vec4.create(), workingVec, matrix))
         );
+    }
+
+    private sanitizeValues(v: vec4) {
+        return v.map((value: number) => {
+            const downDiff = Math.abs(value - Math.floor(value));
+            const upDiff = Math.abs(Math.ceil(value) - value);
+            const diff = Math.min(downDiff, upDiff);
+            const epsilon = 1E-6;
+
+            return (diff < epsilon) ? Math.round(value) : value;
+        });
     }
 }

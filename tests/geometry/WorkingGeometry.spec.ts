@@ -191,8 +191,12 @@ describe('WorkingGeometry', () => {
 
             square.rotate(xAxis, Math.PI / 2);
 
-            // expect(square.vertices).toEqual([
-            // ]);
+            expect(square.vertices).toEqual([
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, 0, 1, 1),
+                vec4.fromValues(1, 0, 1, 1),
+                vec4.fromValues(1, 0, 0, 1)
+            ]);
         });
         it('can rotate on an arbitrary axis by 90 degrees about origin', () => {});
         it('can rotate on the x axis by 90 degrees about (1, 0, 0)', () => {});

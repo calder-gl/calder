@@ -93,8 +93,8 @@ export class WorkingGeometry {
             const p1: vec4 = this.vertices[face.indices[0]];
             const p2: vec4 = this.vertices[face.indices[1]];
             const p3: vec4 = this.vertices[face.indices[2]];
-            const v1: vec3 = Affine.truncate(vec4.subtract(vec4.create(), p1, p2));
-            const v2: vec3 = Affine.truncate(vec4.subtract(vec4.create(), p2, p3));
+            const v1: vec3 = Affine.to3D(vec4.subtract(vec4.create(), p1, p2));
+            const v2: vec3 = Affine.to3D(vec4.subtract(vec4.create(), p2, p3));
 
             return vec3.cross(vec3.create(), v1, v2);
         });

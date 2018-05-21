@@ -27,7 +27,7 @@ export namespace Affine {
      * @param {vec4} vector: The vector to truncate.
      * @return {vec3}: The vector without the last element.
      */
-    export function truncate(vector: vec4): vec3 {
+    export function to3D(vector: vec4): vec3 {
         return vec3.fromValues(vector[0], vector[1], vector[2]);
     }
 }

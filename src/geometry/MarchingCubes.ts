@@ -308,8 +308,8 @@ export function genIsoSurface(scalarField: ScalarField): vec3[] {
 
         const triTableEntry = triTable[triTableIdx];
 
-        triTableEntry.forEach((i: number) => {
-            let [ex, ey, ez] = edgeCoords[triTableEntry[i]];
+        triTableEntry.forEach((edge: number) => {
+            let [ex, ey, ez] = edgeCoords[edge];
             if (ex === -1) {
                 const dx = voxel[1][ey][ez] - voxel[0][ey][ez];
                 ex = -voxel[0][ey][ez] / dx;

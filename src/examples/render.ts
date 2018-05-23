@@ -4,7 +4,7 @@ import { genSphere } from '../geometry/Sphere';
 import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
 
-import { quat, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3 } from 'gl-matrix';
 import { range } from 'lodash';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
@@ -39,8 +39,8 @@ range(5).forEach(() => {
     const nextPiece = bone();
     nextPiece.point('base').stickTo(top.point('tip'));
     nextPiece.point('base').attach(sphere);
-    nextPiece.setRotation(
-        quat.fromEuler(quat.create(), Math.random() * 90 - 45, Math.random() * 90 - 45, 0)
+    nextPiece.applyTransform(
+        mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), Math.random() * 90 - 45, Math.random() * 90 - 45, 0))
     );
 
     top = nextPiece;
@@ -56,10 +56,9 @@ renderer.camera.moveTo(vec3.fromValues(0, 0, 8));
 renderer.camera.lookAt(vec3.fromValues(2, 2, -4));
 
 // Draw the armature
-let rotation = 0;
+const incrementalRotation = mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 0, 0.1, 0));
 const draw = () => {
-    rotation += 1;
-    tower.setRotation(quat.fromEuler(quat.create(), 0, rotation, 0));
+    tower.applyTransform(incrementalRotation);
     renderer.draw([tower], { drawAxes: true, drawArmatureBones: true });
     window.requestAnimationFrame(draw);
 };

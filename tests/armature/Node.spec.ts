@@ -107,17 +107,19 @@ describe('Node', () => {
                 .release();
 
             child
-                .grab(child.point('tip'))
-                .pointAt(target.point('tip'))
-                .release();
-
-            child
                 .hold(child.point('tip'))
                 .grab(child.point('handle'))
                 .pointAt(target.point('tip'))
                 .release();
 
-            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, -90, 0));
+            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 0, -90, 0));
+
+            //child
+                //.grab(child.point('tip'))
+                //.pointAt(target.point('tip'))
+                //.release();
+
+            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 0, 0, 0));
         });
 
         it('can rotate a node to look at a point in another node', () => {
@@ -143,6 +145,46 @@ describe('Node', () => {
         });
     });
 
+    describe('stretchTo', () => {
+        xit('stretch a node about an axis', () => {
+            const node = bone();
+            node.createPoint('handle', vec3.fromValues(1, 0.5, 0));
+
+            /*
+             * Node's control points:
+             *
+             * X      <-- tip
+             * |
+             * |----X <-- handle
+             * |
+             * X      <-- base (at the origin)
+             *
+             */
+
+            node
+                .hold(node.point('base'))
+                .hold(node.point('tip'))
+                .grab(node.point('handle'))
+                .pointAt(vec3.fromValues(0, 0, 2))
+                .release();
+
+            expect(node.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 0, -90, 0));
+        });
+
+        xit('stretches a node with two degrees of freedom', () => {
+            const node = bone();
+            node.createPoint('handle', vec3.fromValues(1, 0.5, 0));
+
+            node
+                .hold(node.point('base'))
+                .grab(node.point('handle'))
+                .stretchTo(vec3.fromValues(0, 0, 2))
+                .release();
+
+            expect(node.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, 0, 0));
+        });
+    })
+
     describe('traverse', () => {
         it("flattens the parent's coordinate space and returns an array of `RenderObject`s", () => {
             const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };
@@ -154,8 +196,8 @@ describe('Node', () => {
             root.setPosition(vec3.fromValues(1, 0, 0));
 
             // Rotate this child matrix 90 degrees about the x-axis.
-            const rotation = quat.fromEuler(quat.create(), 90, 0, 0);
-            nodeChild.setRotation(rotation);
+            const rotation = mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, 0));
+            nodeChild.applyTransform(rotation);
 
             /**
              * Here we're defining a test point and what we expect the result of

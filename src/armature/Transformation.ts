@@ -1,21 +1,19 @@
-import { mat4, quat, vec3 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 
 /**
  * Not intended to be user facing.
  */
 export class Transformation {
     public position: vec3;
-    public rotation: quat;
+    public transform: mat4;
     public scale: vec3;
 
     constructor(
         position: vec3 = vec3.fromValues(0, 0, 0),
-        rotation: quat = quat.create(),
-        scale: vec3 = vec3.fromValues(1, 1, 1)
+        transform: mat4 = mat4.create()
     ) {
         this.position = position;
-        this.rotation = rotation;
-        this.scale = scale;
+        this.transform = transform;
     }
 
     /**
@@ -24,12 +22,11 @@ export class Transformation {
      *
      * @returns {mat4}
      */
-    public getTransformation(): mat4 {
-        return mat4.fromRotationTranslationScale(
+    public getMatrix(): mat4 {
+        return mat4.translate(
             mat4.create(),
-            this.rotation,
-            this.position,
-            this.scale
+            this.transform,
+            this.position
         );
     }
 }

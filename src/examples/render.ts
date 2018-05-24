@@ -4,7 +4,7 @@ import { genSphere } from '../geometry/Sphere';
 import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
 
-import { mat4, quat, vec3 } from 'gl-matrix';
+import { quat, vec3 } from 'gl-matrix';
 import { range } from 'lodash';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
@@ -39,12 +39,18 @@ range(5).forEach(() => {
     const nextPiece = bone();
     nextPiece.point('base').stickTo(top.point('tip'));
     nextPiece.point('base').attach(sphere);
-    nextPiece.applyTransform(
-        mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), Math.random() * 90 - 45, Math.random() * 90 - 45, 0))
+    nextPiece.setRotation(
+        quat.fromEuler(quat.create(), Math.random() * 90 - 45, Math.random() * 90 - 45, 0)
     );
 
     top = nextPiece;
 });
+
+const test = bone();
+test.setPosition(vec3.fromValues(3, 0, 0));
+test.setScale(vec3.fromValues(1, 3, 1));
+const testChild = bone();
+testChild.point('base').stickTo(test.point('tip'));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer
@@ -56,10 +62,17 @@ renderer.camera.moveTo(vec3.fromValues(0, 0, 8));
 renderer.camera.lookAt(vec3.fromValues(2, 2, -4));
 
 // Draw the armature
-const incrementalRotation = mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 0, 0.1, 0));
+let rotation = 0;
+const angle = Math.random() * 90;
 const draw = () => {
-    tower.applyTransform(incrementalRotation);
-    renderer.draw([tower], { drawAxes: true, drawArmatureBones: true });
+    rotation += 1;
+    tower.setRotation(quat.fromEuler(quat.create(), angle, rotation, 0));
+    test
+        .hold(test.point('base'))
+        .grab(test.point('tip'))
+        .pointAt(tower.point('tip'))
+        .release();
+    renderer.draw([tower, test], { drawAxes: true, drawArmatureBones: true });
     window.requestAnimationFrame(draw);
 };
 draw();

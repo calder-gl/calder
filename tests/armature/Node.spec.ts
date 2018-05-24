@@ -32,7 +32,7 @@ describe('Node', () => {
 
         it('respects rotations', () => {
             const node = bone();
-            node.setRotation(quat.fromEuler(quat.create(), 0, 90, 0));
+            node.setRotation(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 0, 90, 0)));
 
             const point = vec4.fromValues(1, 0, 0, 1);
             vec4.transformMat4(point, point, node.globalToLocalTransform());
@@ -83,7 +83,7 @@ describe('Node', () => {
 
         it('respects rotations', () => {
             const node = bone();
-            node.setRotation(quat.fromEuler(quat.create(), 0, 90, 0));
+            node.setRotation(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 0, 90, 0)));
 
             const point = vec4.fromValues(0, 0, 1, 1);
             vec4.transformMat4(point, point, node.localToGlobalTransform());
@@ -114,10 +114,10 @@ describe('Node', () => {
 
         it('works with nested bones with transforms applied', () => {
             const parent = bone();
-            parent.setRotation(quat.fromEuler(quat.create(), 45, 0, 0));
+            parent.setRotation(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 45, 0, 0)));
 
             const node = bone();
-            node.setRotation(quat.fromEuler(quat.create(), 45, 0, 0));
+            node.setRotation(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 45, 0, 0)));
             node.point('base').stickTo(parent.point('tip'));
 
             const point = vec4.fromValues(0, 1, 0, 1);
@@ -172,7 +172,7 @@ describe('Node', () => {
                 .pointAt(vec3.fromValues(0, 0, 2))
                 .release();
 
-            expect(node.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 0, -90, 0));
+            expect(node.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 0, -90, 0)));
         });
 
         it('rotates a node with two degrees of freedom', () => {
@@ -183,7 +183,7 @@ describe('Node', () => {
                 .pointAt(vec3.fromValues(0, 0, 2))
                 .release();
 
-            expect(node.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, 0, 0));
+            expect(node.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, 0)));
         });
 
         it('can rotate a node to look at a global coordinate space point', () => {
@@ -197,14 +197,14 @@ describe('Node', () => {
                 .pointAt(vec3.fromValues(0, 0, -2))
                 .release();
 
-            expect(parent.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), -90, 0, 0));
+            expect(parent.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), -90, 0, 0)));
 
             child
                 .grab(child.point('tip'))
                 .pointAt(vec3.fromValues(0, 1, -1))
                 .release();
 
-            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, 0, 0));
+            expect(child.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, 0)));
         });
 
         it('can rotate constrained to an axis a node to look at a point in another node', () => {
@@ -235,7 +235,7 @@ describe('Node', () => {
                 .pointAt(target.point('tip'))
                 .release();
 
-            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, -90, 0));
+            expect(child.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, -90, 0)));
         });
 
         it('can rotate a node to look at a point in another node', () => {
@@ -257,10 +257,10 @@ describe('Node', () => {
                 .pointAt(target.point('tip'))
                 .release();
 
-            expect(child.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 90, 0, 0));
+            expect(child.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, 0)));
         });
 
-        fit('can rotate a node to look at a point in another node while transformed', () => {
+        it('can rotate a node to look at a point in another node while transformed', () => {
             const node = bone();
             node.setScale(vec3.fromValues(1, 2, 1));
             node.setPosition(vec3.fromValues(4, 0, 0));
@@ -268,6 +268,8 @@ describe('Node', () => {
             const target = bone();
             //target.setRotation(quat.fromEuler(quat.create(), 45, 0, 0));
 
+            // The transformation should be stable, so the rotation should not change
+            // when we call `pointAt` multiple times in a row
             for (let i = 0; i < 2; i += 1) {
                 node
                     .hold(node.point('base'))
@@ -275,7 +277,7 @@ describe('Node', () => {
                     .pointAt(target.point('tip'))
                     .release();
 
-                expect(node.getRotation()).toEqualQuat(quat.fromEuler(quat.create(), 0, 0, Math.atan2(4, 1) / Math.PI * 180));
+                expect(node.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 0, 0, Math.atan2(4, 1) / Math.PI * 180)));
             }
         });
     });
@@ -291,7 +293,7 @@ describe('Node', () => {
             root.setPosition(vec3.fromValues(1, 0, 0));
 
             // Rotate this child matrix 90 degrees about the x-axis.
-            const rotation = quat.fromEuler(quat.create(), 90, 0, 0);
+            const rotation = mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, 0));
             nodeChild.setRotation(rotation);
 
             /**

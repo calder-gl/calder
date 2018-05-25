@@ -15,6 +15,9 @@ module.exports = {
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.{ts,tsx,js,jsx}',
-    '!src/**/*.d.ts'
+    '!src/**/*.d.ts',
+  ],
+  coveragePathIgnorePatterns: [
+    'examples/',
   ]
 };

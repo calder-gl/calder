@@ -260,13 +260,12 @@ describe('Node', () => {
             expect(child.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, 0)));
         });
 
-        it('can rotate a node to look at a point in another node while transformed', () => {
+        it('can rotate a node to look at a point in another node while scaled', () => {
             const node = bone();
             node.setScale(vec3.fromValues(1, 2, 1));
             node.setPosition(vec3.fromValues(4, 0, 0));
 
             const target = bone();
-            //target.setRotation(quat.fromEuler(quat.create(), 45, 0, 0));
 
             // The transformation should be stable, so the rotation should not change
             // when we call `pointAt` multiple times in a row
@@ -279,6 +278,23 @@ describe('Node', () => {
 
                 expect(node.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 0, 0, Math.atan2(4, 1) / Math.PI * 180)));
             }
+        });
+
+        fit('can rotate a node to look at a point in another node while rotated', () => {
+            const node = bone();
+            node.setScale(vec3.fromValues(1, 2, 1));
+            node.setPosition(vec3.fromValues(4, 0, 0));
+            node.setRotation(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, 0)));
+
+            const target = bone();
+
+            node
+                .hold(node.point('base'))
+                .grab(node.point('tip'))
+                .pointAt(target.point('base'))
+                .release();
+
+            expect(node.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, -90)));
         });
     });
 

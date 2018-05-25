@@ -198,23 +198,27 @@ export class Node {
         this.setRotation(
             mat4.multiply(
                 mat4.create(),
+                this.getRotation(),
                 incRotation,
-                this.getRotation()
             )
         );
     }
 
     public rotateTo2Degrees(anchor3: vec3, target3: vec3, grabbed3: vec3) {
         const scaleMatrix = mat4.fromScaling(mat4.create(), this.getScale());
-
-        // Create vectors going from the anchor to the
-        const toGrabbed = vec4.sub(vec4.create(), vec3ToPoint(grabbed3), vec3ToPoint(anchor3));
-        const toTarget = vec4.sub(vec4.create(), vec3ToPoint(target3), vec3ToPoint(anchor3));
+        const grabbed = vec3ToPoint(grabbed3);
+        const target = vec3ToPoint(target3);
+        const anchor = vec3ToPoint(anchor3);
 
         // Rotation gets applied before scale, so we want to undo this node's scale before
         // calculating the new rotation
-        vec4.transformMat4(toGrabbed, toGrabbed, scaleMatrix);
-        vec4.transformMat4(toTarget, toTarget, scaleMatrix);
+        vec4.transformMat4(grabbed, grabbed, scaleMatrix);
+        vec4.transformMat4(target, target, scaleMatrix);
+        vec4.transformMat4(anchor, anchor, scaleMatrix);
+
+        // Create vectors going from the anchor to the
+        const toGrabbed = vec4.sub(vec4.create(), grabbed, anchor);
+        const toTarget = vec4.sub(vec4.create(), target, anchor);
 
         // Normalize direction vectors
         const toGrabbed3 = vec3From4(toGrabbed);
@@ -235,8 +239,8 @@ export class Node {
         this.setRotation(
             mat4.multiply(
                 mat4.create(),
+                this.getRotation(),
                 incRotation,
-                this.getRotation()
             )
         );
     }

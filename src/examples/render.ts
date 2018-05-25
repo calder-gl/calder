@@ -48,7 +48,7 @@ range(5).forEach(() => {
 
 const test = bone();
 test.setPosition(vec3.fromValues(3, 0, 0));
-test.setScale(vec3.fromValues(1, 2, 1));
+test.setScale(vec3.fromValues(1, 3, 1));
 const testChild = bone();
 testChild.point('base').stickTo(test.point('tip'));
 
@@ -62,7 +62,7 @@ renderer.camera.moveTo(vec3.fromValues(0, 0, 8));
 renderer.camera.lookAt(vec3.fromValues(2, 2, -4));
 
 // Draw the armature
-let rotation = 0;
+let rotation = 90;
 const angle = Math.random() * 90;
 const draw = () => {
     rotation += 1;

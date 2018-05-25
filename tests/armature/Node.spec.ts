@@ -279,6 +279,21 @@ describe('Node', () => {
                 expect(node.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 0, 0, Math.atan2(4, 1) / Math.PI * 180)));
             }
         });
+
+        it('can rotate about a point that isn\'t the origin', () => {
+            const node = bone();
+
+            node
+                .hold(node.point('tip'))
+                .grab(node.point('base'))
+                .pointAt(vec3.fromValues(1, 1, 0))
+                .release();
+
+            const testPoint = vec4.fromValues(0, 0, 0, 1);
+            vec4.transformMat4(testPoint, testPoint, node.localToGlobalTransform());
+
+            expect(testPoint).toEqualVec4(vec4.fromValues(1, 1, 0, 1));
+        });
     });
 
     describe('traverse', () => {

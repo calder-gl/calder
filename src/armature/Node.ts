@@ -138,13 +138,11 @@ export class Node {
             // After having popped one constrained point, if there are no remaining points, then
             // there are two degrees of freedom
             this.rotateTo2Degrees(anchor3, target3, this.grabbed);
-            
         } else if (constrainedPoints.length === 1) {
             // After having popped one constraine dpoint, if there is another remaining point, then
             // we only have one degree of freedom, so rotation will be about the axis between the
             // anchor point and the remaining constrained point
             this.rotateTo1Degree(anchor3, target3, this.grabbed, constrainedPoints[0]);
-
         } else {
             throw new Error(
                 `There are too many held points (${
@@ -186,22 +184,23 @@ export class Node {
         vec3.normalize(toTarget3, toTarget3);
 
         // Move the center of rotation to the anchor
-        const incRotation = mat4.fromTranslation(mat4.create(), vec3.sub(vec3.create(), vec3.create(), anchor3));
+        const incRotation = mat4.fromTranslation(
+            mat4.create(),
+            vec3.sub(vec3.create(), vec3.create(), anchor3)
+        );
 
         // Add a rotation equal to the shortest rotation from the vector of the anchor to the grab
         // point to the vector from the anchor to the target point
-        mat4.multiply(incRotation, mat4.fromQuat(mat4.create(), quat.rotationTo(quat.create(), toGrabbed3, toTarget3)), incRotation);
+        mat4.multiply(
+            incRotation,
+            mat4.fromQuat(mat4.create(), quat.rotationTo(quat.create(), toGrabbed3, toTarget3)),
+            incRotation
+        );
 
         // Shift the center back again
         mat4.translate(incRotation, incRotation, anchor3);
 
-        this.setRotation(
-            mat4.multiply(
-                mat4.create(),
-                this.getRotation(),
-                incRotation,
-            )
-        );
+        this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
     }
 
     public rotateTo2Degrees(anchor3: vec3, target3: vec3, grabbed3: vec3) {
@@ -227,22 +226,23 @@ export class Node {
         vec3.normalize(toTarget3, toTarget3);
 
         // Move the center of rotation to the anchor
-        const incRotation = mat4.fromTranslation(mat4.create(), vec3.sub(vec3.create(), vec3.create(), anchor3));
+        const incRotation = mat4.fromTranslation(
+            mat4.create(),
+            vec3.sub(vec3.create(), vec3.create(), anchor3)
+        );
 
         // Add a rotation equal to the shortest rotation from the vector of the anchor to the grab
         // point to the vector from the anchor to the target point
-        mat4.multiply(incRotation, mat4.fromQuat(mat4.create(), quat.rotationTo(quat.create(), toGrabbed3, toTarget3)), incRotation);
+        mat4.multiply(
+            incRotation,
+            mat4.fromQuat(mat4.create(), quat.rotationTo(quat.create(), toGrabbed3, toTarget3)),
+            incRotation
+        );
 
         // Shift the center back again
         mat4.translate(incRotation, incRotation, anchor3);
 
-        this.setRotation(
-            mat4.multiply(
-                mat4.create(),
-                this.getRotation(),
-                incRotation,
-            )
-        );
+        this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
     }
 
     public addChild(child: Node) {
@@ -425,11 +425,14 @@ export class Node {
 
             // Rotate the bone so it points from the parent node's origin to the current node's
             // origin
-            mat4.fromQuat(mat4.create(), quat.rotationTo(
-                quat.create(),
-                vec3.fromValues(1, 0, 0),
-                vec3.normalize(vec3.create(), this.transformation.position)
-            )),
+            mat4.fromQuat(
+                mat4.create(),
+                quat.rotationTo(
+                    quat.create(),
+                    vec3.fromValues(1, 0, 0),
+                    vec3.normalize(vec3.create(), this.transformation.position)
+                )
+            ),
 
             // Scale the bone so its length is equal to the length between the parent node's origin
             // and the current node's origin

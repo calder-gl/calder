@@ -40,7 +40,10 @@ range(5).forEach(() => {
     nextPiece.point('base').stickTo(top.point('tip'));
     nextPiece.point('base').attach(sphere);
     nextPiece.setRotation(
-        mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), Math.random() * 90 - 45, Math.random() * 90 - 45, 0))
+        mat4.fromQuat(
+            mat4.create(),
+            quat.fromEuler(quat.create(), Math.random() * 90 - 45, Math.random() * 90 - 45, 0)
+        )
     );
 
     top = nextPiece;
@@ -66,7 +69,9 @@ let rotation = 90;
 const angle = Math.random() * 90;
 const draw = () => {
     rotation += 1;
-    tower.setRotation(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), angle, rotation, 0)));
+    tower.setRotation(
+        mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), angle, rotation, 0))
+    );
     test
         .hold(test.point('base'))
         .grab(test.point('tip'))

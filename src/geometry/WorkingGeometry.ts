@@ -169,11 +169,14 @@ export class WorkingGeometry {
      * @param {vec3} holdPoint: point to scale from, default to true origin
      */
     public scaleByFactor(factor: number, pullPoint: vec3, holdPoint: vec3 = vec3.create()) {
-        const scalingDirection: vec3 = vec3
-            .sub(vec3.create(), pullPoint, holdPoint)
-            .map((value: number) => Math.abs(value));
+        const scalingDirection: vec3 = vec3.sub(vec3.create(), pullPoint, holdPoint);
+        const absScalingDirection: vec3 = vec3.fromValues(
+            Math.abs(scalingDirection[0]),
+            Math.abs(scalingDirection[1]),
+            Math.abs(scalingDirection[2])
+        );
         const factorVector: vec3 = vec3.fromValues(factor, factor, factor);
-        const scalingVector: vec3 = vec3.mul(vec3.create(), scalingDirection, factorVector);
+        const scalingVector: vec3 = vec3.mul(vec3.create(), absScalingDirection, factorVector);
         const scalingMatrix: mat4 = mat4.fromRotationTranslationScaleOrigin(
             mat4.create(),
             quat.create(),
@@ -245,18 +248,7 @@ export class WorkingGeometry {
      */
     private transform(matrix: mat4) {
         this.vertices = this.vertices.map((workingVec: vec4) =>
-            this.sanitizeValues(vec4.transformMat4(vec4.create(), workingVec, matrix))
+            vec4.transformMat4(vec4.create(), workingVec, matrix)
         );
-    }
-
-    private sanitizeValues(v: vec4) {
-        return v.map((value: number) => {
-            const downDiff = Math.abs(value - Math.floor(value));
-            const upDiff = Math.abs(Math.ceil(value) - value);
-            const diff = Math.min(downDiff, upDiff);
-            const epsilon = 1E-6;
-
-            return (diff < epsilon) ? Math.round(value) : value;
-        });
     }
 }

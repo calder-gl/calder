@@ -24,6 +24,7 @@ expect.extend({
                     return false;
                 }
             }
+
             return true;
         }
         if (match()) {
@@ -54,6 +55,7 @@ expect.extend({
                     return false;
                 }
             }
+
             return true;
         }
         if (match()) {

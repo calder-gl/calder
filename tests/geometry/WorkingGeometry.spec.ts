@@ -202,7 +202,7 @@ describe('WorkingGeometry', () => {
             const square = TestHelper.square();
             const axis = vec3.fromValues(1, 2, 3);
 
-            square.rotate(axis, Math.PI/2);
+            square.rotate(axis, Math.PI / 2);
 
             // TODO: Verify this by plotting it graphically, or using another tool.
             expect(square.vertices).toEqualArrVec4([
@@ -216,7 +216,7 @@ describe('WorkingGeometry', () => {
             const square = TestHelper.square();
             const xAxis = vec3.fromValues(1, 0, 0);
 
-            square.rotate(xAxis, Math.PI/2, vec3.fromValues(1, 0, 0));
+            square.rotate(xAxis, Math.PI / 2, vec3.fromValues(1, 0, 0));
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(0, 0, 0, 1),
@@ -229,7 +229,7 @@ describe('WorkingGeometry', () => {
             const square = TestHelper.square();
             const yAxis = vec3.fromValues(0, 1, 0);
 
-            square.rotate(yAxis, Math.PI/2, vec3.fromValues(1, 0, 0));
+            square.rotate(yAxis, Math.PI / 2, vec3.fromValues(1, 0, 0));
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(1, 0, 1, 1),
@@ -269,6 +269,7 @@ describe('WorkingGeometry', () => {
                 vec4.fromValues(1, 0, 0, 1)
             ]);
         });
+        // TODO: Change wording
         it('can rotate at 90 degrees on x, y, z axes and reverse the rotation to remain unchanged, regardless of order', () => {
             const square = TestHelper.square();
             const xAxis = vec3.fromValues(1, 0, 0);
@@ -286,16 +287,13 @@ describe('WorkingGeometry', () => {
 
             expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
         });
-        it('can rotate at an arbitrary degrees on x, y, z axes and reverse the rotation to remain unchanged, regardless of order', () => {
-            // TODO: I don't think this test is valid. Need to verify.
-        });
         it('can rotate 360 degrees and remain unchanged', () => {
             const square = TestHelper.square();
             const xAxis = vec3.fromValues(1, 0, 0);
             const yAxis = vec3.fromValues(0, 1, 0);
             const zAxis = vec3.fromValues(0, 0, 1);
-            const angle = 2 * Math.PI;
-            
+            const angle = Math.PI * 2;
+
             // xAxis
             square.rotate(xAxis, angle);
             expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);

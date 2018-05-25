@@ -128,7 +128,8 @@ export class WorkingGeometry {
      * @param {vec3} holdPoint: point to rotate from, default to true origin
      */
     public rotate(axis: vec3, angle: number, holdPoint: vec3 = vec3.create()) {
-        const quartnion = quat.setAxisAngle(quat.create(), axis, angle);
+        const normalAxis = vec3.normalize(vec3.create(), axis);
+        const quartnion = quat.setAxisAngle(quat.create(), normalAxis, angle);
         const rotationMatrix: mat4 = mat4.fromRotationTranslationScaleOrigin(
             mat4.create(),
             quartnion,

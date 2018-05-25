@@ -207,7 +207,7 @@ describe('Node', () => {
             expect(child.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, 0)));
         });
 
-        it('can rotate constrained to an axis a node to look at a point in another node', () => {
+        fit('can rotate constrained to an axis a node to look at a point in another node', () => {
             const parent = bone();
             const child = bone();
             child.createPoint('handle', vec3.fromValues(1, 0.5, 0));
@@ -235,7 +235,7 @@ describe('Node', () => {
                 .pointAt(target.point('tip'))
                 .release();
 
-            expect(child.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, -90, 0)));
+            expect(child.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, -90)));
         });
 
         it('can rotate a node to look at a point in another node', () => {
@@ -278,23 +278,6 @@ describe('Node', () => {
 
                 expect(node.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 0, 0, Math.atan2(4, 1) / Math.PI * 180)));
             }
-        });
-
-        fit('can rotate a node to look at a point in another node while rotated', () => {
-            const node = bone();
-            node.setScale(vec3.fromValues(1, 2, 1));
-            node.setPosition(vec3.fromValues(4, 0, 0));
-            node.setRotation(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, 0)));
-
-            const target = bone();
-
-            node
-                .hold(node.point('base'))
-                .grab(node.point('tip'))
-                .pointAt(target.point('base'))
-                .release();
-
-            expect(node.getRotation()).toEqualMat4(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, -90)));
         });
     });
 

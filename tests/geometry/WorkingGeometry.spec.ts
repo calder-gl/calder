@@ -10,13 +10,10 @@ describe('Face', () => {
     describe('constructor', () => {
         it('can create an object as specified', () => {
             const indices = [0, 1, 2];
-            const n = [0, 1, 2];
-            const normalVec3 = vec3.fromValues(n[0], n[1], n[2]);
 
-            const face = new Face(indices, normalVec3);
+            const face = new Face(indices);
 
             expect(face.indices).toEqual(indices);
-            expect(face.normal).toEqualVec4(vec4.fromValues(n[0], n[1], n[2], 1));
         });
     });
 });
@@ -37,19 +34,18 @@ describe('WorkingGeometry', () => {
                 vec3.fromValues(1, 1, 0),
                 vec3.fromValues(1, 0, 0)
             ];
-            const normal = vec3.fromValues(0, 0, 1);
-            const faces = [new Face([0, 1, 2], normal), new Face([0, 2, 3], normal)];
+            const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
             const geo = new WorkingGeometry(vertices, faces, controlPoints);
 
             expect(geo.vertices).toEqual([
-                vec4.fromValues(0, 0, 0, 0),
-                vec4.fromValues(0, 1, 0, 0),
-                vec4.fromValues(1, 1, 0, 0),
-                vec4.fromValues(1, 0, 0, 0)
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, 1, 0, 1),
+                vec4.fromValues(1, 1, 0, 1),
+                vec4.fromValues(1, 0, 0, 1)
             ]);
             expect(geo.faces).toEqual(faces);
-            expect(geo.controlPoints).toEqual([vec4.fromValues(0, 0, 0, 0)]);
+            expect(geo.controlPoints).toEqual([vec4.fromValues(0, 0, 0, 1)]);
         });
     });
     describe('bake', () => {
@@ -60,16 +56,16 @@ describe('WorkingGeometry', () => {
                 vec3.fromValues(1, 1, 0),
                 vec3.fromValues(1, 0, 0)
             ];
-            const normal = vec3.fromValues(0, 0, 1);
-            const faces = [new Face([0, 1, 2], normal), new Face([0, 2, 3], normal)];
+            const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
             const square = new WorkingGeometry(vertices, faces, controlPoints);
             const bakedSquare = square.bake();
 
             // Not testing the colors yet since they don't do anything useful
+            const expectedNormal = vec3.fromValues(0, 0, -1);
             expect(bakedSquare.indices).toEqual([0, 1, 2, 0, 2, 3]);
             expect(bakedSquare.vertices).toEqual(vertices);
-            expect(bakedSquare.normals).toEqual([normal, normal]);
+            expect(bakedSquare.normals).toEqualArrVec3([expectedNormal, expectedNormal]);
         });
         it('can bake a WorkingGeometry that has many merged objects', () => {
             const rootSquare = TestHelper.square();
@@ -128,8 +124,8 @@ describe('WorkingGeometry', () => {
             // Normals should be an array of 8 (indices/3) [0, 0, 1] vectors
             const indexStride = 3;
             const normalCount = bakedObject.indices.length / indexStride;
-            const expectedNormals: vec3[] = range(normalCount).map(() => vec3.fromValues(0, 0, 1));
-            expect(bakedObject.normals).toEqual(expectedNormals);
+            const expectedNormals: vec3[] = range(normalCount).map(() => vec3.fromValues(0, 0, -1));
+            expect(bakedObject.normals).toEqualArrVec3(expectedNormals);
         });
     });
     describe('merge', () => {

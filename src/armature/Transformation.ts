@@ -1,4 +1,4 @@
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3 } from 'gl-matrix';
 import { vector3 } from '../types/VectorTypes';
 import { Constraint } from './Constraint';
 
@@ -7,11 +7,16 @@ import { Constraint } from './Constraint';
  */
 export class Transformation {
     private position: vector3;
-    private rotation: vector3;
+    private rotation: quat;
     private scale: vector3;
     private constraint: Constraint;
 
-    constructor(position: vector3, rotation: vector3, scale: vector3, constraint: Constraint = new Constraint()) {
+    constructor(
+        position: vector3 = vec3.fromValues(0, 0, 0),
+        rotation: quat = quat.create(),
+        scale: vector3 = vec3.fromValues(1, 1, 1),
+        constraint: Constraint = new Constraint()
+    ) {
         this.position = position;
         this.rotation = rotation;
         this.scale = scale;
@@ -25,16 +30,12 @@ export class Transformation {
      * @returns {mat4}
      */
     public getTransformation(): mat4 {
-        const matrix = mat4.create();
-        const rotation = this.getRotation();
-
-        mat4.translate(matrix, matrix, this.getPosition());
-        mat4.rotateX(matrix, matrix, rotation[0]);
-        mat4.rotateY(matrix, matrix, rotation[1]);
-        mat4.rotateZ(matrix, matrix, rotation[2]);
-        mat4.scale(matrix, matrix, this.getScale());
-
-        return matrix;
+        return mat4.fromRotationTranslationScale(
+            mat4.create(),
+            this.rotation,
+            this.getPosition(),
+            this.getScale()
+        );
     }
 
     public getPosition(): vec3 {
@@ -45,11 +46,11 @@ export class Transformation {
         this.position = position;
     }
 
-    public getRotation(): vec3 {
+    public getRotation(): quat {
         return this.rotation instanceof Function ? this.rotation() : this.rotation;
     }
 
-    public setRotation(rotation: vector3) {
+    public setRotation(rotation: quat) {
         this.rotation = rotation;
     }
 

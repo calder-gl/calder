@@ -10,7 +10,7 @@ export namespace Affine {
      * @return {vec4}: The point in Affine space.
      */
     export function createPoint(point: vec3): vec4 {
-        return vec4.fromValues(point[0], point[1], point[2], 0);
+        return vec4.fromValues(point[0], point[1], point[2], 1);
     }
 
     /**
@@ -19,6 +19,15 @@ export namespace Affine {
      * @return {vec4}: The vector in Affine space.
      */
     export function createVector(vector: vec3): vec4 {
-        return vec4.fromValues(vector[0], vector[1], vector[2], 1);
+        return vec4.fromValues(vector[0], vector[1], vector[2], 0);
+    }
+
+    /**
+     * Convert a vector from Affine space to 3D space.
+     * @param {vec4} vector: The vector to truncate.
+     * @return {vec3}: The vector without the last element.
+     */
+    export function to3D(vector: vec4): vec3 {
+        return vec3.fromValues(vector[0], vector[1], vector[2]);
     }
 }

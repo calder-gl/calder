@@ -2,7 +2,7 @@ import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { BakedGeometry } from '../geometry/BakedGeometry';
 import { closestPointOnLine, vec3From4, vec3ToPoint } from '../math/utils';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
-import { vector3 } from '../types/VectorTypes';
+import { matrix4, vector3 } from '../types/VectorTypes';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
 
@@ -53,7 +53,7 @@ export class Node {
     constructor(
         children: Node[] = [],
         position: vector3 = vec3.fromValues(0, 0, 0),
-        rotation: quat = quat.create(),
+        rotation: matrix4 = mat4.create(),
         scale: vector3 = vec3.fromValues(1, 1, 1)
     ) {
         this.children = children;
@@ -121,7 +121,6 @@ export class Node {
         if (this.grabbed === null) {
             throw new Error('You must grab a point before pointing it at something');
         }
-        const grabbed = vec3ToPoint(this.grabbed);
 
         // Constrained points must stay in the same location before and after the rotation
         const constrainedPoints: vec3[] = [...this.held];
@@ -134,7 +133,6 @@ export class Node {
 
         // Bring the target point into local coordinates
         const target3 = this.localPointCoordinate(point);
-        const target = vec3ToPoint(target3);
 
         // Use the last constrained point as an anchor. If this node was attached to a parent, then
         // this will be `this.anchor`. Otherwise, it will be some other arbitrary held point.
@@ -142,69 +140,16 @@ export class Node {
         if (anchor3 === undefined) {
             throw new Error('At least one point must be held or attached to another node');
         }
-        const anchor = vec3ToPoint(anchor3);
 
         if (constrainedPoints.length === 0) {
             // After having popped one constrained point, if there are no remaining points, then
             // there are two degrees of freedom
-
-            // Create vectors going from the anchor to the
-            const toGrabbed = vec3.sub(vec3.create(), this.grabbed, anchor3);
-            const toTarget = vec3.sub(vec3.create(), target3, anchor3);
-
-            // We want to rotate about an axis perpendicular to the plane defined by the anchor,
-            // the grabbed point, and the target point
-            const axis = vec3.cross(vec3.create(), toGrabbed, toTarget);
-            vec3.normalize(axis, axis);
-
-            // We need to rotate the angle between the vector from anchor to grab point and the
-            // vector from anchor to target point
-            const angle = vec3.angle(toGrabbed, toTarget);
-
-            // Create a quaternion from the axis and angle
-            this.setRotation(
-                quat.multiply(
-                    quat.create(),
-                    quat.setAxisAngle(quat.create(), axis, angle),
-                    this.getRotation()
-                )
-            );
+            this.rotateTo2Degrees(anchor3, target3, this.grabbed);
         } else if (constrainedPoints.length === 1) {
             // After having popped one constraine dpoint, if there is another remaining point, then
             // we only have one degree of freedom, so rotation will be about the axis between the
             // anchor point and the remaining constrained point
-
-            // Compute the axis between the two constrained points
-            const heldAxis = vec4.sub(vec4.create(), vec3ToPoint(constrainedPoints[0]), anchor);
-            vec4.normalize(heldAxis, heldAxis);
-
-            // Get the vector from the axis to the grabbed point
-            const closestOnAxisToGrab = closestPointOnLine(grabbed, anchor, heldAxis);
-            const toGrabbed = vec4.sub(vec4.create(), grabbed, closestOnAxisToGrab);
-
-            // Get the vector from the axis to the target
-            const closestOnAxisToTarget = closestPointOnLine(target, anchor, heldAxis);
-            const toTarget = vec4.sub(vec4.create(), target, closestOnAxisToTarget);
-
-            // Create an axis that is perpendicular to the vector from axis to target and the vector
-            // from axis to grab point. Even though we already have an axis, it could be pointing
-            // positively or negatively, depending on the order hold points were added. By using
-            // the cross product, we will always have the axis face the same way relative to the two
-            // vectors.
-            const axis = vec3.cross(vec3.create(), vec3From4(toGrabbed), vec3From4(toTarget));
-            vec3.normalize(axis, axis);
-
-            // Get the angle between the vector to the grab point and the vector to the target
-            const angle = vec3.angle(vec3From4(toGrabbed), vec3From4(toTarget));
-
-            // Create a quaternion from the axis and angle
-            this.setRotation(
-                quat.multiply(
-                    quat.create(),
-                    quat.setAxisAngle(quat.create(), axis, angle),
-                    this.getRotation()
-                )
-            );
+            this.rotateTo1Degree(anchor3, target3, this.grabbed, constrainedPoints[0]);
         } else {
             throw new Error(
                 `There are too many held points (${
@@ -214,6 +159,99 @@ export class Node {
         }
 
         return this;
+    }
+
+    public rotateTo1Degree(anchor3: vec3, target3: vec3, grabbed3: vec3, held3: vec3) {
+        const target = vec3ToPoint(target3);
+        const anchor = vec3ToPoint(anchor3);
+        const grabbed = vec3ToPoint(grabbed3);
+        const scaleMatrix = mat4.fromScaling(mat4.create(), this.getScale());
+
+        // Compute the axis between the two constrained points
+        const heldAxis = vec4.sub(vec4.create(), vec3ToPoint(held3), anchor);
+        vec4.normalize(heldAxis, heldAxis);
+
+        // Get the vector from the axis to the grabbed point
+        const closestOnAxisToGrab = closestPointOnLine(grabbed, anchor, heldAxis);
+        const toGrabbed = vec4.sub(vec4.create(), grabbed, closestOnAxisToGrab);
+
+        // Get the vector from the axis to the target
+        const closestOnAxisToTarget = closestPointOnLine(target, anchor, heldAxis);
+        const toTarget = vec4.sub(vec4.create(), target, closestOnAxisToTarget);
+
+        // Rotation gets applied before scale, so we want to undo this node's scale before
+        // calculating the new rotation
+        vec4.transformMat4(toGrabbed, toGrabbed, scaleMatrix);
+        vec4.transformMat4(toTarget, toTarget, scaleMatrix);
+
+        // Normalize direction vectors
+        const toGrabbed3 = vec3From4(toGrabbed);
+        const toTarget3 = vec3From4(toTarget);
+        vec3.normalize(toGrabbed3, toGrabbed3);
+        vec3.normalize(toTarget3, toTarget3);
+
+        // Move the center of rotation to the anchor
+        const incRotation = mat4.fromTranslation(mat4.create(), vec3From4(anchor));
+
+        // Add a rotation equal to the shortest rotation from the vector of the anchor to the grab
+        // point to the vector from the anchor to the target point
+        mat4.multiply(
+            incRotation,
+            mat4.fromQuat(mat4.create(), quat.rotationTo(quat.create(), toGrabbed3, toTarget3)),
+            incRotation
+        );
+
+        // Shift the center back again
+        mat4.translate(
+            incRotation,
+            incRotation,
+            vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor))
+        );
+
+        this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
+    }
+
+    public rotateTo2Degrees(anchor3: vec3, target3: vec3, grabbed3: vec3) {
+        const scaleMatrix = mat4.fromScaling(mat4.create(), this.getScale());
+        const grabbed = vec3ToPoint(grabbed3);
+        const target = vec3ToPoint(target3);
+        const anchor = vec3ToPoint(anchor3);
+
+        // Rotation gets applied before scale, so we want to undo this node's scale before
+        // calculating the new rotation
+        vec4.transformMat4(grabbed, grabbed, scaleMatrix);
+        vec4.transformMat4(target, target, scaleMatrix);
+        vec4.transformMat4(anchor, anchor, scaleMatrix);
+
+        // Create vectors going from the anchor to the
+        const toGrabbed = vec4.sub(vec4.create(), grabbed, anchor);
+        const toTarget = vec4.sub(vec4.create(), target, anchor);
+
+        // Normalize direction vectors
+        const toGrabbed3 = vec3From4(toGrabbed);
+        const toTarget3 = vec3From4(toTarget);
+        vec3.normalize(toGrabbed3, toGrabbed3);
+        vec3.normalize(toTarget3, toTarget3);
+
+        // Move the center of rotation to the anchor
+        const incRotation = mat4.fromTranslation(mat4.create(), vec3From4(anchor));
+
+        // Add a rotation equal to the shortest rotation from the vector of the anchor to the grab
+        // point to the vector from the anchor to the target point
+        mat4.multiply(
+            incRotation,
+            incRotation,
+            mat4.fromQuat(mat4.create(), quat.rotationTo(quat.create(), toGrabbed3, toTarget3))
+        );
+
+        // Shift the center back again
+        mat4.translate(
+            incRotation,
+            incRotation,
+            vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor))
+        );
+
+        this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
     }
 
     public addChild(child: Node) {
@@ -234,9 +272,9 @@ export class Node {
     /**
      * Gets the node's rotation.
      *
-     * @returns {quat}
+     * @returns {mat4}
      */
-    public getRotation(): quat {
+    public getRotation(): mat4 {
         return this.transformation.getRotation();
     }
 
@@ -244,9 +282,9 @@ export class Node {
      * Sets the rotation for the node by updating the private `transformation`
      * property.
      *
-     * @param {quat} rotation
+     * @param {mat4} rotation
      */
-    public setRotation(rotation: quat) {
+    public setRotation(rotation: matrix4) {
         this.transformation.setRotation(rotation);
     }
 
@@ -290,6 +328,7 @@ export class Node {
     /**
      * @returns {mat4} A matrix that brings local coordinate into the parent coordinate space.
      */
+
     public getTransformation(): mat4 {
         return this.transformation.getTransformation();
     }
@@ -301,7 +340,7 @@ export class Node {
     public localToGlobalTransform(): mat4 {
         const transform = this.transformation.getTransformation();
         if (this.parent !== null) {
-            mat4.multiply(transform, transform, this.parent.localToGlobalTransform());
+            mat4.multiply(transform, this.parent.localToGlobalTransform(), transform);
         }
 
         return transform;
@@ -390,10 +429,13 @@ export class Node {
 
             // Rotate the bone so it points from the parent node's origin to the current node's
             // origin
-            quat.rotationTo(
-                quat.create(),
-                vec3.fromValues(1, 0, 0),
-                vec3.normalize(vec3.create(), this.transformation.getPosition())
+            mat4.fromQuat(
+                mat4.create(),
+                quat.rotationTo(
+                    quat.create(),
+                    vec3.fromValues(1, 0, 0),
+                    vec3.normalize(vec3.create(), this.transformation.getPosition())
+                )
             ),
 
             // Scale the bone so its length is equal to the length between the parent node's origin
@@ -431,13 +473,16 @@ export class Node {
             // it out of its own node's space into global space
             mat4.multiply(pointToLocal, point.node.localToGlobalTransform(), pointToLocal);
         }
+
         // tslint:disable-next-line:no-use-before-declare
         if (!(point instanceof Point) || point.node !== this) {
             // If the point was given in a coordenate space other than this node's space, it is now
             // in global space after the previous matrix multiply, so we now need to bring it from
             // global into this node's local space.
             mat4.multiply(pointToLocal, this.globalToLocalTransform(), pointToLocal);
+            //mat4.scale(pointToLocal, pointToLocal, this.getScale());
         }
+
         const local = vec4.transformMat4(vec4.create(), pointRelative, pointToLocal);
 
         return vec3From4(local);

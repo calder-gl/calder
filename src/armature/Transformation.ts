@@ -1,17 +1,18 @@
 import { mat4, vec3 } from 'gl-matrix';
+import { matrix4, vector3 } from '../types/VectorTypes';
 
 /**
  * Not intended to be user facing.
  */
 export class Transformation {
-    public position: vec3;
-    public rotation: mat4;
-    public scale: vec3;
+    private position: vector3;
+    private rotation: matrix4;
+    private scale: vector3;
 
     constructor(
-        position: vec3 = vec3.fromValues(0, 0, 0),
-        rotation: mat4 = mat4.create(),
-        scale: vec3 = vec3.fromValues(1, 1, 1)
+        position: vector3 = vec3.fromValues(0, 0, 0),
+        rotation: matrix4 = mat4.create(),
+        scale: vector3 = vec3.fromValues(1, 1, 1)
     ) {
         this.position = position;
         this.rotation = rotation;
@@ -25,10 +26,34 @@ export class Transformation {
      * @returns {mat4}
      */
     public getTransformation(): mat4 {
-        const transform = mat4.fromTranslation(mat4.create(), this.position);
-        mat4.multiply(transform, transform, this.rotation);
-        mat4.scale(transform, transform, this.scale);
+        const transform = mat4.fromTranslation(mat4.create(), this.getPosition());
+        mat4.multiply(transform, transform, this.getRotation());
+        mat4.scale(transform, transform, this.getScale());
 
         return transform;
+    }
+
+    public getPosition(): vec3 {
+        return this.position instanceof Function ? this.position() : this.position;
+    }
+
+    public setPosition(position: vector3) {
+        this.position = position;
+    }
+
+    public getRotation(): mat4 {
+        return this.rotation instanceof Function ? this.rotation() : this.rotation;
+    }
+
+    public setRotation(rotation: matrix4) {
+        this.rotation = rotation;
+    }
+
+    public getScale(): vec3 {
+        return this.scale instanceof Function ? this.scale() : this.scale;
+    }
+
+    public setScale(scale: vector3) {
+        this.scale = scale;
     }
 }

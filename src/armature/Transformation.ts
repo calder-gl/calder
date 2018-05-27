@@ -43,7 +43,7 @@ export class Transformation {
     }
 
     public getRotation(): quat {
-        return this.rotation instanceof Function ? this.rotation() : this.rotation;
+        return this.rotation;
     }
 
     public setRotation(rotation: quat) {

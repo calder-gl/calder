@@ -11,8 +11,12 @@ export class Constraints {
         this.constraints = [];
     }
 
-    public static get() {
-        return this.instance || (this.instance = new this());
+    public static getInstance() {
+        if (this.instance === null) {
+            this.instance = new this();
+        }
+
+        return this.instance;
     }
 
     /**

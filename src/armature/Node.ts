@@ -208,7 +208,7 @@ export class Node {
         } else {
             throw new Error(
                 `There are too many held points (${
-                constrainedPoints.length
+                    constrainedPoints.length
                 }), so the node can't be rotated`
             );
         }

@@ -1,11 +1,4 @@
-import { Node } from './Node';
-
-type ConstraintCallback = (node: Node) => void;
-
-type ConstraintWithNode = {
-    constraint: ConstraintCallback;
-    node: Node;
-};
+import { ConstraintWithNode } from '../types/ConstraintTypes';
 
 /**
  * User facing constraint on an armature which a user may define.

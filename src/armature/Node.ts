@@ -191,10 +191,7 @@ export class Node {
         vec3.normalize(toTarget3, toTarget3);
 
         // Move the center of rotation to the anchor
-        const incRotation = mat4.fromTranslation(
-            mat4.create(),
-            vec3From4(anchor)
-        );
+        const incRotation = mat4.fromTranslation(mat4.create(), vec3From4(anchor));
 
         // Add a rotation equal to the shortest rotation from the vector of the anchor to the grab
         // point to the vector from the anchor to the target point
@@ -205,7 +202,11 @@ export class Node {
         );
 
         // Shift the center back again
-        mat4.translate(incRotation, incRotation, vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor)));
+        mat4.translate(
+            incRotation,
+            incRotation,
+            vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor))
+        );
 
         this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
     }
@@ -233,10 +234,7 @@ export class Node {
         vec3.normalize(toTarget3, toTarget3);
 
         // Move the center of rotation to the anchor
-        const incRotation = mat4.fromTranslation(
-            mat4.create(),
-            vec3From4(anchor)
-        );
+        const incRotation = mat4.fromTranslation(mat4.create(), vec3From4(anchor));
 
         // Add a rotation equal to the shortest rotation from the vector of the anchor to the grab
         // point to the vector from the anchor to the target point
@@ -247,7 +245,11 @@ export class Node {
         );
 
         // Shift the center back again
-        mat4.translate(incRotation, incRotation, vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor)));
+        mat4.translate(
+            incRotation,
+            incRotation,
+            vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor))
+        );
 
         this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
     }
@@ -321,6 +323,14 @@ export class Node {
      */
     public setPosition(position: vector3) {
         this.transformation.setPosition(position);
+    }
+
+    /**
+     * @returns {mat4} A matrix that brings local coordinate into the parent coordinate space.
+     */
+
+    public getTransformation(): mat4 {
+        return this.transformation.getTransformation();
     }
 
     /**

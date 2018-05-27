@@ -219,7 +219,7 @@ describe('Node', () => {
             );
         });
 
-        fit('can rotate constrained to an axis a node to look at a point in another node', () => {
+        it('can rotate constrained to an axis a node to look at a point in another node', () => {
             const parent = bone();
             const child = bone();
             child.createPoint('handle', vec3.fromValues(1, 0.5, 0));
@@ -310,10 +310,13 @@ describe('Node', () => {
                 .pointAt(vec3.fromValues(1, 1, 0))
                 .release();
 
-            const testPoint = vec4.fromValues(0, 0, 0, 1);
-            vec4.transformMat4(testPoint, testPoint, node.localToGlobalTransform());
+            const tipPoint = vec4.fromValues(0, 1, 0, 1);
+            vec4.transformMat4(tipPoint, tipPoint, node.localToGlobalTransform());
+            expect(tipPoint).toEqualVec4(vec4.fromValues(0, 1, 0, 1));
 
-            expect(testPoint).toEqualVec4(vec4.fromValues(1, 1, 0, 1));
+            const basePoint = vec4.fromValues(0, 0, 0, 1);
+            vec4.transformMat4(basePoint, basePoint, node.localToGlobalTransform());
+            expect(basePoint).toEqualVec4(vec4.fromValues(1, 1, 0, 1));
         });
     });
 

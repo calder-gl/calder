@@ -186,7 +186,7 @@ export class Node {
         // Move the center of rotation to the anchor
         const incRotation = mat4.fromTranslation(
             mat4.create(),
-            vec3.sub(vec3.create(), vec3.create(), anchor3)
+            vec3From4(anchor)
         );
 
         // Add a rotation equal to the shortest rotation from the vector of the anchor to the grab
@@ -198,7 +198,7 @@ export class Node {
         );
 
         // Shift the center back again
-        mat4.translate(incRotation, incRotation, anchor3);
+        mat4.translate(incRotation, incRotation, vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor)));
 
         this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
     }
@@ -228,19 +228,19 @@ export class Node {
         // Move the center of rotation to the anchor
         const incRotation = mat4.fromTranslation(
             mat4.create(),
-            vec3.sub(vec3.create(), vec3.create(), anchor3)
+            vec3From4(anchor)
         );
 
         // Add a rotation equal to the shortest rotation from the vector of the anchor to the grab
         // point to the vector from the anchor to the target point
         mat4.multiply(
             incRotation,
-            mat4.fromQuat(mat4.create(), quat.rotationTo(quat.create(), toGrabbed3, toTarget3)),
-            incRotation
+            incRotation,
+            mat4.fromQuat(mat4.create(), quat.rotationTo(quat.create(), toGrabbed3, toTarget3))
         );
 
         // Shift the center back again
-        mat4.translate(incRotation, incRotation, anchor3);
+        mat4.translate(incRotation, incRotation, vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor)));
 
         this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
     }

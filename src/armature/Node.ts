@@ -3,7 +3,6 @@ import { BakedGeometry } from '../geometry/BakedGeometry';
 import { closestPointOnLine, vec3From4, vec3ToPoint } from '../math/utils';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
 import { vector3 } from '../types/VectorTypes';
-import { Constraint } from './Constraint';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
 
@@ -54,7 +53,7 @@ export class Node {
     constructor(
         children: Node[] = [],
         position: vector3 = vec3.fromValues(0, 0, 0),
-        rotation: vector3 = vec3.fromValues(0, 0, 0),
+        rotation: quat = quat.create(),
         scale: vector3 = vec3.fromValues(1, 1, 1)
     ) {
         this.children = children;
@@ -286,14 +285,6 @@ export class Node {
      */
     public setPosition(position: vector3) {
         this.transformation.setPosition(position);
-    }
-
-    public setConstraint(constraint: Constraint) {
-        this.transformation.setConstraint(constraint);
-    }
-
-    public addConstraint(constraint: Constraint) {
-        this.transformation.addConstraint(constraint);
     }
 
     /**

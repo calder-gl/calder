@@ -1,6 +1,5 @@
 import { mat4, quat, vec3 } from 'gl-matrix';
 import { vector3 } from '../types/VectorTypes';
-import { Constraint } from './Constraint';
 
 /**
  * Not intended to be user facing.
@@ -9,18 +8,15 @@ export class Transformation {
     private position: vector3;
     private rotation: quat;
     private scale: vector3;
-    private constraint: Constraint;
 
     constructor(
         position: vector3 = vec3.fromValues(0, 0, 0),
         rotation: quat = quat.create(),
-        scale: vector3 = vec3.fromValues(1, 1, 1),
-        constraint: Constraint = new Constraint()
+        scale: vector3 = vec3.fromValues(1, 1, 1)
     ) {
         this.position = position;
         this.rotation = rotation;
         this.scale = scale;
-        this.constraint = constraint;
     }
 
     /**
@@ -60,27 +56,5 @@ export class Transformation {
 
     public setScale(scale: vector3) {
         this.scale = scale;
-    }
-
-    public getConstraint(): Constraint {
-        return this.constraint;
-    }
-
-    public setConstraint(constraint: Constraint) {
-        this.constraint = constraint;
-    }
-
-    public addConstraint(constraint: Constraint) {
-        if (constraint.getPosition() !== null && this.constraint.getPosition() === null) {
-            this.constraint.setPosition(constraint.getPosition());
-        }
-
-        if (constraint.getRotation() !== null && this.constraint.getRotation() === null) {
-            this.constraint.setRotation(constraint.getRotation());
-        }
-
-        if (constraint.getScale() !== null && this.constraint.getScale() === null) {
-            this.constraint.setScale(constraint.getScale());
-        }
     }
 }

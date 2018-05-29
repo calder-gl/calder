@@ -42,7 +42,7 @@ describe('Node', () => {
 
         it('respects scale', () => {
             const node = bone();
-            node.setScale(vec3.fromValues(2, 1, 1));
+            node.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(2, 1, 1)));
 
             const point = vec4.fromValues(1, 0, 0, 1);
             vec4.transformMat4(point, point, node.globalToLocalTransform());
@@ -93,7 +93,7 @@ describe('Node', () => {
 
         it('respects scale', () => {
             const node = bone();
-            node.setScale(vec3.fromValues(2, 1, 1));
+            node.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(2, 1, 1)));
 
             const point = vec4.fromValues(0.5, 0, 0, 1);
             vec4.transformMat4(point, point, node.localToGlobalTransform());
@@ -278,7 +278,7 @@ describe('Node', () => {
 
         it('can rotate a node to look at a point in another node while scaled', () => {
             const node = bone();
-            node.setScale(vec3.fromValues(1, 2, 1));
+            node.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(1, 2, 1)));
             node.setPosition(vec3.fromValues(4, 0, 0));
 
             const target = bone();

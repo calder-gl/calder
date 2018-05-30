@@ -7,12 +7,12 @@ import { matrix4, vector3 } from '../types/VectorTypes';
 export class Transformation {
     private position: vector3;
     private rotation: matrix4;
-    private scale: vector3;
+    private scale: matrix4;
 
     constructor(
         position: vector3 = vec3.fromValues(0, 0, 0),
         rotation: matrix4 = mat4.create(),
-        scale: vector3 = vec3.fromValues(1, 1, 1)
+        scale: matrix4 = mat4.create()
     ) {
         this.position = position;
         this.rotation = rotation;
@@ -28,7 +28,7 @@ export class Transformation {
     public getTransformation(): mat4 {
         const transform = mat4.fromTranslation(mat4.create(), this.getPosition());
         mat4.multiply(transform, transform, this.getRotation());
-        mat4.scale(transform, transform, this.getScale());
+        mat4.multiply(transform, transform, this.getScale());
 
         return transform;
     }
@@ -49,11 +49,11 @@ export class Transformation {
         this.rotation = rotation;
     }
 
-    public getScale(): vec3 {
+    public getScale(): mat4 {
         return this.scale instanceof Function ? this.scale() : this.scale;
     }
 
-    public setScale(scale: vector3) {
+    public setScale(scale: matrix4) {
         this.scale = scale;
     }
 }

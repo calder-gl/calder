@@ -398,7 +398,7 @@ export class Node {
             // there are two degrees of freedom
             this.rotateTo2Degrees(anchor3, target3, this.grabbed, stretch);
         } else if (constrainedPoints.length === 1) {
-            // After having popped one constraine dpoint, if there is another remaining point, then
+            // After having popped one constrained point, if there is another remaining point, then
             // we only have one degree of freedom, so rotation will be about the axis between the
             // anchor point and the remaining constrained point
             this.rotateTo1Degree(anchor3, target3, this.grabbed, constrainedPoints[0], stretch);

@@ -51,7 +51,7 @@ range(5).forEach(() => {
 
 const test = bone();
 test.setPosition(vec3.fromValues(3, 0, 0));
-//test.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(1, 3, 1)));
+test.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(1, 3, 1)));
 const testChild = bone();
 testChild.point('base').stickTo(test.point('tip'));
 

@@ -301,31 +301,28 @@ export class Node {
     protected boneRenderObject(parentMatrix: mat4): RenderObject {
         const position = this.getPosition();
 
-        const transform: mat4 = 
-            mat4.scale(
+        const transform: mat4 = mat4.scale(
+            mat4.create(),
+
+            // Rotate the bone so it points from the parent node's origin to the current node's
+            // origin
+            mat4.fromQuat(
                 mat4.create(),
-
-                // Rotate the bone so it points from the parent node's origin to the current node's
-                // origin
-                mat4.fromQuat(
-                    mat4.create(),
-                    quat.rotationTo(
-                        quat.create(),
-                        vec3.fromValues(1, 0, 0),
-                        vec3.normalize(vec3.create(), this.transformation.getPosition())
-                    )
-                ),
-
-                vec3.fromValues(
-                    Math.sqrt(
-                        Math.pow(position[0], 2) +
-                            Math.pow(position[1], 2) +
-                            Math.pow(position[2], 2)
-                    ),
-                    1,
-                    1
+                quat.rotationTo(
+                    quat.create(),
+                    vec3.fromValues(1, 0, 0),
+                    vec3.normalize(vec3.create(), this.transformation.getPosition())
                 )
-            );
+            ),
+
+            vec3.fromValues(
+                Math.sqrt(
+                    Math.pow(position[0], 2) + Math.pow(position[1], 2) + Math.pow(position[2], 2)
+                ),
+                1,
+                1
+            )
+        );
         const transformationMatrix = mat4.create();
         mat4.multiply(transformationMatrix, parentMatrix, transform);
 
@@ -416,7 +413,13 @@ export class Node {
         return this;
     }
 
-    private rotateTo1Degree(anchor3: vec3, target3: vec3, grabbed3: vec3, held3: vec3, stretch: boolean) {
+    private rotateTo1Degree(
+        anchor3: vec3,
+        target3: vec3,
+        grabbed3: vec3,
+        held3: vec3,
+        stretch: boolean
+    ) {
         const target = vec3ToPoint(target3);
         const anchor = vec3ToPoint(anchor3);
         const grabbed = vec3ToPoint(grabbed3);
@@ -442,6 +445,8 @@ export class Node {
         // Normalize direction vectors
         const toGrabbed3 = vec3From4(toGrabbed);
         const toTarget3 = vec3From4(toTarget);
+        const toGrabbedUnscaled = vec3.copy(vec3.create(), toGrabbed3);
+        const toTargetUnscaled = vec3.copy(vec3.create(), toTarget3);
         vec3.normalize(toGrabbed3, toGrabbed3);
         vec3.normalize(toTarget3, toTarget3);
 
@@ -456,18 +461,6 @@ export class Node {
             incRotation
         );
 
-        if (stretch) {
-            const scale = vec4.length(vec4.sub(vec4.create(), closestOnAxisToTarget, anchor)) / vec4.length(vec4.sub(vec4.create(), closestOnAxisToGrab, anchor));
-            mat4.multiply(
-                incRotation,
-                incRotation,
-                mat4.fromScaling(
-                    mat4.create(),
-                    vec3.fromValues(1, scale, 1)
-                )
-            );
-        }
-
         // Shift the center back again
         mat4.translate(
             incRotation,
@@ -476,6 +469,11 @@ export class Node {
         );
 
         this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
+
+        if (stretch) {
+            const scale = vec3.length(toTargetUnscaled) / vec3.length(toGrabbedUnscaled);
+            this.scaleAxis(vec3From4(closestOnAxisToGrab), grabbed3, scale);
+        }
     }
 
     private rotateTo2Degrees(anchor3: vec3, target3: vec3, grabbed3: vec3, stretch: boolean) {
@@ -493,6 +491,8 @@ export class Node {
         // Create vectors going from the anchor to the
         const toGrabbed = vec4.sub(vec4.create(), grabbed, anchor);
         const toTarget = vec4.sub(vec4.create(), target, anchor);
+        const toGrabbedUnscaled = vec4.copy(vec4.create(), toGrabbed);
+        const toTargetUnscaled = vec4.copy(vec4.create(), toTarget);
 
         // Normalize direction vectors
         const toGrabbed3 = vec3From4(toGrabbed);
@@ -520,59 +520,56 @@ export class Node {
 
         this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
 
-
         if (stretch) {
-            // Move the center of rotation to the anchor
-            const incScaling = mat4.fromTranslation(mat4.create(), vec3From4(anchor));
-
-            const toTargetUnscaled = vec3.sub(vec3.create(), target3, anchor3);
-            const toGrabbedUnscaled = vec3.sub(vec3.create(), grabbed3, anchor3);
-
-            mat4.multiply(
-                incScaling,
-                incScaling,
-                mat4.fromQuat(
-                    mat4.create(),
-                    quat.rotationTo(
-                        quat.create(),
-                        vec3.fromValues(1, 0, 0),
-                        toGrabbedUnscaled
-                    )
-                )
-            );
-
-            mat4.multiply(
-                incScaling,
-                incScaling,
-                mat4.fromScaling(
-                    mat4.create(),
-                    vec3.fromValues(vec3.length(toTargetUnscaled) / vec3.length(toGrabbedUnscaled), 1, 1)
-                )
-            );
-
-            mat4.multiply(
-                incScaling,
-                incScaling,
-                mat4.fromQuat(
-                    mat4.create(),
-                    quat.rotationTo(
-                        quat.create(),
-                        toGrabbedUnscaled,
-                        vec3.fromValues(1, 0, 0)
-                    )
-                )
-            );
-
-            // Shift the center back again
-            mat4.translate(
-                incScaling,
-                incScaling,
-                vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor))
-            );
-
-            this.setScale(mat4.multiply(mat4.create(), this.getScale(), incScaling));
+            const scale = vec4.length(toTargetUnscaled) / vec4.length(toGrabbedUnscaled);
+            this.scaleAxis(anchor3, grabbed3, scale);
         }
+    }
 
+    /**
+     * Scales along an anchor point to a grabbed point by a given amount.
+     *
+     * @param {vec3} anchor The point the stretch is centered around.
+     * @param {vec3} grabbed The point that should stretch to the target.
+     * @param {number} scale The amount to scale by
+     */
+    private scaleAxis(anchor: vec3, grabbed: vec3, scale: number) {
+        // Move the center of rotation to the anchor
+        const incScaling = mat4.fromTranslation(mat4.create(), anchor);
+
+        const toGrabbedUnscaled = vec3.sub(vec3.create(), grabbed, anchor);
+
+        // Rotate so that the x axis becomes the line from the held axis to the grabbed point
+        mat4.multiply(
+            incScaling,
+            incScaling,
+            mat4.fromQuat(
+                mat4.create(),
+                quat.rotationTo(quat.create(), vec3.fromValues(1, 0, 0), toGrabbedUnscaled)
+            )
+        );
+
+        // Scale along the held axis
+        mat4.multiply(
+            incScaling,
+            incScaling,
+            mat4.fromScaling(mat4.create(), vec3.fromValues(scale, 1, 1))
+        );
+
+        // Rotate back
+        mat4.multiply(
+            incScaling,
+            incScaling,
+            mat4.fromQuat(
+                mat4.create(),
+                quat.rotationTo(quat.create(), toGrabbedUnscaled, vec3.fromValues(1, 0, 0))
+            )
+        );
+
+        // Shift the center back again
+        mat4.translate(incScaling, incScaling, vec3.sub(vec3.create(), vec3.create(), anchor));
+
+        this.setScale(mat4.multiply(mat4.create(), this.getScale(), incScaling));
     }
 }
 

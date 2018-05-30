@@ -320,6 +320,55 @@ describe('Node', () => {
         });
     });
 
+    describe('stretchTo', () => {
+        it('brings the grabbed point to the target when there are 2 degrees of freedom', () => {
+            const node = bone();
+            node
+                .hold(node.point('base'))
+                .grab(node.point('tip'))
+                .stretchTo(vec3.fromValues(0, 0, 2))
+                .release();
+
+            // Check that the tip of the bone ends up at the target
+            const testPoint = vec4.fromValues(0, 1, 0, 1);
+            vec4.transformMat4(testPoint, testPoint, node.localToGlobalTransform());
+            expect(testPoint).toEqualVec4(vec4.fromValues(0, 0, 2, 1));
+        });
+
+        it('brings the grabbed point to the target when there are 2 degrees of freedom and an initial scale', () => {
+            const node = bone();
+            node.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(2, 3, 5)));
+
+            node
+                .hold(node.point('base'))
+                .grab(node.point('tip'))
+                .stretchTo(vec3.fromValues(0, 0, 2))
+                .release();
+
+            // Check that the tip of the bone ends up at the target
+            const testPoint = vec4.fromValues(0, 1, 0, 1);
+            vec4.transformMat4(testPoint, testPoint, node.localToGlobalTransform());
+            expect(testPoint).toEqualVec4(vec4.fromValues(0, 0, 2, 1));
+        });
+
+        it('brings the grabbed point as close as it can to the target when there is 1 degree of freedom', () => {
+            const node = bone();
+            node.createPoint('handle', vec3.fromValues(1, 0.5, 0));
+
+            node
+                .hold(node.point('base'))
+                .hold(node.point('tip'))
+                .grab(node.point('handle'))
+                .stretchTo(vec3.fromValues(0, 0, 2))
+                .release();
+
+            // Check that the handle of the bone ends up at the target
+            const testPoint = vec4.fromValues(1, 0.5, 0, 1);
+            vec4.transformMat4(testPoint, testPoint, node.localToGlobalTransform());
+            expect(testPoint).toEqualVec4(vec4.fromValues(0, 0.5, 2, 1));
+        });
+    });
+
     describe('traverse', () => {
         it("flattens the parent's coordinate space and returns an array of `RenderObject`s", () => {
             const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };

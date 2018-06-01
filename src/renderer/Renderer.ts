@@ -5,7 +5,7 @@ import { Light } from './interfaces/Light';
 import { RenderObject } from './interfaces/RenderObject';
 import { Camera } from './Camera';
 
-import { mat4, vec4 } from 'gl-matrix';
+import { mat4, vec3, vec4 } from 'gl-matrix';
 
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
@@ -30,15 +30,22 @@ export class Renderer {
     private drawObject: REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps>;
     private drawAxes: REGL.DrawCommand<REGL.DefaultContext, DrawAxesProps>;
     private lights: Light[];
+    private ambientLight: vec3;
 
     private projectionMatrix: mat4 = mat4.create();
     private ctx2D: CanvasRenderingContext2D;
 
-    constructor(width: number, height: number, maxLights: number) {
+    constructor(
+        width: number,
+        height: number,
+        maxLights: number,
+        ambientLight: vec3 = vec3.create()
+    ) {
         this.width = width;
         this.height = height;
         this.maxLights = maxLights;
         this.lights = [];
+        this.ambientLight = ambientLight;
 
         // Create a single element to contain the renderer view
         this.stage = document.createElement('div');
@@ -125,6 +132,7 @@ export class Renderer {
                     indices: o.indices,
                     isShadeless: o.isShadeless === true,
                     numLights: this.lights.length,
+                    ambientLight: this.ambientLight,
                     lights: this.lights
                 };
             })
@@ -145,6 +153,7 @@ export class Renderer {
                         indices: o.indices,
                         isShadeless: o.isShadeless === true,
                         numLights: this.lights.length,
+                        ambientLight: this.ambientLight,
                         lights: this.lights
                     };
                 })

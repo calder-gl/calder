@@ -146,4 +146,223 @@ describe('WorkingGeometry', () => {
             childCube1.merge(grandChildCube3);
         });
     });
+    describe('translate', () => {
+        it('can translate on the positive x, y, z axes', () => {
+            const cube = TestHelper.cube();
+            const v = vec3.fromValues(1, 2, 3);
+
+            cube.translate(v);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqualArrVec4(result.vertices);
+        });
+        it('can translate on the negative x, y, z axes', () => {
+            const cube = TestHelper.cube();
+            const v = vec3.fromValues(-3, -2, -1);
+
+            cube.translate(v);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqualArrVec4(result.vertices);
+        });
+        it('can translate with arbitrary values on the x, y, z axes', () => {
+            const cube = TestHelper.cube();
+            const v = vec3.fromValues(1.2, -3.5, 6.2);
+
+            cube.translate(v);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqualArrVec4(result.vertices);
+        });
+        it('can translate with the zero vector and remain unchanged', () => {
+            const cube = TestHelper.cube();
+            const v = vec3.fromValues(0, 0, 0);
+
+            cube.translate(v);
+
+            const result = TestHelper.cube(v);
+            expect(cube.vertices).toEqualArrVec4(result.vertices);
+        });
+    });
+    describe('rotate', () => {
+        it('can rotate on the x axis by 90 degrees about origin', () => {
+            const square = TestHelper.square();
+            const xAxis = vec3.fromValues(1, 0, 0);
+
+            square.rotate(xAxis, Math.PI / 2);
+
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, 0, 1, 1),
+                vec4.fromValues(1, 0, 1, 1),
+                vec4.fromValues(1, 0, 0, 1)
+            ]);
+        });
+        it('can rotate on an arbitrary axis by 90 degrees about origin', () => {
+            const square = TestHelper.square();
+            const axis = vec3.fromValues(1, 2, 3);
+
+            square.rotate(axis, Math.PI / 2);
+
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(-0.6589266061782837, 0.28571420907974243, 0.6958326697349548, 1),
+                vec4.fromValues(-0.587498128414154, 1.2303550243377686, 0.37559592723846436, 1),
+                vec4.fromValues(0.07142850011587143, 0.9446408748626709, -0.3202367424964905, 1)
+            ]);
+        });
+        it('can rotate on the x axis by 90 degrees about (1, 0, 0)', () => {
+            const square = TestHelper.square();
+            const xAxis = vec3.fromValues(1, 0, 0);
+
+            square.rotate(xAxis, Math.PI / 2, vec3.fromValues(1, 0, 0));
+
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, 0, 1, 1),
+                vec4.fromValues(1, 0, 1, 1),
+                vec4.fromValues(1, 0, 0, 1)
+            ]);
+        });
+        it('can rotate on the y axis by 90 degrees about (1, 0, 0)', () => {
+            const square = TestHelper.square();
+            const yAxis = vec3.fromValues(0, 1, 0);
+
+            square.rotate(yAxis, Math.PI / 2, vec3.fromValues(1, 0, 0));
+
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(1, 0, 1, 1),
+                vec4.fromValues(1, 1, 1, 1),
+                vec4.fromValues(1, 1, 0, 1),
+                vec4.fromValues(1, 0, 0, 1)
+            ]);
+        });
+        it('can rotate on x, y, z axes and reverse the rotation to remain unchanged', () => {
+            const square = TestHelper.square();
+            const xAxis = vec3.fromValues(1, 0, 0);
+            const yAxis = vec3.fromValues(0, 1, 0);
+            const zAxis = vec3.fromValues(0, 0, 1);
+            const angle = 0.7;
+
+            square.rotate(xAxis, angle);
+            square.rotate(yAxis, angle);
+            square.rotate(zAxis, angle);
+
+            square.rotate(zAxis, -angle);
+            square.rotate(yAxis, -angle);
+            square.rotate(xAxis, -angle);
+
+            expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
+        });
+        it('can rotate on one axis at a non 90 degree angle', () => {
+            const square = TestHelper.square();
+            const xAxis = vec3.fromValues(1, 0, 0);
+            const angle = 0.7;
+
+            square.rotate(xAxis, angle);
+
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, Math.cos(angle), Math.sin(angle), 1),
+                vec4.fromValues(1, Math.cos(angle), Math.sin(angle), 1),
+                vec4.fromValues(1, 0, 0, 1)
+            ]);
+        });
+        it('can rotate 360 degrees and remain unchanged', () => {
+            const square = TestHelper.square();
+            const xAxis = vec3.fromValues(1, 0, 0);
+            const yAxis = vec3.fromValues(0, 1, 0);
+            const zAxis = vec3.fromValues(0, 0, 1);
+            const angle = Math.PI * 2;
+
+            // xAxis
+            square.rotate(xAxis, angle);
+            expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
+
+            // yAxis
+            square.rotate(yAxis, angle);
+            expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
+
+            // zAxis
+            square.rotate(zAxis, angle);
+            expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
+        });
+    });
+    describe('scale', () => {
+        it('can scale from (1, 1, 0) to (2, 2, 0) about origin', () => {
+            const square = TestHelper.square();
+
+            square.scale(vec3.fromValues(1, 1, 0), vec3.fromValues(2, 2, 0));
+
+            expect(square.vertices).toEqual([
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, 2, 0, 1),
+                vec4.fromValues(2, 2, 0, 1),
+                vec4.fromValues(2, 0, 0, 1)
+            ]);
+        });
+        it('can scale from (0, 0, 0) to (-1, -1, 0) about (1, 1, 0)', () => {
+            const square = TestHelper.square();
+
+            square.scale(
+                vec3.fromValues(0, 0, 0),
+                vec3.fromValues(-1, -1, 0),
+                vec3.fromValues(1, 1, 0)
+            );
+
+            expect(square.vertices).toEqual([
+                vec4.fromValues(-1, -1, 0, 1),
+                vec4.fromValues(-1, 1, 0, 1),
+                vec4.fromValues(1, 1, 0, 1),
+                vec4.fromValues(1, -1, 0, 1)
+            ]);
+        });
+        it('can scale to itself and remain unchanged', () => {
+            const square = TestHelper.square();
+
+            square.scale(vec3.fromValues(1, 1, 0), vec3.fromValues(1, 1, 0));
+
+            expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
+        });
+        it('will throw an error when it is skewed', () => {
+            const square = TestHelper.square();
+
+            expect(() => {
+                square.scale(vec3.create(), vec3.fromValues(1, 1, 0), vec3.fromValues(1, 0, 0));
+            }).toThrowError('Destination and pull vectors must be in the same direction.');
+        });
+    });
+    describe('scaleByFactor', () => {
+        it('can scale by a factor of 2 on the positive axes about origin', () => {
+            const square = TestHelper.square();
+
+            square.scaleByFactor(2, vec3.fromValues(1, 1, 0));
+
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, 2, 0, 1),
+                vec4.fromValues(2, 2, 0, 1),
+                vec4.fromValues(2, 0, 0, 1)
+            ]);
+        });
+        it('can scale by a factor of 2 on the negative axes about (1, 1, 0)', () => {
+            const square = TestHelper.square();
+
+            square.scaleByFactor(2, vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 0));
+
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(-1, -1, 0, 1),
+                vec4.fromValues(-1, 1, 0, 1),
+                vec4.fromValues(1, 1, 0, 1),
+                vec4.fromValues(1, -1, 0, 1)
+            ]);
+        });
+        it('can scale by a factor of 1 and remain unchanged', () => {
+            const square = TestHelper.square();
+
+            square.scaleByFactor(1, vec3.fromValues(1, 1, 0));
+
+            expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
+        });
+    });
 });

@@ -15,16 +15,19 @@ declare global {
 
 expect.extend({
     toEqualArrVec4(received: vec4[], argument: vec4[]) {
-        let match: boolean = true;
-        if (received.length !== argument.length) {
-            match = false;
-        }
-        for (let i: number = 0; i < received.length; i += 1) {
-            if (!vec4.equals(received[i], argument[i])) {
-                match = false;
+        function match(): boolean {
+            if (received.length !== argument.length) {
+                return false;
             }
+            for (let i: number = 0; i < received.length; i += 1) {
+                if (!vec4.equals(received[i], argument[i])) {
+                    return false;
+                }
+            }
+
+            return true;
         }
-        if (match) {
+        if (match()) {
             return {
                 message: () =>
                     `expected ${argument.map(vec4.str).join(',')} to not be equal to ${argument
@@ -43,16 +46,19 @@ expect.extend({
         }
     },
     toEqualArrVec3(received: vec3[], argument: vec3[]) {
-        let match: boolean = true;
-        if (received.length !== argument.length) {
-            match = false;
-        }
-        for (let i: number = 0; i < received.length; i += 1) {
-            if (!vec3.equals(received[i], argument[i])) {
-                match = false;
+        function match(): boolean {
+            if (received.length !== argument.length) {
+                return false;
             }
+            for (let i: number = 0; i < received.length; i += 1) {
+                if (!vec3.equals(received[i], argument[i])) {
+                    return false;
+                }
+            }
+
+            return true;
         }
-        if (match) {
+        if (match()) {
             return {
                 message: () =>
                     `expected ${argument.map(vec3.str).join(',')} to not be equal to ${argument

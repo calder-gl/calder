@@ -204,7 +204,6 @@ describe('WorkingGeometry', () => {
 
             square.rotate(axis, Math.PI / 2);
 
-            // TODO: Verify this by plotting it graphically, or using another tool.
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(0, 0, 0, 1),
                 vec4.fromValues(-0.6589266061782837, 0.28571420907974243, 0.6958326697349548, 1),
@@ -269,24 +268,6 @@ describe('WorkingGeometry', () => {
                 vec4.fromValues(1, 0, 0, 1)
             ]);
         });
-        // TODO: Change wording
-        it('can rotate at 90 degrees on x, y, z axes and reverse the rotation to remain unchanged, regardless of order', () => {
-            const square = TestHelper.square();
-            const xAxis = vec3.fromValues(1, 0, 0);
-            const yAxis = vec3.fromValues(0, 1, 0);
-            const zAxis = vec3.fromValues(0, 0, 1);
-            const angle = Math.PI / 2;
-
-            square.rotate(xAxis, angle);
-            square.rotate(yAxis, angle);
-            square.rotate(zAxis, angle);
-
-            square.rotate(xAxis, -angle);
-            square.rotate(yAxis, -angle);
-            square.rotate(zAxis, angle);
-
-            expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
-        });
         it('can rotate 360 degrees and remain unchanged', () => {
             const square = TestHelper.square();
             const xAxis = vec3.fromValues(1, 0, 0);
@@ -341,7 +322,14 @@ describe('WorkingGeometry', () => {
 
             square.scale(vec3.fromValues(1, 1, 0), vec3.fromValues(1, 1, 0));
 
-            expect(square.vertices).toEqual(TestHelper.square().vertices);
+            expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
+        });
+        it('will throw an error when it is skewed', () => {
+            const square = TestHelper.square();
+
+            expect(() => {
+                square.scale(vec3.create(), vec3.fromValues(1, 1, 0), vec3.fromValues(1, 0, 0));
+            }).toThrowError('Destination and pull vectors must be in the same direction.');
         });
     });
     describe('scaleByFactor', () => {

@@ -9,8 +9,10 @@ import { mat4, vec3, vec4 } from 'gl-matrix';
 
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
+import { Constraints } from '../armature/Constraints';
 import { Node } from '../armature/Node';
 import { DebugParams } from './interfaces/DebugParams';
+import { RenderParams } from './interfaces/RenderParams';
 
 // tslint:disable:no-unsafe-any
 
@@ -196,6 +198,32 @@ export class Renderer {
 
     public getLights(): Light[] {
         return this.lights;
+    }
+
+    /**
+     * For each frame, the draw callback applies all constraints, and calls
+     * `draw` on the objects returned by the callback.
+     *
+     * @param {RenderParams} drawCallback A callback to be applied each frame
+     *   that will yield the objects to be rendered each frame.
+     */
+    public eachFrame(drawCallback: () => RenderParams) {
+        const draw = () => {
+            const { objects, debugParams } = drawCallback();
+            Constraints.getInstance().applyAll();
+            this.draw(
+                objects,
+                debugParams === undefined
+                    ? debugParams
+                    : { drawAxes: false, drawArmatureBones: false }
+            );
+
+            // Your callback routine must itself call requestAnimationFrame() if
+            // you want to animate another frame at the next repaint.
+            window.requestAnimationFrame(draw);
+        };
+
+        window.requestAnimationFrame(draw);
     }
 
     private drawCrosshairs() {

@@ -112,9 +112,8 @@ export function createDrawObject(
                             lightIntensities[i]);
 
                         color += spec * lightColors[i];
-
-                        color += ambientLight;
                     }
+                    color += ambientLight;
                 }
 
                 gl_FragColor = vec4(color, 1.0);

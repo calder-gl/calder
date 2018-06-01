@@ -1,29 +1,30 @@
-import { ConstraintWithNode } from '../types/ConstraintTypes';
+import { ConstraintCallback, ConstraintWithNode } from '../types/ConstraintTypes';
+import { Node } from './Node';
 
 /**
  * User facing constraint on an armature which a user may define.
  */
 export class Constraints {
-    private static instance: Constraints;
+    private static instance: Constraints | null = null;
     private constraints: ConstraintWithNode[] = [];
 
     private constructor() {
         this.constraints = [];
     }
 
-    public static getInstance() {
-        if (this.instance === null) {
-            this.instance = new this();
+    public static getInstance(): Constraints {
+        if (Constraints.instance === null) {
+            Constraints.instance = new Constraints();
         }
 
-        return this.instance;
+        return Constraints.instance;
     }
 
     /**
      * Adds a constraint function to the array of constraints.
      */
-    public add(constraintWithNode: ConstraintWithNode) {
-        this.constraints.push(constraintWithNode);
+    public add(node: Node, constraint: ConstraintCallback) {
+        this.constraints.push({ node, constraint });
     }
 
     /**

@@ -6,6 +6,7 @@ import { Renderer } from '../renderer/Renderer';
 
 import { mat4, quat, vec3 } from 'gl-matrix';
 import { range } from 'lodash';
+import { Constraints } from '../armature/Constraints';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
 const light2: Light = { lightPosition: [700, 500, 50], lightColor: [3, 3, 3], lightIntensity: 100 };
@@ -67,17 +68,28 @@ renderer.camera.lookAt(vec3.fromValues(2, 2, -4));
 // Draw the armature
 let rotation = 90;
 const angle = Math.random() * 90;
+
+// Create a new constraint to be applied to the `test` Node.
+const constraints = Constraints.getInstance();
+constraints.add(test, (node: Node) => {
+    node
+        .hold(node.point('base'))
+        .grab(node.point('tip'))
+        .stretchTo(tower.point('tip'))
+        .release();
+});
+
 const draw = () => {
     rotation += 1;
     tower.setRotation(
         mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), angle, rotation, 0))
     );
-    test
-        .hold(test.point('base'))
-        .grab(test.point('tip'))
-        .stretchTo(tower.point('tip'))
-        .release();
-    renderer.draw([tower, test], { drawAxes: true, drawArmatureBones: true });
-    window.requestAnimationFrame(draw);
+
+    return {
+        objects: [tower, test],
+        debugParams: { drawAxes: true, drawArmatureBones: true }
+    };
 };
-draw();
+
+// Apply the constraints each frame.
+renderer.eachFrame(draw);

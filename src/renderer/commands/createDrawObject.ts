@@ -6,17 +6,20 @@ import REGL = require('regl');
 
 // tslint:disable:no-unsafe-any
 
+// Uniforms are the same for all vertices.
 interface Uniforms {
     projection: REGL.Mat4;
     view: REGL.Mat4;
     model: REGL.Mat4;
     numLights: number;
+    ambientLight: REGL.Vec3;
     lightPositions: REGL.Vec3[];
     lightColors: REGL.Vec3[];
     lightIntensities: number[];
     isShadeless: boolean;
 }
 
+// Attributes are per vertex.
 interface Attributes {
     position: REGL.Vec3;
     normal: REGL.Vec3;
@@ -82,6 +85,7 @@ export function createDrawObject(
             uniform int numLights;
             uniform vec3 lightPositions[MAX_LIGHTS];
             uniform vec3 lightColors[MAX_LIGHTS];
+            uniform vec3 ambientLight;
             uniform float lightIntensities[MAX_LIGHTS];
             uniform bool isShadeless;
 
@@ -109,6 +113,7 @@ export function createDrawObject(
 
                         color += spec * lightColors[i];
                     }
+                    color += ambientLight;
                 }
 
                 gl_FragColor = vec4(color, 1.0);
@@ -124,6 +129,7 @@ export function createDrawObject(
             view: regl.prop('cameraTransform'),
             model: regl.prop('model'),
             numLights: regl.prop('numLights'),
+            ambientLight: regl.prop('ambientLight'),
             isShadeless: regl.prop('isShadeless'),
             ...buildLightMetadata(maxLights)
         },

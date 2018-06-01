@@ -10,7 +10,7 @@ import { range } from 'lodash';
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
 const light2: Light = { lightPosition: [700, 500, 50], lightColor: [3, 3, 3], lightIntensity: 100 };
 
-const renderer: Renderer = new Renderer(800, 600, 2);
+const renderer: Renderer = new Renderer(800, 600, 2, vec3.fromValues(0.0, 0.1, 0.0));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 1: create geometry

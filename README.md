@@ -17,6 +17,13 @@ yarn install
 yarn test
 ```
 
+### Examples
+To generate the examples files (under /example), run:
+
+```bash
+yarn webpack
+```
+
 ### Contributing
 Run the autoformatter on your code:
 

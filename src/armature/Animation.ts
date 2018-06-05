@@ -162,16 +162,15 @@ export namespace Animation {
         remove(current, (animation: AnimationDescription) => {
             if (animation.times === 0) {
                 return false;
-            }
-
-            if (animation.times === 1) {
+            } else if (animation.times === 1) {
                 return (currentTime - animation.start) / animation.duration >= 1;
+            } else {
+                return (
+                    (currentTime - animation.start) /
+                        (animation.duration + animation.repeatDelay) >=
+                    animation.times
+                );
             }
-
-            return (
-                (currentTime - animation.start) / (animation.duration + animation.repeatDelay) >=
-                animation.times
-            );
         });
     }
 }

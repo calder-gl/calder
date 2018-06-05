@@ -57,6 +57,15 @@ export class Transformation {
         this.scale = scale;
     }
 
+    /**
+     * Creates a new transformation that is between the current one and the provided one, with a
+     * given mix proportion.
+     *
+     * @param {Transformation} other The other transformation to interpolate towards.
+     * @param {number} amount The proportion to mix the transformations, where 0 is entirely the
+     * current transformation and 1 is entirely the other transformation.
+     * @returns {Transformation} The interpolated transformation.
+     */
     public interpolate(other: Transformation, amount: number): Transformation {
         const interpolated = new Transformation();
 
@@ -64,6 +73,8 @@ export class Transformation {
             vec3.lerp(interpolated.getPosition(), this.getPosition(), other.getPosition(), amount)
         );
 
+        // To interpolate matrices, we have to factor them into components and interpolate each
+        // part separately
         const rotationOffsetBegin = mat4.getTranslation(vec3.create(), this.getRotation());
         const rotationOffsetEnd = mat4.getTranslation(vec3.create(), other.getRotation());
         const rotationRotationBegin = mat4.getRotation(quat.create(), this.getRotation());

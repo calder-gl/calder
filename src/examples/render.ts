@@ -86,6 +86,7 @@ Animation.create({
         node.setRotation(
             mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), theta, phi, 0))
         );
+        node.setScale(mat4.create());
     },
     duration: 1000,
     times: 0,
@@ -93,11 +94,6 @@ Animation.create({
 });
 
 const draw = () => {
-    //rotation += 1;
-    //tower.setRotation(
-        //mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), angle, rotation, 0))
-    //);
-
     return {
         objects: [tower, test],
         debugParams: { drawAxes: true, drawArmatureBones: true }

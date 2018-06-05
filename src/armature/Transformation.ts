@@ -64,11 +64,12 @@ export class Transformation {
             vec3.lerp(interpolated.getPosition(), this.getPosition(), other.getPosition(), amount)
         );
 
-        // No need to extract scale from rotation matrix, since it should never be scaled
         const rotationOffsetBegin = mat4.getTranslation(vec3.create(), this.getRotation());
         const rotationOffsetEnd = mat4.getTranslation(vec3.create(), other.getRotation());
         const rotationRotationBegin = mat4.getRotation(quat.create(), this.getRotation());
         const rotationRotationEnd = mat4.getRotation(quat.create(), other.getRotation());
+        quat.normalize(rotationRotationBegin, rotationRotationBegin);
+        quat.normalize(rotationRotationEnd, rotationRotationEnd);
         const rotationScaleBegin = mat4.getScaling(vec3.create(), this.getRotation());
         const rotationScaleEnd = mat4.getScaling(vec3.create(), other.getRotation());
         interpolated.setRotation(
@@ -80,12 +81,12 @@ export class Transformation {
             )
         );
 
-        // Because we scale about arbitrary axes, we need to extract and interpolate position,
-        // rotation, and scale separately
         const scaleOffsetBegin = mat4.getTranslation(vec3.create(), this.getScale());
         const scaleOffsetEnd = mat4.getTranslation(vec3.create(), other.getScale());
         const scaleRotationBegin = mat4.getRotation(quat.create(), this.getScale());
         const scaleRotationEnd = mat4.getRotation(quat.create(), other.getScale());
+        quat.normalize(scaleRotationBegin, scaleRotationBegin);
+        quat.normalize(scaleRotationEnd, scaleRotationEnd);
         const scaleScaleBegin = mat4.getScaling(vec3.create(), this.getScale());
         const scaleScaleEnd = mat4.getScaling(vec3.create(), other.getScale());
         interpolated.setScale(

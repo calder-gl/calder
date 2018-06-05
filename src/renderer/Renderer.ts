@@ -215,7 +215,7 @@ export class Renderer {
             Constraints.getInstance().applyAll();
             this.draw(
                 objects,
-                debugParams === undefined
+                debugParams !== undefined
                     ? debugParams
                     : { drawAxes: false, drawArmatureBones: false }
             );

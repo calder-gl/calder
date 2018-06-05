@@ -87,12 +87,11 @@ export namespace Animation {
         queue.sort((a: AnimationDescription, b: AnimationDescription) => {
             if (a.start < b.start) {
                 return -1;
-            }
-            if (a.start > b.start) {
+            } else if (a.start > b.start) {
                 return 1;
+            } else {
+                return 0;
             }
-
-            return 0;
         });
     }
 

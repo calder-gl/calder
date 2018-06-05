@@ -30,7 +30,9 @@ describe('Animation', () => {
 
             Animation.create({
                 node,
-                to: (_: Node) => animationApplied(),
+                to: (_: Node) => {
+                    animationApplied();
+                },
                 start: 2000,
                 duration: 1000
             });
@@ -61,7 +63,9 @@ describe('Animation', () => {
 
             Animation.create({
                 node,
-                to: (_: Node) => animationApplied(),
+                to: (_: Node) => {
+                    animationApplied();
+                },
                 start: 2000,
                 duration: 1000,
                 times: 2,

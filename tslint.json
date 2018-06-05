@@ -28,6 +28,7 @@
     "insecure-random": false,
     "prefer-method-signature": false,
     "no-empty": false,
+    "no-unnecessary-qualifier": false,
     "typedef": [
       true,
       "parameter",

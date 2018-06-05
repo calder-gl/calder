@@ -79,7 +79,7 @@ constraints.add(test, (node: Node) => {
 });
 
 Animation.create({
-    node: tower, 
+    node: tower,
     to: (node: Node) => {
         const theta = Math.random() * 90;
         const phi = Math.random() * 360;

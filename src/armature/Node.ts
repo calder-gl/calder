@@ -61,7 +61,12 @@ export class Node {
     }
 
     public static clone(node: Node): Node {
-        const cloned = new Node(node.children, node.getPosition(), node.getRotation(), node.getScale());
+        const cloned = new Node(
+            node.children,
+            node.getPosition(),
+            node.getRotation(),
+            node.getScale()
+        );
         cloned.parent = node.parent;
         Object.keys(node.points).forEach((key: string) => {
             cloned.createPoint(key, node.points[key].position);

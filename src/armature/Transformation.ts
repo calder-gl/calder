@@ -94,7 +94,7 @@ export class Transformation {
                 interpolated.getScale(),
                 quat.slerp(quat.create(), scaleRotationBegin, scaleRotationEnd, amount),
                 vec3.lerp(vec3.create(), scaleOffsetBegin, scaleOffsetEnd, amount),
-                vec3.lerp(vec3.create(), scaleScaleBegin, scaleScaleEnd, amount),
+                vec3.lerp(vec3.create(), scaleScaleBegin, scaleScaleEnd, amount)
             )
         );
 

@@ -27,6 +27,7 @@
     "no-import-side-effect": false,
     "insecure-random": false,
     "prefer-method-signature": false,
+    "no-empty": false,
     "typedef": [
       true,
       "parameter",

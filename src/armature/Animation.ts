@@ -1,6 +1,8 @@
 import { Node } from './Node';
 import { Transformation } from './Transformation';
 
+import { remove } from 'lodash';
+
 type AnimationDescription = {
     node: Node;
     to: (node: Node) => void;
@@ -11,6 +13,7 @@ type AnimationDescription = {
     times: number;
     repeatDelay: number;
     lastTimeInCycle: number;
+    lastCycle: number;
 };
 
 type AnimationDescriptionParams = {
@@ -25,7 +28,12 @@ type AnimationDescriptionParams = {
 
 export namespace Animation {
     const queue: AnimationDescription[] = [];
-    let current: AnimationDescription[] = [];
+    const current: AnimationDescription[] = [];
+
+    export function resetAll() {
+        queue.length = 0;
+        current.length = 0;
+    }
 
     export function now(): number {
         return new Date().getTime();
@@ -37,18 +45,19 @@ export namespace Animation {
             to: params.to,
             finalTransform: null,
             curve: params.curve !== undefined ? params.curve : 'linear',
-            start: params.start !== undefined ? params.start : now(),
+            start: params.start !== undefined ? params.start : Animation.now(),
             duration: params.duration,
             times: params.times !== undefined ? params.times : 1,
             repeatDelay: params.repeatDelay !== undefined ? params.repeatDelay : 0,
-            lastTimeInCycle: 0
+            lastTimeInCycle: 0,
+            lastCycle: -1
         };
 
         enqueue(animation);
     }
 
     export function tick() {
-        const currentTime = now();
+        const currentTime = Animation.now();
 
         dequeueNewAnimations(currentTime);
         applyCurrentAnimations(currentTime);
@@ -85,11 +94,15 @@ export namespace Animation {
 
             let currentCycle = Math.floor((currentTime - animation.start) / period);
             if (animation.times > 0) {
-                currentCycle = Math.max(animation.times, currentCycle);
+                currentCycle = Math.min(animation.times - 1, currentCycle);
             }
 
             const timeInCurrentCycle = currentTime - animation.start - currentCycle * period;
-            if (animation.finalTransform === null || animation.lastTimeInCycle > timeInCurrentCycle) {
+            if (
+                animation.finalTransform === null ||
+                (animation.lastCycle < currentCycle &&
+                    (animation.times === 0 || currentCycle < animation.times))
+            ) {
                 // We've looped into a new cycle
                 animation.lastTimeInCycle = 0;
                 const finalNode = Node.clone(animation.node);
@@ -108,20 +121,24 @@ export namespace Animation {
             animation.node.setRawTransformation(interpolated);
 
             animation.lastTimeInCycle = timeInCurrentCycle;
+            animation.lastCycle = currentCycle;
         });
     }
 
     function removeFinishedAnimations(currentTime: number) {
-        current = current.filter((animation: AnimationDescription) => {
+        remove(current, (animation: AnimationDescription) => {
             if (animation.times === 0) {
-                return true;
+                return false;
             }
 
             if (animation.times === 1) {
-                return (currentTime - animation.start) / (animation.duration) < 1;
+                return (currentTime - animation.start) / animation.duration >= 1;
             }
 
-            return (currentTime - animation.start) / (animation.duration + animation.repeatDelay) < animation.times;
+            return (
+                (currentTime - animation.start) / (animation.duration + animation.repeatDelay) >=
+                animation.times
+            );
         });
     }
-};
+}

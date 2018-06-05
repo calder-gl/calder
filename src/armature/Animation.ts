@@ -3,12 +3,14 @@ import { Transformation } from './Transformation';
 
 type AnimationDescription = {
     node: Node;
-    to: Transformation;
+    to: (node: Node) => void;
+    finalTransform: Transformation | null;
     curve: string;
     start: number;
     duration: number;
     times: number;
     repeatDelay: number;
+    lastTimeInCycle: number;
 };
 
 type AnimationDescriptionParams = {
@@ -30,17 +32,16 @@ export namespace Animation {
     }
 
     export function create(params: AnimationDescriptionParams) {
-        const finalNode = Node.clone(params.node);
-        params.to(finalNode);
-
         const animation = {
             node: params.node,
-            to: finalNode.getRawTransformation(),
+            to: params.to,
+            finalTransform: null,
             curve: params.curve !== undefined ? params.curve : 'linear',
             start: params.start !== undefined ? params.start : now(),
             duration: params.duration,
             times: params.times !== undefined ? params.times : 1,
-            repeatDelay: params.repeatDelay !== undefined ? params.repeatDelay : 0
+            repeatDelay: params.repeatDelay !== undefined ? params.repeatDelay : 0,
+            lastTimeInCycle: 0
         };
 
         enqueue(animation);
@@ -80,20 +81,34 @@ export namespace Animation {
         // TODO: use curves that aren't linear
         current.forEach((animation: AnimationDescription) => {
             const currentTransform = animation.node.getRawTransformation();
-
             const period = animation.duration + animation.repeatDelay;
 
-            let currentCycle = Math.floor(currentTime / period);
+            let currentCycle = Math.floor((currentTime - animation.start) / period);
             if (animation.times > 0) {
                 currentCycle = Math.max(animation.times, currentCycle);
             }
 
-            let amount = (currentTime - animation.start - currentCycle * period) / animation.duration;
+            const timeInCurrentCycle = currentTime - animation.start - currentCycle * period;
+            if (animation.finalTransform === null || animation.lastTimeInCycle > timeInCurrentCycle) {
+                // We've looped into a new cycle
+                animation.lastTimeInCycle = 0;
+                const finalNode = Node.clone(animation.node);
+                animation.to(finalNode);
+                animation.finalTransform = finalNode.getRawTransformation();
+            }
+            const timeRemainingInCycle = animation.duration - animation.lastTimeInCycle;
+            let amount = (timeInCurrentCycle - animation.lastTimeInCycle) / timeRemainingInCycle;
+            if (amount > 1 && (animation.times === 0 || currentCycle < animation.times - 1)) {
+                return;
+            }
             amount = Math.max(0, amount);
             amount = Math.min(1, amount);
 
-            animation.node.setRawTransformation(currentTransform.interpolate(animation.to, amount));
-        })
+            const interpolated = currentTransform.interpolate(animation.finalTransform, amount);
+            animation.node.setRawTransformation(interpolated);
+
+            animation.lastTimeInCycle = timeInCurrentCycle;
+        });
     }
 
     function removeFinishedAnimations(currentTime: number) {

@@ -9,6 +9,7 @@ import { mat4, vec3, vec4 } from 'gl-matrix';
 
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
+import { Animation } from '../armature/Animation';
 import { Constraints } from '../armature/Constraints';
 import { Node } from '../armature/Node';
 import { DebugParams } from './interfaces/DebugParams';
@@ -210,6 +211,7 @@ export class Renderer {
     public eachFrame(drawCallback: () => RenderParams) {
         const draw = () => {
             const { objects, debugParams } = drawCallback();
+            Animation.tick();
             Constraints.getInstance().applyAll();
             this.draw(
                 objects,

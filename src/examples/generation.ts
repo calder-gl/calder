@@ -6,8 +6,16 @@ import { Renderer } from '../renderer/Renderer';
 
 import { mat4, quat, vec3 } from 'gl-matrix';
 
-const light1: Light = { lightPosition: [10, 10, 10], lightColor: [0.3, 0.3, 0.3], lightIntensity: 256 };
-const light2: Light = { lightPosition: [700, 500, 50], lightColor: [0.3, 0.3, 0.3], lightIntensity: 100 };
+const light1: Light = {
+    lightPosition: [10, 10, 10],
+    lightColor: [0.3, 0.3, 0.3],
+    lightIntensity: 256
+};
+const light2: Light = {
+    lightPosition: [700, 500, 50],
+    lightColor: [0.3, 0.3, 0.3],
+    lightIntensity: 100
+};
 
 const renderer: Renderer = new Renderer(800, 600, 2, vec3.fromValues(0.2, 0.2, 0.2));
 
@@ -42,27 +50,29 @@ const tree = treeGen
         node.point('base').stickTo(root);
         const theta = Math.random() * 70;
         const phi = Math.random() * 360;
-        node.setRotation(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), theta, phi, 0)));
+        node.setRotation(
+            mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), theta, phi, 0))
+        );
         node.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(0.8, 0.8, 0.8))); // Shrink a bit
 
         const trunk = node.point('mid').attach(branchSphere);
         trunk.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(0.2, 0.8, 0.2)));
 
         // branching factor of 2
-        treeGen.addDetail({component: 'branchOrLeaf', at: node.point('tip')});
-        treeGen.addDetail({component: 'branchOrLeaf', at: node.point('tip')});
+        treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
+        treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
     })
     .define('branchOrLeaf', 1, (root: Point) => {
-        treeGen.addDetail({component: 'leaf', at: root});
+        treeGen.addDetail({ component: 'leaf', at: root });
     })
     .define('branchOrLeaf', 3, (root: Point) => {
-        treeGen.addDetail({component: 'branch', at: root});
+        treeGen.addDetail({ component: 'branch', at: root });
     })
     .define('leaf', 1, (root: Point) => {
         const leaf = root.attach(leafSphere);
         leaf.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(0.5, 0.5, 0.5)));
     })
-    .generate({start: 'branch', depth: 15});
+    .generate({ start: 'branch', depth: 15 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer

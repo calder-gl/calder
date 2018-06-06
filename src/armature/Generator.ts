@@ -13,6 +13,10 @@ type SpawnPoint = {
     at: Point;
 };
 
+/**
+ * A way of representing a structure made of connected components, facilitating procedural
+ * generation of instances of these structures.
+ */
 export class Generator {
     private rules: { [name: string]: { totalWeight: number; definitions: Definition[] } } = {};
     private spawnPoints: SpawnPoint[] = [];
@@ -60,14 +64,14 @@ export class Generator {
      * @param {number?} depth How many iterations of generation should be used.
      * @returns {Node} The root node of the generated armature.
      */
-    public generate({start, depth = 10}: {start: string; depth?: number}): Node {
+    public generate({ start, depth = 10 }: { start: string; depth?: number }): Node {
         // Clear spawn points
         this.nextSpawnPoints.length = 0;
 
         // Create root node and initial spawn point
         const root = new Node();
         root.createPoint('spawn', vec3.fromValues(0, 0, 0));
-        this.addDetail({component: start, at: root.point('spawn')});
+        this.addDetail({ component: start, at: root.point('spawn') });
 
         // Run `depth` rounds of generation
         range(depth).forEach(() => {

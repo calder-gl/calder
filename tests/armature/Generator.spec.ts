@@ -16,9 +16,9 @@ describe('Generator', () => {
                 const node = bone();
                 node.point('base').stickTo(root);
 
-                towerGen.addDetail({component: 'block', at: node.point('tip')});
+                towerGen.addDetail({ component: 'block', at: node.point('tip') });
             })
-            .generate({start: 'block', depth: 5});
+            .generate({ start: 'block', depth: 5 });
 
         let depth = 0;
         let block = tower;
@@ -28,5 +28,26 @@ describe('Generator', () => {
         }
 
         expect(depth).toBe(5);
+    });
+
+    it('handles terminal nodes', () => {
+        const towerGen = Armature.generator();
+        const tower = towerGen
+            .define('block', 1, (root: Point) => {
+                const node = bone();
+                node.point('base').stickTo(root);
+
+                // This definition does not add any more detail
+            })
+            .generate({ start: 'block', depth: 5 });
+
+        let depth = 0;
+        let block = tower;
+        while (block.children.length > 0) {
+            depth += 1;
+            block = block.children[0];
+        }
+
+        expect(depth).toBe(1);
     });
 });

@@ -615,7 +615,7 @@ export class GeometryNode extends Node {
 /**
  * A point on an armature that other armature nodes can attach to.
  */
-class Point {
+export class Point {
     public readonly node: Node;
     public readonly position: vec3;
 

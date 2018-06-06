@@ -23,20 +23,40 @@ export class Node {
 
     private static bone: BakedGeometry = {
         vertices: Float32Array.from(flatten(Node.boneVertices)),
-        normals: Float32Array.from(flatten([
-            [-1, 0, 0],
-            [0, 1, 0],
-            [0, 0, -1],
-            [0, -1, 0],
-            [0, 0, 1],
-            [1, 0, 0]
-        ])),
-        indices: Int16Array.from([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1, 5, 2, 1, 5, 3, 2, 5, 4, 3, 5, 1, 4]),
+        normals: Float32Array.from(
+            flatten([[-1, 0, 0], [0, 1, 0], [0, 0, -1], [0, -1, 0], [0, 0, 1], [1, 0, 0]])
+        ),
+        indices: Int16Array.from([
+            0,
+            1,
+            2,
+            0,
+            2,
+            3,
+            0,
+            3,
+            4,
+            0,
+            4,
+            1,
+            5,
+            2,
+            1,
+            5,
+            3,
+            2,
+            5,
+            4,
+            3,
+            5,
+            1,
+            4
+        ]),
 
         // Map x, y, z to r, g, b to give a sense of bone orientation
-        colors: Float32Array.from(flatMap(Node.boneVertices, (v: number[]) =>
-            [v[0], v[1] / 0.1 + 0.1, v[2] / 0.1 + 0.1]
-        ))
+        colors: Float32Array.from(
+            flatMap(Node.boneVertices, (v: number[]) => [v[0], v[1] / 0.1 + 0.1, v[2] / 0.1 + 0.1])
+        )
     };
 
     public readonly children: Node[];

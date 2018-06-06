@@ -22,7 +22,7 @@ renderer.addLight(light1);
 renderer.addLight(light2);
 
 const sphere = genSphere();
-sphere.colors = Int16Array.from(flatMap(range(sphere.vertices.length/3), () => [1, 0, 0]));
+sphere.colors = Int16Array.from(flatMap(range(sphere.vertices.length / 3), () => [1, 0, 0]));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 2: create armature

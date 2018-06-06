@@ -85,9 +85,11 @@ export class WorkingGeometry {
     public bake(): BakedGeometry {
         this.combine();
 
-        const bakedVertices = this.vertices.map((workingVec: vec4) =>
-            [workingVec[0], workingVec[1], workingVec[2]]
-        );
+        const bakedVertices = this.vertices.map((workingVec: vec4) => [
+            workingVec[0],
+            workingVec[1],
+            workingVec[2]
+        ]);
         const bakedIndecies = this.faces.reduce((accum: number[], face: Face) => {
             return accum.concat(face.indices);
         }, []);

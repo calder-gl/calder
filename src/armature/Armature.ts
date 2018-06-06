@@ -1,3 +1,4 @@
+import { Generator } from './Generator';
 import { Node } from './Node';
 
 export namespace Armature {
@@ -17,5 +18,14 @@ export namespace Armature {
 
             return root;
         };
+    }
+
+    /**
+     * Creates a new, empty generator.
+     *
+     * @returns {Generator} The new generator.
+     */
+    export function generator(): Generator {
+        return new Generator();
     }
 }

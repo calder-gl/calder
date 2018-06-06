@@ -113,7 +113,7 @@ export function createDrawObject(
 
                         color += spec * lightColors[i];
                     }
-                    color += ambientLight;
+                    color += ambientLight * vertexColor;
                 }
 
                 gl_FragColor = vec4(color, 1.0);

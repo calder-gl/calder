@@ -145,7 +145,7 @@ describe('Node', () => {
     describe('attach', () => {
         it('creates a GeometryNode for the attached geometry', () => {
             const parent = bone();
-            const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };
+            const geometry: BakedGeometry = { vertices: Float32Array.from([]), normals: Float32Array.from([]), indices: Int16Array.from([]), colors: Float32Array.from([]) };
 
             parent.point('tip').attach(geometry);
             expect(parent.children.length).toBe(1);
@@ -371,7 +371,7 @@ describe('Node', () => {
 
     describe('traverse', () => {
         it("flattens the parent's coordinate space and returns an array of `RenderObject`s", () => {
-            const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };
+            const geometry: BakedGeometry = { vertices: Float32Array.from([]), normals: Float32Array.from([]), indices: Int16Array.from([]), colors: Float32Array.from([]) };
             const geometryChild = new GeometryNode(geometry);
             const nodeChild = new Node([geometryChild]);
             const root = new Node([nodeChild]);
@@ -406,7 +406,7 @@ describe('Node', () => {
         });
 
         it('defaults to no transformation', () => {
-            const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };
+            const geometry: BakedGeometry = { vertices: Float32Array.from([]), normals: Float32Array.from([]), indices: Int16Array.from([]), colors: Float32Array.from([]) };
             const geometryChild = new GeometryNode(geometry);
             const nodeChild = new Node([geometryChild]);
             const root = new Node([nodeChild]);
@@ -434,7 +434,7 @@ describe('Node', () => {
         });
 
         it('shows bones when asked', () => {
-            const geometry: BakedGeometry = { vertices: [], normals: [], indices: [], colors: [] };
+            const geometry: BakedGeometry = { vertices: Float32Array.from([]), normals: Float32Array.from([]), indices: Int16Array.from([]), colors: Float32Array.from([]) };
             const geometryChild = new GeometryNode(geometry);
             const root = new Node([geometryChild]);
 

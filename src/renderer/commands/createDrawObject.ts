@@ -19,9 +19,9 @@ interface Uniforms {
 
 // Attributes are per vertex.
 interface Attributes {
-    position: vec3;
-    normal: vec3;
-    color: vec3;
+    position: Float32Array;
+    normal: Float32Array;
+    color: Float32Array;
 }
 
 /**
@@ -31,10 +31,10 @@ export interface DrawObjectProps {
     model: mat4;
     cameraTransform: mat4;
     projectionMatrix: mat4;
-    positions: vec3[];
-    normals: vec3[];
-    colors: vec3[];
-    indices: number[];
+    positions: Float32Array;
+    normals: Float32Array;
+    colors: Float32Array;
+    indices: Int16Array;
     numLights: number;
     ambientLight: vec3;
     isShadeless: boolean;

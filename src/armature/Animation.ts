@@ -3,27 +3,90 @@ import { Transformation } from './Transformation';
 
 import { remove } from 'lodash';
 
-type AnimationDescription = {
+/**
+ * Parameters that an end user passes in to define a keyframed animation.
+ */
+export type AnimationDescriptionParams = {
+    /**
+     * The node being animated.
+     */
     node: Node;
+
+    /**
+     * A function to transform a node into a target transformation.
+     */
     to: (node: Node) => void;
-    finalTransform: Transformation | null;
-    curve: string;
-    start: number;
+
+    /**
+     * A starting time, in milliseconds since the epoch. Defaults to now if not specified.
+     */
+    start?: number;
+
+    /**
+     * The length of one cycle of the animation, in milliseconds.
+     */
     duration: number;
-    times: number;
-    repeatDelay: number;
-    lastTimeInCycle: number;
-    lastCycle: number;
+
+    /**
+     * How many times to repeat the animation, or 0 for infinite. Defaults to 1 time.
+     */
+    times?: number;
+
+    /**
+     * How much time to wait in between repeats, in milliseconds. Defaults to 0.
+     */
+    repeatDelay?: number;
 };
 
-type AnimationDescriptionParams = {
+/**
+ * An internal representation of the state of an animation.
+ */
+type AnimationDescription = {
+    /**
+     * The node being animated.
+     */
     node: Node;
+
+    /**
+     * A function to transform a node into a target transformation.
+     */
     to: (node: Node) => void;
-    curve?: string;
-    start?: number;
+
+    /**
+     * The target transformation for the current animation cycle, or null if a cycle hasn't yet
+     * started.
+     */
+    finalTransform: Transformation | null;
+
+    /**
+     * The time to start the animation at, in seconds since the epoch.
+     */
+    start: number;
+
+    /**
+     * The duration of one cycle of the animation, in milliseconds.
+     */
     duration: number;
-    times?: number;
-    repeatDelay?: number;
+
+    /**
+     * How many times to repeat the animation, or 0 for infinite repeats.
+     */
+    times: number;
+
+    /**
+     * How much time, in milliseconds, to wait between repeats of the animation.
+     */
+    repeatDelay: number;
+
+    /**
+     * How many milliseconds into an animation cycle we were at in the last tick.
+     */
+    lastTimeInCycle: number;
+
+    /**
+     * The animation cycle we were in in the last tick.
+     */
+    lastCycle: number;
 };
 
 export namespace Animation {
@@ -55,7 +118,6 @@ export namespace Animation {
             node: params.node,
             to: params.to,
             finalTransform: null,
-            curve: params.curve !== undefined ? params.curve : 'linear',
             start: params.start !== undefined ? params.start : Animation.now(),
             duration: params.duration,
             times: params.times !== undefined ? params.times : 1,
@@ -161,15 +223,18 @@ export namespace Animation {
     function removeFinishedAnimations(currentTime: number) {
         remove(current, (animation: AnimationDescription) => {
             if (animation.times === 0) {
+                // Infinite loops are never done
                 return false;
             } else if (animation.times === 1) {
-                return (currentTime - animation.start) / animation.duration >= 1;
+                const timeSoFar = currentTime - animation.start;
+                const period = animation.duration;
+
+                return timeSoFar / period >= 1;
             } else {
-                return (
-                    (currentTime - animation.start) /
-                        (animation.duration + animation.repeatDelay) >=
-                    animation.times
-                );
+                const timeSoFar = currentTime - animation.start;
+                const period = animation.duration + animation.repeatDelay;
+
+                return timeSoFar / period >= animation.times;
             }
         });
     }

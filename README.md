@@ -18,11 +18,16 @@ yarn test
 ```
 
 ### Examples
-To generate the examples files (under /example), run:
+To generate the examples files (under `/examples`), run:
 
 ```bash
 yarn webpack
 ```
+
+To add a new example:
+- Add the example typescript file in `/src/examples`
+- add the typescript file as an entrypoint in `webpack.config.js`
+- Create a new HTML file in `/examples`
 
 ### Contributing
 Run the autoformatter on your code:

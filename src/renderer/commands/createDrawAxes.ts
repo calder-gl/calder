@@ -1,19 +1,20 @@
+import { vec3, vec4 } from 'gl-matrix';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 
 // tslint:disable:no-unsafe-any
 
 interface Attributes {
-    position: REGL.Vec3;
-    color: REGL.Vec3;
+    position: vec3;
+    color: vec3;
 }
 
 /*
  * All the information needed to be able to draw axes to the screen
  */
 export interface DrawAxesProps {
-    positions: REGL.Vec4[];
-    colors: REGL.Vec3[];
+    positions: vec4[];
+    colors: vec3[];
     count: number;
 }
 
@@ -48,10 +49,10 @@ export function createDrawAxes(
         `,
         primitive: 'lines',
         attributes: {
-            position: regl.prop('positions'),
-            color: regl.prop('colors')
+            position: regl.prop<DrawAxesProps, keyof DrawAxesProps>('positions'),
+            color: regl.prop<DrawAxesProps, keyof DrawAxesProps>('colors')
         },
         uniforms: {},
-        count: regl.prop('count')
+        count: regl.prop<DrawAxesProps, keyof DrawAxesProps>('count')
     });
 }

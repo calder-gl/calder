@@ -40,7 +40,7 @@
   "dependencies": {
     "gl-matrix": "^2.5.1",
     "lodash": "^4.17.10",
-    "regl": "^1.3.1",
+    "regl": "regl-project/regl",
     "ts-sinon": "^1.0.12",
     "tslib": "~1.9.0"
   }

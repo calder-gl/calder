@@ -2,8 +2,6 @@ import { vec3, vec4 } from 'gl-matrix';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 
-// tslint:disable:no-unsafe-any
-
 interface Attributes {
     position: vec3;
     color: vec3;

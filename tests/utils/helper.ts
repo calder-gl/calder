@@ -30,7 +30,7 @@ export namespace TestHelper {
             vec3.fromValues(0, 0, -1),
             vec3.fromValues(0, 0, -1),
             vec3.fromValues(0, 0, -1),
-            vec3.fromValues(0, 0, -1),
+            vec3.fromValues(0, 0, -1)
         ];
         const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
         const controlPoints = [start];

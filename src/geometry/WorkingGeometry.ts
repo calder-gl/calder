@@ -65,7 +65,12 @@ export class WorkingGeometry {
      * @param {vec3[]} controlPoints: A set of points to snap to or reference.
      * @return {WorkingGeometry}
      */
-    constructor(vertices: vec3[] = [], normals: vec3[] = [], faces: Face[] = [], controlPoints: vec3[] = []) {
+    constructor(
+        vertices: vec3[] = [],
+        normals: vec3[] = [],
+        faces: Face[] = [],
+        controlPoints: vec3[] = []
+    ) {
         // TODO(pbardea): Check if max(indices) of all faces is <= the len(vertices)
         this.vertices = vertices.map(Affine.createPoint);
         this.normals = normals.map(Affine.createVector);
@@ -154,29 +159,53 @@ export class WorkingGeometry {
      * @param {vec3} holdPoint: point to scale from, default to true origin.
      */
     public scale(pullPoint: vec3, destinationPoint: vec3, holdPoint: vec3 = vec3.create()) {
-      const moveHoldToOrigin = mat4.translate(
-        mat4.create(), mat4.create(),
-        vec3.negate(vec3.create(), holdPoint));
+        const moveHoldToOrigin = mat4.translate(
+            mat4.create(),
+            mat4.create(),
+            vec3.negate(vec3.create(), holdPoint)
+        );
 
-      const translatedPullPoint = vec3.sub(vec3.create(), pullPoint, holdPoint);
-      const translatedDestinationPoint = vec3.sub(vec3.create(), destinationPoint, holdPoint);
+        const translatedPullPoint = vec3.sub(vec3.create(), pullPoint, holdPoint);
+        const translatedDestinationPoint = vec3.sub(vec3.create(), destinationPoint, holdPoint);
 
-      const rotPullToXAxis = mat4.fromQuat(mat4.create(), quat.rotationTo(quat.create(), vec3.normalize(vec3.create(), translatedPullPoint), vec3.fromValues(1, 0, 0)));
+        const rotPullToXAxis = mat4.fromQuat(
+            mat4.create(),
+            quat.rotationTo(
+                quat.create(),
+                vec3.normalize(vec3.create(), translatedPullPoint),
+                vec3.fromValues(1, 0, 0)
+            )
+        );
 
-      const scalePullToDestOnXAxis = mat4.scale(mat4.create(), mat4.create(), vec3.fromValues(vec3.len(translatedDestinationPoint) / vec3.len(translatedPullPoint), 1, 1));
+        const scalePullToDestOnXAxis = mat4.scale(
+            mat4.create(),
+            mat4.create(),
+            vec3.fromValues(
+                vec3.len(translatedDestinationPoint) / vec3.len(translatedPullPoint),
+                1,
+                1
+            )
+        );
 
-      const rotXAxisToDestAxis = mat4.fromQuat(mat4.create(), quat.rotationTo(quat.create(), vec3.fromValues(1, 0, 0), vec3.normalize(vec3.create(), translatedDestinationPoint)));
+        const rotXAxisToDestAxis = mat4.fromQuat(
+            mat4.create(),
+            quat.rotationTo(
+                quat.create(),
+                vec3.fromValues(1, 0, 0),
+                vec3.normalize(vec3.create(), translatedDestinationPoint)
+            )
+        );
 
-      const moveOriginToHold = mat4.translate(mat4.create(), mat4.create(), holdPoint);
+        const moveOriginToHold = mat4.translate(mat4.create(), mat4.create(), holdPoint);
 
-      // Assemble all the matrices!
-      let matrix = moveOriginToHold;
-      mat4.mul(matrix, matrix, rotXAxisToDestAxis);
-      mat4.mul(matrix, matrix, scalePullToDestOnXAxis);
-      mat4.mul(matrix, matrix, rotPullToXAxis);
-      mat4.mul(matrix, matrix, moveHoldToOrigin);
+        // Assemble all the matrices!
+        let matrix = moveOriginToHold;
+        mat4.mul(matrix, matrix, rotXAxisToDestAxis);
+        mat4.mul(matrix, matrix, scalePullToDestOnXAxis);
+        mat4.mul(matrix, matrix, rotPullToXAxis);
+        mat4.mul(matrix, matrix, moveHoldToOrigin);
 
-      this.transform(matrix);
+        this.transform(matrix);
     }
 
     /**

@@ -45,7 +45,7 @@ describe('WorkingGeometry', () => {
                 vec3.fromValues(0, 0, -1),
                 vec3.fromValues(0, 0, -1),
                 vec3.fromValues(0, 0, -1),
-                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1)
             ];
             const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
@@ -73,7 +73,7 @@ describe('WorkingGeometry', () => {
                 vec3.fromValues(0, 0, -1),
                 vec3.fromValues(0, 0, -1),
                 vec3.fromValues(0, 0, -1),
-                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1)
             ];
             const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
@@ -336,10 +336,11 @@ describe('WorkingGeometry', () => {
         it('can scale from (0, 0, 0) to (-1, -1, 0) about (1, 1, 0)', () => {
             const square = TestHelper.square();
 
-          square.scale(
-            vec3.fromValues(0, 0, 0),
-            vec3.fromValues(-1, -1, 0),
-            vec3.fromValues(1, 1, 0));
+            square.scale(
+                vec3.fromValues(0, 0, 0),
+                vec3.fromValues(-1, -1, 0),
+                vec3.fromValues(1, 1, 0)
+            );
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(-1, -1, 0, 1),
@@ -360,12 +361,12 @@ describe('WorkingGeometry', () => {
 
             square.scale(vec3.create(), vec3.fromValues(1, 1, 0), vec3.fromValues(1, 0, 0));
 
-          expect(square.vertices).toEqualArrVec4([
-            vec4.fromValues(1, 1, 0, 1),
-            vec4.fromValues(2, 1, 0, 1),
-            vec4.fromValues(2, 0, 0, 1),
-            vec4.fromValues(1, 0, 0, 1),
-          ]);
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(1, 1, 0, 1),
+                vec4.fromValues(2, 1, 0, 1),
+                vec4.fromValues(2, 0, 0, 1),
+                vec4.fromValues(1, 0, 0, 1)
+            ]);
         });
     });
     describe('scaleByFactor', () => {

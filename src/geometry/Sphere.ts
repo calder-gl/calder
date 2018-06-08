@@ -1,5 +1,5 @@
 import { vec3 } from 'gl-matrix';
-import { range } from 'lodash';
+import { flatMap, range } from 'lodash';
 
 import { BakedGeometry } from './BakedGeometry';
 import { genIsoSurface } from './MarchingCubes';
@@ -19,9 +19,9 @@ export function genSphere(): BakedGeometry {
     const vertices = genIsoSurface(sphere);
 
     return {
-        vertices: vertices,
-        normals: vertices,
-        indices: range(vertices.length),
-        colors: [] // colors are created by the caller
+        vertices: Float32Array.from(flatMap(vertices, (v: vec3) => [v[0], v[1], v[2]])),
+        normals: Float32Array.from(flatMap(vertices, (v: vec3) => [v[0], v[1], v[2]])),
+        indices: Int16Array.from(range(vertices.length)),
+        colors: Float32Array.from([]) // colors are created by the caller
     };
 }

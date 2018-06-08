@@ -2,6 +2,8 @@ import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { Affine } from '../utils/affine';
 import { BakedGeometry } from './BakedGeometry';
 
+import { flatten } from 'lodash';
+
 /**
  * A representation of a surface on an object.
  */
@@ -83,9 +85,11 @@ export class WorkingGeometry {
     public bake(): BakedGeometry {
         this.combine();
 
-        const bakedVertices = this.vertices.map((workingVec: vec4) =>
-            vec3.fromValues(workingVec[0], workingVec[1], workingVec[2])
-        );
+        const bakedVertices = this.vertices.map((workingVec: vec4) => [
+            workingVec[0],
+            workingVec[1],
+            workingVec[2]
+        ]);
         const bakedIndecies = this.faces.reduce((accum: number[], face: Face) => {
             return accum.concat(face.indices);
         }, []);
@@ -96,17 +100,19 @@ export class WorkingGeometry {
             const v1: vec3 = Affine.to3D(vec4.subtract(vec4.create(), p1, p2));
             const v2: vec3 = Affine.to3D(vec4.subtract(vec4.create(), p2, p3));
 
-            return vec3.cross(vec3.create(), v1, v2);
+            const normal = vec3.cross(vec3.create(), v1, v2);
+
+            return [normal[0], normal[1], normal[2]];
         });
 
         // Make all of the baked shapes red for now.
-        const bakedColors: vec3[] = bakedVertices.map(() => vec3.fromValues(1, 0, 0));
+        const bakedColors = bakedVertices.map(() => [1, 0, 0]);
 
         return {
-            vertices: bakedVertices,
-            normals: bakedNormals,
-            indices: bakedIndecies,
-            colors: bakedColors
+            vertices: Float32Array.from(flatten(bakedVertices)),
+            normals: Float32Array.from(flatten(bakedNormals)),
+            indices: Int16Array.from(bakedIndecies),
+            colors: Float32Array.from(flatten(bakedColors))
         };
     }
 

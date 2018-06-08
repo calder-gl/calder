@@ -31,16 +31,12 @@
 export * from './armature/Armature';
 export * from './armature/Constraints';
 export * from './armature/Node';
-export * from './armature/Node';
-export * from './armature/NodeRenderObject';
-export * from './armature/Transformation';
 
 /*****************************
  * Geometry
  *****************************/
 
 export * from './geometry/BakedGeometry';
-export * from './geometry/MarchingCubes';
 export * from './geometry/ScalarField';
 export * from './geometry/Sphere';
 export * from './geometry/WorkingGeometry';
@@ -70,9 +66,3 @@ export * from './renderer/commands/createDrawObject';
 
 export * from './types/ConstraintTypes';
 export * from './types/VectorTypes';
-
-/*****************************
- * Utils
- *****************************/
-
-export * from './utils/affine';

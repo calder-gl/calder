@@ -6,34 +6,42 @@ import { matrix4, vector3 } from '../types/VectorTypes';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
 
+import { flatten, flatMap } from 'lodash';
+
 /**
  * A `Node` in a scene-graph.
  */
 export class Node {
-    private static boneVertices: vec3[] = [
-        vec3.fromValues(0, 0, 0),
-        vec3.fromValues(0.5, 0.1, 0),
-        vec3.fromValues(0.5, 0, -0.1),
-        vec3.fromValues(0.5, -0.1, 0),
-        vec3.fromValues(0.5, 0, 0.1),
-        vec3.fromValues(1, 0, 0)
+    private static boneVertices: number[][] = [
+        [0, 0, 0],
+        [0.5, 0.1, 0],
+        [0.5, 0, -0.1],
+        [0.5, -0.1, 0],
+        [0.5, 0, 0.1],
+        [1, 0, 0]
     ];
 
     private static bone: BakedGeometry = {
-        vertices: Node.boneVertices,
-        normals: [
-            vec3.fromValues(-1, 0, 0),
-            vec3.fromValues(0, 1, 0),
-            vec3.fromValues(0, 0, -1),
-            vec3.fromValues(0, -1, 0),
-            vec3.fromValues(0, 0, 1),
-            vec3.fromValues(1, 0, 0)
-        ],
-        indices: [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1, 5, 2, 1, 5, 3, 2, 5, 4, 3, 5, 1, 4],
+        vertices: Float32Array.from(flatten(Node.boneVertices)),
+        normals: Float32Array.from(
+            flatten([[-1, 0, 0], [0, 1, 0], [0, 0, -1], [0, -1, 0], [0, 0, 1], [1, 0, 0]])
+        ),
+        indices: Int16Array.from(
+            flatten([
+                [0, 1, 2],
+                [0, 2, 3],
+                [0, 3, 4],
+                [0, 4, 1],
+                [5, 2, 1],
+                [5, 3, 2],
+                [5, 4, 3],
+                [5, 1, 4]
+            ])
+        ),
 
         // Map x, y, z to r, g, b to give a sense of bone orientation
-        colors: Node.boneVertices.map((v: vec3) =>
-            vec3.fromValues(v[0], v[1] / 0.1 + 0.1, v[2] / 0.1 + 0.1)
+        colors: Float32Array.from(
+            flatMap(Node.boneVertices, (v: number[]) => [v[0], v[1] / 0.1 + 0.1, v[2] / 0.1 + 0.1])
         )
     };
 
@@ -58,6 +66,22 @@ export class Node {
     ) {
         this.children = children;
         this.transformation = new Transformation(position, rotation, scale);
+    }
+
+    public static clone(node: Node): Node {
+        const cloned = new Node(
+            node.children,
+            node.getPosition(),
+            node.getRotation(),
+            node.getScale()
+        );
+        cloned.parent = node.parent;
+        Object.keys(node.points).forEach((key: string) => {
+            cloned.createPoint(key, node.points[key].position);
+        });
+        cloned.anchor = node.anchor;
+
+        return cloned;
     }
 
     public createPoint(name: string, position: vec3) {
@@ -205,9 +229,25 @@ export class Node {
     /**
      * @returns {mat4} A matrix that brings local coordinate into the parent coordinate space.
      */
-
     public getTransformation(): mat4 {
         return this.transformation.getTransformation();
+    }
+
+    /**
+     * @internal
+     *
+     * @returns {Transformation} The transformation for this node separated into its components
+     */
+    public getRawTransformation(): Transformation {
+        return this.transformation;
+    }
+
+    /**
+     * @internal
+     * Sets the transformation for this node, separated into its components
+     */
+    public setRawTransformation(transformation: Transformation) {
+        this.transformation = transformation;
     }
 
     /**

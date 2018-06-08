@@ -1,3 +1,4 @@
+import { Animation } from '../armature/Animation';
 import { Armature } from '../armature/Armature';
 import { Node } from '../armature/Node';
 import { genSphere } from '../geometry/Sphere';
@@ -5,7 +6,7 @@ import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
 
 import { mat4, quat, vec3 } from 'gl-matrix';
-import { range } from 'lodash';
+import { flatMap, range } from 'lodash';
 import { Constraints } from '../armature/Constraints';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
@@ -22,7 +23,7 @@ renderer.addLight(light1);
 renderer.addLight(light2);
 
 const sphere = genSphere();
-sphere.colors = sphere.vertices.map(() => vec3.fromValues(1, 0, 0));
+sphere.colors = Int16Array.from(flatMap(range(sphere.vertices.length / 3), () => [1, 0, 0]));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 2: create armature
@@ -66,8 +67,6 @@ renderer.camera.moveTo(vec3.fromValues(0, 0, 8));
 renderer.camera.lookAt(vec3.fromValues(2, 2, -4));
 
 // Draw the armature
-let rotation = 90;
-const angle = Math.random() * 90;
 
 // Create a new constraint to be applied to the `test` Node.
 const constraints = Constraints.getInstance();
@@ -79,12 +78,22 @@ constraints.add(test, (node: Node) => {
         .release();
 });
 
-const draw = () => {
-    rotation += 1;
-    tower.setRotation(
-        mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), angle, rotation, 0))
-    );
+Animation.create({
+    node: tower,
+    to: (node: Node) => {
+        const theta = Math.random() * 90;
+        const phi = Math.random() * 360;
+        node.setRotation(
+            mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), theta, phi, 0))
+        );
+        node.setScale(mat4.create());
+    },
+    duration: 1000,
+    times: 0,
+    repeatDelay: 0
+});
 
+const draw = () => {
     return {
         objects: [tower, test],
         debugParams: { drawAxes: true, drawArmatureBones: true }

@@ -9,12 +9,11 @@ import { mat4, vec3, vec4 } from 'gl-matrix';
 
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
+import { Animation } from '../armature/Animation';
 import { Constraints } from '../armature/Constraints';
 import { Node } from '../armature/Node';
 import { DebugParams } from './interfaces/DebugParams';
 import { RenderParams } from './interfaces/RenderParams';
-
-// tslint:disable:no-unsafe-any
 
 /**
  * Manages all scene information and is responsible for rendering it to the screen
@@ -210,10 +209,11 @@ export class Renderer {
     public eachFrame(drawCallback: () => RenderParams) {
         const draw = () => {
             const { objects, debugParams } = drawCallback();
+            Animation.tick();
             Constraints.getInstance().applyAll();
             this.draw(
                 objects,
-                debugParams === undefined
+                debugParams !== undefined
                     ? debugParams
                     : { drawAxes: false, drawArmatureBones: false }
             );
@@ -230,7 +230,7 @@ export class Renderer {
         this.clearDepth();
 
         const [zero, x, y, z] = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]].map(
-            (point: number[]) => {
+            (point: number[]): vec4 => {
                 // Initially treat these as vectors (w = 0) instead of points (where w would be 1)
                 // so that only the direction changes, and they are not translated from the origin
                 const vector = vec4.fromValues(point[0], point[1], point[2], 0);
@@ -252,15 +252,17 @@ export class Renderer {
         const redHex = '#FF0000';
         const greenHex = '#00FF00';
         const blueHex = '#0000FF';
-        const redRGB = [1, 0, 0]; // redHex
-        const greenRGB = [0, 1, 0]; // greenHex
-        const blueRGB = [0, 0, 1]; // blueHex
+        const redRGB = vec3.fromValues(1, 0, 0); // redHex
+        const greenRGB = vec3.fromValues(0, 1, 0); // greenHex
+        const blueRGB = vec3.fromValues(0, 0, 1); // blueHex
 
-        this.drawAxes({
-            positions: [zero, x, zero, y, zero, z],
-            colors: [redRGB, redRGB, greenRGB, greenRGB, blueRGB, blueRGB],
-            count: 6
-        });
+        this.drawAxes([
+            {
+                positions: [zero, x, zero, y, zero, z],
+                colors: [redRGB, redRGB, greenRGB, greenRGB, blueRGB, blueRGB],
+                count: 6
+            }
+        ]);
 
         // Use the 2D projected points to draw text labels for the axes. To convert the GL 3D point
         // to a point where each element is in [0, 1], we use:

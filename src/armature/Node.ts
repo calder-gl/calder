@@ -366,7 +366,7 @@ export class Node {
         const transformationMatrix = mat4.create();
         mat4.multiply(transformationMatrix, parentMatrix, transform);
 
-        return { ...Node.bone, transform: transformationMatrix, isShadeless: true };
+        return { geometry: Node.bone, transform: transformationMatrix, isShadeless: true };
     }
 
     /**
@@ -646,7 +646,7 @@ export class GeometryNode extends Node {
             isRoot,
             makeBones
         );
-        objects.geometry.push({ ...this.geometry, transform: currentMatrix });
+        objects.geometry.push({ geometry: this.geometry, transform: currentMatrix });
 
         return objects;
     }

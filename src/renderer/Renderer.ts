@@ -26,6 +26,8 @@ export class Renderer {
 
     public camera: Camera = new Camera();
 
+    private regl: REGL.Regl;
+
     private clearAll: () => void;
     private clearDepth: () => void;
     private drawObject: REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps>;
@@ -81,23 +83,23 @@ export class Renderer {
         mat4.perspective(this.projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
         // Set up drawing commands
-        const regl: REGL.Regl = REGL(canvas3D);
+        this.regl = REGL(canvas3D);
 
         this.clearAll = () => {
             this.ctx2D.clearRect(0, 0, this.width, this.height);
-            regl.clear({
+            this.regl.clear({
                 color: [0, 0, 0, 1],
                 depth: 1
             });
         };
 
         this.clearDepth = () =>
-            regl.clear({
+            this.regl.clear({
                 depth: 1
             });
 
-        this.drawObject = createDrawObject(regl, this.maxLights);
-        this.drawAxes = createDrawAxes(regl);
+        this.drawObject = createDrawObject(this.regl, this.maxLights);
+        this.drawAxes = createDrawAxes(this.regl);
     }
 
     public draw(
@@ -113,6 +115,22 @@ export class Renderer {
                     true,
                     debug.drawArmatureBones === true
                 );
+
+                [...childObjects.geometry, ...childObjects.bones].forEach((o: RenderObject) => {
+                    if (o.geometry.verticesBuffer === undefined) {
+                        o.geometry.verticesBuffer = this.regl.buffer(o.geometry.vertices);
+                    }
+                    if (o.geometry.normalsBuffer === undefined) {
+                        o.geometry.normalsBuffer = this.regl.buffer(o.geometry.normals);
+                    }
+                    if (o.geometry.colorsBuffer === undefined) {
+                        o.geometry.colorsBuffer = this.regl.buffer(o.geometry.colors);
+                    }
+                    if (o.geometry.indicesBuffer === undefined) {
+                        o.geometry.indicesBuffer = this.regl.elements(o.geometry.indices);
+                    }
+                });
+
                 accum.geometry.push(...childObjects.geometry);
                 accum.bones.push(...childObjects.bones);
 
@@ -127,10 +145,10 @@ export class Renderer {
                     model: o.transform,
                     cameraTransform: this.camera.getTransform(),
                     projectionMatrix: this.projectionMatrix,
-                    positions: o.vertices,
-                    normals: o.normals,
-                    colors: o.colors,
-                    indices: o.indices,
+                    positions: o.geometry.verticesBuffer,
+                    normals: o.geometry.normalsBuffer,
+                    colors: o.geometry.colorsBuffer,
+                    indices: o.geometry.indicesBuffer,
                     isShadeless: o.isShadeless === true,
                     numLights: this.lights.length,
                     ambientLight: this.ambientLight,
@@ -148,10 +166,10 @@ export class Renderer {
                         model: o.transform,
                         cameraTransform: this.camera.getTransform(),
                         projectionMatrix: this.projectionMatrix,
-                        positions: o.vertices,
-                        normals: o.normals,
-                        colors: o.colors,
-                        indices: o.indices,
+                        positions: o.geometry.verticesBuffer,
+                        normals: o.geometry.normalsBuffer,
+                        colors: o.geometry.colorsBuffer,
+                        indices: o.geometry.indicesBuffer,
                         isShadeless: o.isShadeless === true,
                         numLights: this.lights.length,
                         ambientLight: this.ambientLight,

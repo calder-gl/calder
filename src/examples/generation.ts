@@ -5,6 +5,7 @@ import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
 
 import { mat4, quat, vec3 } from 'gl-matrix';
+import { flatMap } from 'lodash';
 
 const light1: Light = {
     lightPosition: [10, 10, 10],
@@ -28,10 +29,10 @@ renderer.addLight(light1);
 renderer.addLight(light2);
 
 const leafSphere = genSphere();
-leafSphere.colors = leafSphere.vertices.map(() => vec3.fromValues(0.8, 1, 0.8));
+leafSphere.colors = Float32Array.from(flatMap(leafSphere.vertices, () => [0.8, 1, 0.8]));
 
 const branchSphere = genSphere();
-branchSphere.colors = branchSphere.vertices.map(() => vec3.fromValues(0.4, 0.3, 0.3));
+branchSphere.colors = Float32Array.from(flatMap(branchSphere.vertices, () => [0.4, 0.3, 0.3]));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 2: create armature

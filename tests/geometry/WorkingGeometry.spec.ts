@@ -30,6 +30,7 @@ describe('WorkingGeometry', () => {
             const geo = new WorkingGeometry();
 
             expect(geo.vertices).toEqual([]);
+            expect(geo.normals).toEqual([]);
             expect(geo.faces).toEqual([]);
             expect(geo.controlPoints).toEqual([]);
         });
@@ -40,9 +41,15 @@ describe('WorkingGeometry', () => {
                 vec3.fromValues(1, 1, 0),
                 vec3.fromValues(1, 0, 0)
             ];
+            const normals = [
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1),
+            ];
             const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
-            const geo = new WorkingGeometry(vertices, faces, controlPoints);
+            const geo = new WorkingGeometry(vertices, normals, faces, controlPoints);
 
             expect(geo.vertices).toEqual([
                 vec4.fromValues(0, 0, 0, 1),
@@ -62,9 +69,15 @@ describe('WorkingGeometry', () => {
                 vec3.fromValues(1, 1, 0),
                 vec3.fromValues(1, 0, 0)
             ];
+            const normals = [
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1),
+            ];
             const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
-            const square = new WorkingGeometry(vertices, faces, controlPoints);
+            const square = new WorkingGeometry(vertices, normals, faces, controlPoints);
             const bakedSquare = square.bake();
 
             // Not testing the colors yet since they don't do anything useful
@@ -72,11 +85,11 @@ describe('WorkingGeometry', () => {
             expect(bakedSquare.indices).toEqual(Int16Array.from([0, 1, 2, 0, 2, 3]));
             compareFloatArrays(
                 bakedSquare.vertices,
-                Float32Array.from([0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0])
+                Float32Array.from(vertices)
             );
             compareFloatArrays(
                 bakedSquare.normals,
-                Float32Array.from([...expectedNormal, ...expectedNormal])
+                Float32Array.from(normals)
             );
         });
         it('can bake a WorkingGeometry that has many merged objects', () => {
@@ -313,27 +326,26 @@ describe('WorkingGeometry', () => {
 
             square.scale(vec3.fromValues(1, 1, 0), vec3.fromValues(2, 2, 0));
 
-            expect(square.vertices).toEqual([
+            expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(0, 0, 0, 1),
-                vec4.fromValues(0, 2, 0, 1),
+                vec4.fromValues(0.5, 1.5, 0, 1),
                 vec4.fromValues(2, 2, 0, 1),
-                vec4.fromValues(2, 0, 0, 1)
+                vec4.fromValues(1.5, 0.5, 0, 1)
             ]);
         });
         it('can scale from (0, 0, 0) to (-1, -1, 0) about (1, 1, 0)', () => {
             const square = TestHelper.square();
 
-            square.scale(
-                vec3.fromValues(0, 0, 0),
-                vec3.fromValues(-1, -1, 0),
-                vec3.fromValues(1, 1, 0)
-            );
+          square.scale(
+            vec3.fromValues(0, 0, 0),
+            vec3.fromValues(-1, -1, 0),
+            vec3.fromValues(1, 1, 0));
 
-            expect(square.vertices).toEqual([
+            expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(-1, -1, 0, 1),
-                vec4.fromValues(-1, 1, 0, 1),
+                vec4.fromValues(-0.5, 0.5, 0, 1),
                 vec4.fromValues(1, 1, 0, 1),
-                vec4.fromValues(1, -1, 0, 1)
+                vec4.fromValues(0.5, -0.5, 0, 1)
             ]);
         });
         it('can scale to itself and remain unchanged', () => {
@@ -343,12 +355,17 @@ describe('WorkingGeometry', () => {
 
             expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
         });
-        it('will throw an error when it is skewed', () => {
+        it('will perform a rotation when the pull and destination points are not colinear', () => {
             const square = TestHelper.square();
 
-            expect(() => {
-                square.scale(vec3.create(), vec3.fromValues(1, 1, 0), vec3.fromValues(1, 0, 0));
-            }).toThrowError('Destination and pull vectors must be in the same direction.');
+            square.scale(vec3.create(), vec3.fromValues(1, 1, 0), vec3.fromValues(1, 0, 0));
+
+          expect(square.vertices).toEqualArrVec4([
+            vec4.fromValues(1, 1, 0, 1),
+            vec4.fromValues(2, 1, 0, 1),
+            vec4.fromValues(2, 0, 0, 1),
+            vec4.fromValues(1, 0, 0, 1),
+          ]);
         });
     });
     describe('scaleByFactor', () => {

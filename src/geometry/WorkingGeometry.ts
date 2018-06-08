@@ -199,7 +199,9 @@ export class WorkingGeometry {
         const moveOriginToHold = mat4.translate(mat4.create(), mat4.create(), holdPoint);
 
         // Assemble all the matrices!
-        let matrix = moveOriginToHold;
+        // Note that matrix is modified after each mul call, but the linter can't figure that out,
+        // so the const is only there to appease the linter
+        const matrix = moveOriginToHold;
         mat4.mul(matrix, matrix, rotXAxisToDestAxis);
         mat4.mul(matrix, matrix, scalePullToDestOnXAxis);
         mat4.mul(matrix, matrix, rotPullToXAxis);
@@ -215,7 +217,7 @@ export class WorkingGeometry {
      * @param {vec3} pullPoint: point that will be scaled by factor away from holdPoint.
      * @param {vec3} holdPoint: point to scale from, default to true origin.
      */
-    public scaleByFactor(factor: number, pullPoint: vec3, holdPoint: vec3 = vec3.create()) {
+    public scaleByFactor(factor: number, holdPoint: vec3 = vec3.create()) {
         const factorVector: vec3 = vec3.fromValues(factor, factor, factor);
         const scalingMatrix: mat4 = mat4.fromRotationTranslationScaleOrigin(
             mat4.create(),
@@ -250,62 +252,6 @@ export class WorkingGeometry {
     }
 
     /**
-     * Special divide for scaling vectors. Treats undeterminate as 1.
-     *
-     * @param {number} a: Numerator.
-     * @param {number} b: Denominator.
-     * @return {number}: Result of division.
-     */
-    private scalingDivide(a: number, b: number): number {
-        if (b === 0 && a === 0) {
-            return 1;
-        } else if (b === 0 || a === 0) {
-            // TODO: Handle skew case here. Should not return NaN.
-            //       This should also never be run since call site checks
-            //       that vectors are in the same direction.
-            return NaN;
-        } else {
-            return a / b;
-        }
-    }
-
-    /**
-     * Determines if 2 vectors are pointing in the same direction.
-     *
-     * @param {vec3} a: The first vector.
-     * @param {vec3} b: The second vector.
-     * @return {boolean}: Whether the 2 vectors are in the same direction.
-     */
-    private areSameDirection(a: vec3, b: vec3): boolean {
-        const base: vec3 = vec3.normalize(vec3.create(), b);
-        const positiveNorm: vec3 = vec3.normalize(vec3.create(), a);
-        const negativeNorm: vec3 = vec3.normalize(vec3.create(), vec3.scale(vec3.create(), a, -1));
-
-        return vec3.equals(positiveNorm, base) || vec3.equals(negativeNorm, base);
-    }
-
-    /**
-     * Computes scaling vector by dividing destination by pull vectors using
-     * special division.
-     *
-     * @param {vec3} destination: Destination point of scaling.
-     * @param {vec3} pull: Starting pull point of scaling.
-     * @return {vec3}: Scaling vector.
-     * @throws {Error}: If the destination and pull vectors are not in the same direction.
-     */
-    private getScalingVector(destination: vec3, pull: vec3): vec3 {
-        if (!this.areSameDirection(destination, pull)) {
-            // TODO: Add the vector values in the error, but the test needs to be updated to a regex.
-            throw new Error('Destination and pull vectors must be in the same direction.');
-        }
-        const x: number = this.scalingDivide(destination[0], pull[0]);
-        const y: number = this.scalingDivide(destination[1], pull[1]);
-        const z: number = this.scalingDivide(destination[2], pull[2]);
-
-        return vec3.fromValues(x, y, z);
-    }
-
-    /**
      * Iteratively perform transforms on all vertices.
      *
      * @param {mat4} matrix: transformation matrix.
@@ -314,11 +260,11 @@ export class WorkingGeometry {
         this.vertices = this.vertices.map((workingVec: vec4) =>
             vec4.transformMat4(vec4.create(), workingVec, matrix)
         );
-        let inv = mat4.invert(mat4.create(), matrix);
+        const inv = mat4.invert(mat4.create(), matrix);
         if (inv === null) {
             throw new Error('Uninvertible transformation matrix');
         }
-        let normalMat = mat4.transpose(mat4.create(), inv);
+        const normalMat = mat4.transpose(mat4.create(), inv);
         this.normals = this.normals.map((workingVec: vec4) =>
             vec4.transformMat4(vec4.create(), workingVec, normalMat)
         );

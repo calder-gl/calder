@@ -370,10 +370,10 @@ describe('WorkingGeometry', () => {
         });
     });
     describe('scaleByFactor', () => {
-        it('can scale by a factor of 2 on the positive axes about origin', () => {
+        it('can scale by a factor of 2 about origin', () => {
             const square = TestHelper.square();
 
-            square.scaleByFactor(2, vec3.fromValues(1, 1, 0));
+            square.scaleByFactor(2);
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(0, 0, 0, 1),
@@ -382,10 +382,10 @@ describe('WorkingGeometry', () => {
                 vec4.fromValues(2, 0, 0, 1)
             ]);
         });
-        it('can scale by a factor of 2 on the negative axes about (1, 1, 0)', () => {
+        it('can scale by a factor of 2 about (1, 1, 0)', () => {
             const square = TestHelper.square();
 
-            square.scaleByFactor(2, vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 0));
+            square.scaleByFactor(2, vec3.fromValues(1, 1, 0));
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(-1, -1, 0, 1),
@@ -397,7 +397,7 @@ describe('WorkingGeometry', () => {
         it('can scale by a factor of 1 and remain unchanged', () => {
             const square = TestHelper.square();
 
-            square.scaleByFactor(1, vec3.fromValues(1, 1, 0));
+            square.scaleByFactor(1);
 
             expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
         });

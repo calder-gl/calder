@@ -5,7 +5,7 @@ import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
 
 import { mat4, quat, vec3 } from 'gl-matrix';
-import { range } from 'lodash';
+import { flatMap, range } from 'lodash';
 import { Constraints } from '../armature/Constraints';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
@@ -22,7 +22,7 @@ renderer.addLight(light1);
 renderer.addLight(light2);
 
 const sphere = genSphere();
-sphere.colors = sphere.vertices.map(() => vec3.fromValues(1, 0, 0));
+sphere.colors = Int16Array.from(flatMap(range(sphere.vertices.length / 3), () => [1, 0, 0]));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 2: create armature

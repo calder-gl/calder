@@ -2,8 +2,8 @@
 import REGL = require('regl');
 
 export interface Light {
-    lightPosition: REGL.Vec3[];
-    lightColor: REGL.Vec3[];
+    lightPosition: REGL.Vec3;
+    lightColor: REGL.Vec3;
     lightIntensity: number;
 }
 

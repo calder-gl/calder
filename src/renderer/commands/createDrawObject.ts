@@ -1,5 +1,6 @@
 import { blankLight, Light } from '../interfaces/Light';
 
+import { mat4, vec3 } from 'gl-matrix';
 import { range } from 'lodash';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
@@ -8,36 +9,36 @@ import REGL = require('regl');
 
 // Uniforms are the same for all vertices.
 interface Uniforms {
-    projection: REGL.Mat4;
-    view: REGL.Mat4;
-    model: REGL.Mat4;
+    projection: mat4;
+    view: mat4;
+    model: mat4;
     numLights: number;
-    ambientLight: REGL.Vec3;
-    lightPositions: REGL.Vec3[];
-    lightColors: REGL.Vec3[];
-    lightIntensities: number[];
+    ambientLight: vec3;
     isShadeless: boolean;
 }
 
 // Attributes are per vertex.
 interface Attributes {
-    position: REGL.Vec3;
-    normal: REGL.Vec3;
-    color: REGL.Vec3;
+    position: Float32Array;
+    normal: Float32Array;
+    color: Float32Array;
 }
 
 /**
  * All the information needed to be able to draw an object to the screen
  */
 export interface DrawObjectProps {
-    model: REGL.Mat4;
-    cameraTransform: REGL.Mat4;
-    projectionMatrix: REGL.Mat4;
-    positions: REGL.Vec3[];
-    normals: REGL.Vec3[];
-    colors: REGL.Vec3[];
-    indices: number[];
+    model: mat4;
+    cameraTransform: mat4;
+    projectionMatrix: mat4;
+    positions: Float32Array;
+    normals: Float32Array;
+    colors: Float32Array;
+    indices: Int16Array;
+    numLights: number;
+    ambientLight: vec3;
     isShadeless: boolean;
+    lights: Light[];
 }
 
 /**
@@ -46,7 +47,7 @@ export interface DrawObjectProps {
  * @param {REGL.regl} regl The regl object factory to build a function to draw an object.
  */
 export function createDrawObject(
-    regl: REGL.regl,
+    regl: REGL.Regl,
     maxLights: number
 ): REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps> {
     return regl<Uniforms, Attributes, DrawObjectProps>({
@@ -120,20 +121,20 @@ export function createDrawObject(
             }
         `,
         attributes: {
-            position: regl.prop('positions'),
-            normal: regl.prop('normals'),
-            color: regl.prop('colors')
+            position: regl.prop<DrawObjectProps, keyof DrawObjectProps>('positions'),
+            normal: regl.prop<DrawObjectProps, keyof DrawObjectProps>('normals'),
+            color: regl.prop<DrawObjectProps, keyof DrawObjectProps>('colors')
         },
         uniforms: {
-            projection: regl.prop('projectionMatrix'),
-            view: regl.prop('cameraTransform'),
-            model: regl.prop('model'),
-            numLights: regl.prop('numLights'),
-            ambientLight: regl.prop('ambientLight'),
-            isShadeless: regl.prop('isShadeless'),
+            projection: regl.prop<DrawObjectProps, keyof DrawObjectProps>('projectionMatrix'),
+            view: regl.prop<DrawObjectProps, keyof DrawObjectProps>('cameraTransform'),
+            model: regl.prop<DrawObjectProps, keyof DrawObjectProps>('model'),
+            numLights: regl.prop<DrawObjectProps, keyof DrawObjectProps>('numLights'),
+            ambientLight: regl.prop<DrawObjectProps, keyof DrawObjectProps>('ambientLight'),
+            isShadeless: regl.prop<DrawObjectProps, keyof DrawObjectProps>('isShadeless'),
             ...buildLightMetadata(maxLights)
         },
-        elements: regl.prop('indices')
+        elements: regl.prop<DrawObjectProps, keyof DrawObjectProps>('indices')
     });
 }
 

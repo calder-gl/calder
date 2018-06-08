@@ -2,9 +2,15 @@ import { Face, WorkingGeometry } from '../../src/geometry/WorkingGeometry';
 import { TestHelper } from '../utils/helper';
 
 import { vec3, vec4 } from 'gl-matrix';
-import { range } from 'lodash';
+import { flatten, range } from 'lodash';
 
 import '../glMatrix';
+
+function compareFloatArrays(actual: Float32Array, expected: Float32Array) {
+    for (let i = 0; i < Math.max(actual.length, expected.length); i += 1) {
+        expect(actual[i]).toBeCloseTo(expected[i]);
+    }
+}
 
 describe('Face', () => {
     describe('constructor', () => {
@@ -62,10 +68,16 @@ describe('WorkingGeometry', () => {
             const bakedSquare = square.bake();
 
             // Not testing the colors yet since they don't do anything useful
-            const expectedNormal = vec3.fromValues(0, 0, -1);
-            expect(bakedSquare.indices).toEqual([0, 1, 2, 0, 2, 3]);
-            expect(bakedSquare.vertices).toEqual(vertices);
-            expect(bakedSquare.normals).toEqualArrVec3([expectedNormal, expectedNormal]);
+            const expectedNormal = [0, 0, -1];
+            expect(bakedSquare.indices).toEqual(Int16Array.from([0, 1, 2, 0, 2, 3]));
+            compareFloatArrays(
+                bakedSquare.vertices,
+                Float32Array.from([0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0])
+            );
+            compareFloatArrays(
+                bakedSquare.normals,
+                Float32Array.from([...expectedNormal, ...expectedNormal])
+            );
         });
         it('can bake a WorkingGeometry that has many merged objects', () => {
             const rootSquare = TestHelper.square();
@@ -77,55 +89,62 @@ describe('WorkingGeometry', () => {
             childSquare1.merge(grandChildSquare);
 
             const bakedObject = rootSquare.bake();
-            expect(bakedObject.indices).toEqual([
-                0,
-                1,
-                2,
-                0,
-                2,
-                3,
-                4,
-                5,
-                6,
-                4,
-                6,
-                7,
-                8,
-                9,
-                10,
-                8,
-                10,
-                11,
-                12,
-                13,
-                14,
-                12,
-                14,
-                15
-            ]);
-            expect(bakedObject.vertices).toEqual([
-                vec3.fromValues(0, 0, 0),
-                vec3.fromValues(0, 1, 0),
-                vec3.fromValues(1, 1, 0),
-                vec3.fromValues(1, 0, 0),
-                vec3.fromValues(1, 0, 0),
-                vec3.fromValues(1, 1, 0),
-                vec3.fromValues(2, 1, 0),
-                vec3.fromValues(2, 0, 0),
-                vec3.fromValues(1, 0, 1),
-                vec3.fromValues(1, 1, 1),
-                vec3.fromValues(2, 1, 1),
-                vec3.fromValues(2, 0, 1),
-                vec3.fromValues(-1, 0, 0),
-                vec3.fromValues(-1, 1, 0),
-                vec3.fromValues(0, 1, 0),
-                vec3.fromValues(0, 0, 0)
-            ]);
+            expect(bakedObject.indices).toEqual(
+                Int16Array.from([
+                    0,
+                    1,
+                    2,
+                    0,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    4,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10,
+                    8,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    12,
+                    14,
+                    15
+                ])
+            );
+            compareFloatArrays(
+                bakedObject.vertices,
+                Float32Array.from(
+                    flatten([
+                        [0, 0, 0],
+                        [0, 1, 0],
+                        [1, 1, 0],
+                        [1, 0, 0],
+                        [1, 0, 0],
+                        [1, 1, 0],
+                        [2, 1, 0],
+                        [2, 0, 0],
+                        [1, 0, 1],
+                        [1, 1, 1],
+                        [2, 1, 1],
+                        [2, 0, 1],
+                        [-1, 0, 0],
+                        [-1, 1, 0],
+                        [0, 1, 0],
+                        [0, 0, 0]
+                    ])
+                )
+            );
             // Normals should be an array of 8 (indices/3) [0, 0, 1] vectors
             const indexStride = 3;
             const normalCount = bakedObject.indices.length / indexStride;
-            const expectedNormals: vec3[] = range(normalCount).map(() => vec3.fromValues(0, 0, -1));
-            expect(bakedObject.normals).toEqualArrVec3(expectedNormals);
+            const expectedNormals = range(normalCount).map(() => [0, 0, -1]);
+            compareFloatArrays(bakedObject.normals, Float32Array.from(flatten(expectedNormals)));
         });
     });
     describe('merge', () => {

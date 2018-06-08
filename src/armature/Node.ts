@@ -68,6 +68,22 @@ export class Node {
         this.transformation = new Transformation(position, rotation, scale);
     }
 
+    public static clone(node: Node): Node {
+        const cloned = new Node(
+            node.children,
+            node.getPosition(),
+            node.getRotation(),
+            node.getScale()
+        );
+        cloned.parent = node.parent;
+        Object.keys(node.points).forEach((key: string) => {
+            cloned.createPoint(key, node.points[key].position);
+        });
+        cloned.anchor = node.anchor;
+
+        return cloned;
+    }
+
     public createPoint(name: string, position: vec3) {
         // tslint:disable-next-line:no-use-before-declare
         this.points[name] = new Point(this, position);
@@ -213,9 +229,25 @@ export class Node {
     /**
      * @returns {mat4} A matrix that brings local coordinate into the parent coordinate space.
      */
-
     public getTransformation(): mat4 {
         return this.transformation.getTransformation();
+    }
+
+    /**
+     * @internal
+     *
+     * @returns {Transformation} The transformation for this node separated into its components
+     */
+    public getRawTransformation(): Transformation {
+        return this.transformation;
+    }
+
+    /**
+     * @internal
+     * Sets the transformation for this node, separated into its components
+     */
+    public setRawTransformation(transformation: Transformation) {
+        this.transformation = transformation;
     }
 
     /**

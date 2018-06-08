@@ -1,4 +1,4 @@
-import { mat4, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3 } from 'gl-matrix';
 import { matrix4, vector3 } from '../types/VectorTypes';
 
 /**
@@ -55,5 +55,60 @@ export class Transformation {
 
     public setScale(scale: matrix4) {
         this.scale = scale;
+    }
+
+    /**
+     * Creates a new transformation that is between the current one and the provided one, with a
+     * given mix proportion.
+     *
+     * @param {Transformation} other The other transformation to interpolate towards.
+     * @param {number} amount The proportion to mix the transformations, where 0 is entirely the
+     * current transformation and 1 is entirely the other transformation.
+     * @returns {Transformation} The interpolated transformation.
+     */
+    public interpolate(other: Transformation, amount: number): Transformation {
+        const interpolated = new Transformation();
+
+        interpolated.setPosition(
+            vec3.lerp(interpolated.getPosition(), this.getPosition(), other.getPosition(), amount)
+        );
+
+        // To interpolate matrices, we have to factor them into components and interpolate each
+        // part separately
+        const rotationOffsetBegin = mat4.getTranslation(vec3.create(), this.getRotation());
+        const rotationOffsetEnd = mat4.getTranslation(vec3.create(), other.getRotation());
+        const rotationRotationBegin = mat4.getRotation(quat.create(), this.getRotation());
+        const rotationRotationEnd = mat4.getRotation(quat.create(), other.getRotation());
+        quat.normalize(rotationRotationBegin, rotationRotationBegin);
+        quat.normalize(rotationRotationEnd, rotationRotationEnd);
+        const rotationScaleBegin = mat4.getScaling(vec3.create(), this.getRotation());
+        const rotationScaleEnd = mat4.getScaling(vec3.create(), other.getRotation());
+        interpolated.setRotation(
+            mat4.fromRotationTranslationScale(
+                interpolated.getRotation(),
+                quat.slerp(quat.create(), rotationRotationBegin, rotationRotationEnd, amount),
+                vec3.lerp(vec3.create(), rotationOffsetBegin, rotationOffsetEnd, amount),
+                vec3.lerp(vec3.create(), rotationScaleBegin, rotationScaleEnd, amount)
+            )
+        );
+
+        const scaleOffsetBegin = mat4.getTranslation(vec3.create(), this.getScale());
+        const scaleOffsetEnd = mat4.getTranslation(vec3.create(), other.getScale());
+        const scaleRotationBegin = mat4.getRotation(quat.create(), this.getScale());
+        const scaleRotationEnd = mat4.getRotation(quat.create(), other.getScale());
+        quat.normalize(scaleRotationBegin, scaleRotationBegin);
+        quat.normalize(scaleRotationEnd, scaleRotationEnd);
+        const scaleScaleBegin = mat4.getScaling(vec3.create(), this.getScale());
+        const scaleScaleEnd = mat4.getScaling(vec3.create(), other.getScale());
+        interpolated.setScale(
+            mat4.fromRotationTranslationScale(
+                interpolated.getScale(),
+                quat.slerp(quat.create(), scaleRotationBegin, scaleRotationEnd, amount),
+                vec3.lerp(vec3.create(), scaleOffsetBegin, scaleOffsetEnd, amount),
+                vec3.lerp(vec3.create(), scaleScaleBegin, scaleScaleEnd, amount)
+            )
+        );
+
+        return interpolated;
     }
 }

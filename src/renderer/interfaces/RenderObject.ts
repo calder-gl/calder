@@ -5,7 +5,8 @@ import { BakedGeometry } from '../../geometry/BakedGeometry';
  * A collection of the properties needed to render something using the default
  * shader.
  */
-export type RenderObject = BakedGeometry & {
+export type RenderObject = {
+    geometry: BakedGeometry;
     transform: mat4;
 
     /**

@@ -31,10 +31,10 @@ export interface DrawObjectProps {
     model: mat4;
     cameraTransform: mat4;
     projectionMatrix: mat4;
-    positions: Float32Array;
-    normals: Float32Array;
-    colors: Float32Array;
-    indices: Int16Array;
+    positions: REGL.Buffer;
+    normals: REGL.Buffer;
+    colors: REGL.Buffer;
+    indices: REGL.Elements;
     numLights: number;
     ambientLight: vec3;
     isShadeless: boolean;

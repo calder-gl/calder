@@ -2,7 +2,7 @@ import { Face, WorkingGeometry } from '../../src/geometry/WorkingGeometry';
 import { TestHelper } from '../utils/helper';
 
 import { vec3, vec4 } from 'gl-matrix';
-import { flatten, range } from 'lodash';
+import { flatten, flatMap } from 'lodash';
 
 import '../glMatrix';
 
@@ -81,15 +81,14 @@ describe('WorkingGeometry', () => {
             const bakedSquare = square.bake();
 
             // Not testing the colors yet since they don't do anything useful
-            const expectedNormal = [0, 0, -1];
             expect(bakedSquare.indices).toEqual(Int16Array.from([0, 1, 2, 0, 2, 3]));
             compareFloatArrays(
                 bakedSquare.vertices,
-                Float32Array.from(vertices)
+                Float32Array.from(flatMap(vertices, (v: vec3) => [v[0], v[1], v[2]]))
             );
             compareFloatArrays(
                 bakedSquare.normals,
-                Float32Array.from(normals)
+                Float32Array.from(flatMap(normals, (n: vec3) => [n[0], n[1], n[2]]))
             );
         });
         it('can bake a WorkingGeometry that has many merged objects', () => {
@@ -153,11 +152,29 @@ describe('WorkingGeometry', () => {
                     ])
                 )
             );
-            // Normals should be an array of 8 (indices/3) [0, 0, 1] vectors
-            const indexStride = 3;
-            const normalCount = bakedObject.indices.length / indexStride;
-            const expectedNormals = range(normalCount).map(() => [0, 0, -1]);
-            compareFloatArrays(bakedObject.normals, Float32Array.from(flatten(expectedNormals)));
+            compareFloatArrays(
+                bakedObject.normals,
+                Float32Array.from(
+                    flatten([
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1]
+                    ])
+                )
+            );
         });
     });
     describe('merge', () => {
@@ -359,7 +376,11 @@ describe('WorkingGeometry', () => {
         it('will perform a rotation when the pull and destination points are not colinear', () => {
             const square = TestHelper.square();
 
-            square.freeformStretchTo(vec3.create(), vec3.fromValues(1, 1, 0), vec3.fromValues(1, 0, 0));
+            square.freeformStretchTo(
+                vec3.create(),
+                vec3.fromValues(1, 1, 0),
+                vec3.fromValues(1, 0, 0)
+            );
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(1, 1, 0, 1),

@@ -158,7 +158,11 @@ export class WorkingGeometry {
      * @param {vec3} destinationPoint: point that is the result of pullPoint after transformation.
      * @param {vec3} holdPoint: point to scale from, default to true origin.
      */
-    public freeformStretchTo(pullPoint: vec3, destinationPoint: vec3, holdPoint: vec3 = vec3.create()) {
+    public freeformStretchTo(
+        pullPoint: vec3,
+        destinationPoint: vec3,
+        holdPoint: vec3 = vec3.create()
+    ) {
         const moveHoldToOrigin = mat4.translate(
             mat4.create(),
             mat4.create(),

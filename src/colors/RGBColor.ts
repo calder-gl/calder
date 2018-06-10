@@ -44,8 +44,17 @@ export class RGBColor implements Color {
             throw new Error('Please pass in a hexadecimal string (i.e., FF33AA)');
         }
 
-        // Split hex string into segments of length 2
-        const hexValues = value.match(/.{2}/g)!.map((hex: string) => parseInt(hex, 16));
+        // Split the hexadecimal string into segments of length 2
+        const matches = value.match(/.{2}/g);
+
+        // Throw error if `matches` is null. Shouldn't be the case because of
+        // the previous assertion - but tslint was complaining ¯\_(ツ)_/¯
+        if (matches === null) {
+            throw new Error();
+        }
+
+        // Map the hexadecimal string segments to decimal integers
+        const hexValues = matches.map((hex: string) => parseInt(hex, 16));
 
         // Return the new color
         return new RGBColor(hexValues[0], hexValues[1], hexValues[2]);

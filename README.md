@@ -26,7 +26,7 @@ yarn webpack
 
 To add a new example:
 - Add the example typescript file in `/src/examples`
-- add the typescript file as an entrypoint in `webpack.config.js`
+- Add the typescript file as an entrypoint in `webpack.config.js`
 - Create a new HTML file in `/examples`
 
 ### Contributing

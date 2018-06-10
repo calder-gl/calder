@@ -31,7 +31,7 @@ export class Generator {
      * of 2 and another has a weight of 1, there is a 2:1 chance that the first one will be used.
      * @param {(root: Point) => void} generator A function that takes in a spawn point and generates
      * geometry at that point. Call `addDetail` in the function to spawn more.
-     * @returns {Generator} the current generator, so that more methods can be chained.
+     * @returns {Generator} The current generator, so that more methods can be chained.
      */
     public define(name: string, weight: number, generator: (root: Point) => void): Generator {
         // Make a component for the given name if one doesn't already exist
@@ -94,7 +94,12 @@ export class Generator {
     }
 
     /**
-     * Picks a weighted random generator function for the given component name.
+     * Picks a weighted random generator function for the given component name. If there are
+     * multiple definitions of a component (different ways to spawn that component), this will
+     * randomly pick one of those ways, according to the weights assigned to each way.
+     *
+     * @param {string} component The name of a component that we want to get a generator for.
+     * @returns {(root: Point) => void} A function to generate an instance of the component.
      */
     private getGenerator(component: string): (root: Point) => void {
         if (this.rules[component] === undefined) {

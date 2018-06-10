@@ -64,7 +64,9 @@ export class Generator {
      * @param {number?} depth How many iterations of generation should be used.
      * @returns {Node} The root node of the generated armature.
      */
-    public generate({ start, depth = 10 }: { start: string; depth?: number }): Node {
+    public generate(params: { start: string; depth?: number }): Node {
+        const { start, depth = 10 } = params;
+
         // Clear spawn points
         this.nextSpawnPoints.length = 0;
 

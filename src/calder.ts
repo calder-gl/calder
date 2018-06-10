@@ -33,6 +33,12 @@ export * from './armature/Constraints';
 export * from './armature/Node';
 
 /*****************************
+ * Colors
+ *****************************/
+
+export * from './colors/RGBColor';
+
+/*****************************
  * Geometry
  *****************************/
 

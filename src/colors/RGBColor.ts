@@ -16,6 +16,9 @@ export class RGBColor implements Color {
      *
      * @class RGBColor
      * @constructor
+     * @param {number} red Red numeric color value.
+     * @param {number} green Green numeric color value.
+     * @param {number} blue Blue numeric color value.
      */
     private constructor(red: number, green: number, blue: number) {
         if (red < 0 || red > 255) {

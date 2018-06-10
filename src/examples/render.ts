@@ -8,7 +8,7 @@ import { Renderer } from '../renderer/Renderer';
 import { mat4, quat, vec3 } from 'gl-matrix';
 import { flatMap, range } from 'lodash';
 import { Constraints } from '../armature/Constraints';
-import { RGBColor } from '../calder';
+import { CMYKColor } from '../calder';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
 const light2: Light = { lightPosition: [700, 500, 50], lightColor: [3, 3, 3], lightIntensity: 100 };
@@ -24,7 +24,7 @@ renderer.addLight(light1);
 renderer.addLight(light2);
 
 const sphere = genSphere();
-const red: number[] = RGBColor.fromHex('FF0000').asArray();
+const red: number[] = CMYKColor.fromCMYK(0, 1, 1, 0).asArray();
 sphere.colors = Int16Array.from(flatMap(range(sphere.vertices.length / 3), () => red));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

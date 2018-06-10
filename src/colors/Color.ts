@@ -5,7 +5,7 @@ import { vec3 } from 'gl-matrix';
  */
 export interface Color {
     /**
-     * Returns a three element array representation of the `RGBColor` object.
+     * Returns a three element array representation of the `Color` object.
      *
      * @class RGBColor
      * @method asArray

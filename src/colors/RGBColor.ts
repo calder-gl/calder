@@ -41,7 +41,7 @@ export class RGBColor implements Color {
      */
     public static fromHex(value: string): RGBColor {
         if (value.length !== 6) {
-            throw new Error("Please pass in a hexadecimal string (i.e., FF33AA)");
+            throw new Error('Please pass in a hexadecimal string (i.e., FF33AA)');
         }
 
         // Split hex string into segments of length 2
@@ -84,7 +84,11 @@ export class RGBColor implements Color {
      * @returns {gl-matrix.vec3}
      */
     public asVec(): vec3 {
-        return vec3.fromValues(this.vecValue(this.red), this.vecValue(this.green), this.vecValue(this.blue));
+        return vec3.fromValues(
+            this.vecValue(this.red),
+            this.vecValue(this.green),
+            this.vecValue(this.blue)
+        );
     }
 
     public interpolate() {

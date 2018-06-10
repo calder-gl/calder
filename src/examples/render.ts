@@ -24,7 +24,7 @@ renderer.addLight(light1);
 renderer.addLight(light2);
 
 const sphere = genSphere();
-const red: number[] = RGBColor.fromHex("FF0000").asArray();
+const red: number[] = RGBColor.fromHex('FF0000').asArray();
 sphere.colors = Int16Array.from(flatMap(range(sphere.vertices.length / 3), () => red));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

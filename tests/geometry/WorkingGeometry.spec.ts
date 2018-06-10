@@ -320,11 +320,11 @@ describe('WorkingGeometry', () => {
             expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
         });
     });
-    describe('scale', () => {
+    describe('freeformStretchTo', () => {
         it('can scale from (1, 1, 0) to (2, 2, 0) about origin', () => {
             const square = TestHelper.square();
 
-            square.scale(vec3.fromValues(1, 1, 0), vec3.fromValues(2, 2, 0));
+            square.freeformStretchTo(vec3.fromValues(1, 1, 0), vec3.fromValues(2, 2, 0));
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(0, 0, 0, 1),
@@ -336,7 +336,7 @@ describe('WorkingGeometry', () => {
         it('can scale from (0, 0, 0) to (-1, -1, 0) about (1, 1, 0)', () => {
             const square = TestHelper.square();
 
-            square.scale(
+            square.freeformStretchTo(
                 vec3.fromValues(0, 0, 0),
                 vec3.fromValues(-1, -1, 0),
                 vec3.fromValues(1, 1, 0)
@@ -352,14 +352,14 @@ describe('WorkingGeometry', () => {
         it('can scale to itself and remain unchanged', () => {
             const square = TestHelper.square();
 
-            square.scale(vec3.fromValues(1, 1, 0), vec3.fromValues(1, 1, 0));
+            square.freeformStretchTo(vec3.fromValues(1, 1, 0), vec3.fromValues(1, 1, 0));
 
             expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
         });
         it('will perform a rotation when the pull and destination points are not colinear', () => {
             const square = TestHelper.square();
 
-            square.scale(vec3.create(), vec3.fromValues(1, 1, 0), vec3.fromValues(1, 0, 0));
+            square.freeformStretchTo(vec3.create(), vec3.fromValues(1, 1, 0), vec3.fromValues(1, 0, 0));
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(1, 1, 0, 1),
@@ -369,11 +369,11 @@ describe('WorkingGeometry', () => {
             ]);
         });
     });
-    describe('scaleByFactor', () => {
+    describe('proportionalStretchTo', () => {
         it('can scale by a factor of 2 about origin', () => {
             const square = TestHelper.square();
 
-            square.scaleByFactor(2);
+            square.proportionalStretchTo(2);
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(0, 0, 0, 1),
@@ -385,7 +385,7 @@ describe('WorkingGeometry', () => {
         it('can scale by a factor of 2 about (1, 1, 0)', () => {
             const square = TestHelper.square();
 
-            square.scaleByFactor(2, vec3.fromValues(1, 1, 0));
+            square.proportionalStretchTo(2, vec3.fromValues(1, 1, 0));
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(-1, -1, 0, 1),
@@ -397,7 +397,7 @@ describe('WorkingGeometry', () => {
         it('can scale by a factor of 1 and remain unchanged', () => {
             const square = TestHelper.square();
 
-            square.scaleByFactor(1);
+            square.proportionalStretchTo(1);
 
             expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
         });

@@ -158,7 +158,7 @@ export class WorkingGeometry {
      * @param {vec3} destinationPoint: point that is the result of pullPoint after transformation.
      * @param {vec3} holdPoint: point to scale from, default to true origin.
      */
-    public scale(pullPoint: vec3, destinationPoint: vec3, holdPoint: vec3 = vec3.create()) {
+    public freeformStretchTo(pullPoint: vec3, destinationPoint: vec3, holdPoint: vec3 = vec3.create()) {
         const moveHoldToOrigin = mat4.translate(
             mat4.create(),
             mat4.create(),
@@ -199,8 +199,6 @@ export class WorkingGeometry {
         const moveOriginToHold = mat4.translate(mat4.create(), mat4.create(), holdPoint);
 
         // Assemble all the matrices!
-        // Note that matrix is modified after each mul call, but the linter can't figure that out,
-        // so the const is only there to appease the linter
         const matrix = moveOriginToHold;
         mat4.mul(matrix, matrix, rotXAxisToDestAxis);
         mat4.mul(matrix, matrix, scalePullToDestOnXAxis);
@@ -211,13 +209,12 @@ export class WorkingGeometry {
     }
 
     /**
-     * Scale by a given factor between 2 points.
+     * Scale by a given factor away from a given point.
      *
      * @param {number} factor: scaling factor.
-     * @param {vec3} pullPoint: point that will be scaled by factor away from holdPoint.
      * @param {vec3} holdPoint: point to scale from, default to true origin.
      */
-    public scaleByFactor(factor: number, holdPoint: vec3 = vec3.create()) {
+    public proportionalStretchTo(factor: number, holdPoint: vec3 = vec3.create()) {
         const factorVector: vec3 = vec3.fromValues(factor, factor, factor);
         const scalingMatrix: mat4 = mat4.fromRotationTranslationScaleOrigin(
             mat4.create(),

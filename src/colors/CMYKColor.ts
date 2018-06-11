@@ -4,6 +4,12 @@ import { Color } from './Color';
 /**
  * An CMYK representation of a color in a WebGL context.
  *
+ * The acronym stands for:
+ *   C: `C`yan
+ *   M: `M`agenta
+ *   Y: `Y`ellow
+ *   K: blac`K`
+ *
  * @class CMYKColor
  */
 export class CMYKColor implements Color {

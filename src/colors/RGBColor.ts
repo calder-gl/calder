@@ -4,6 +4,11 @@ import { Color } from './Color';
 /**
  * An RGB representation of a color in a WebGL context.
  *
+ * The acronym stands for:
+ *   R: `R`ed
+ *   G: `G`reen
+ *   B: `B`lue
+ *
  * @class RGBColor
  */
 export class RGBColor implements Color {

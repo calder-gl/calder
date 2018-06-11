@@ -21,13 +21,12 @@
     "tslint-config-prettier": "^1.12.0",
     "tslint-microsoft-contrib": "~5.0.3",
     "tsutils": "~2.24.0",
-    "typescript": "~2.8.1",
     "webpack": "^4.6.0",
     "webpack-cli": "^2.0.15"
   },
   "scripts": {
     "clean": "rimraf coverage build tmp",
-    "prepublish": "tsc -p tsconfig.build.json",
+    "install": "tsc -p tsconfig.build.json",
     "build": "tsc -p tsconfig.build.json",
     "check-tslint": "tslint-config-prettier-check ./tslint.json",
     "check-format": "prettier --list-different '**/*.ts'",
@@ -40,6 +39,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "typescript": "~2.8.1",
     "gl-matrix": "^2.5.1",
     "lodash": "^4.17.10",
     "regl": "regl-project/regl",

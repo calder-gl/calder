@@ -27,6 +27,7 @@
   },
   "scripts": {
     "clean": "rimraf coverage build tmp",
+    "install": "tsc -p tsconfig.build.json",
     "build": "tsc -p tsconfig.build.json",
     "check-tslint": "tslint-config-prettier-check ./tslint.json",
     "check-format": "prettier --list-different '**/*.ts'",

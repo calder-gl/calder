@@ -48,22 +48,12 @@ export class RGBColor implements Color {
      * @returns {RGBColor}
      */
     public static fromHex(value: string): RGBColor {
-        // Ensure the user passed in a valid hexadecimal string
-        if (
-            value.length > 7 ||
-            value.length < 6 ||
-            (value.length === 7 && value.lastIndexOf('#', 0) !== 0)
-        ) {
-            throw new Error('Please pass in a valid hexadecimal string (i.e., FF33AA or #FF33AA)');
-        }
-
         // Split the hexadecimal string into segments of length 2
         const matches = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(value);
 
-        // Throw error if `matches` is null. Shouldn't be the case because of
-        // the previous assertion - but tslint was complaining ¯\_(ツ)_/¯
+        // Ensure the user passed in a valid hexadecimal string
         if (matches === null) {
-            throw new Error();
+            throw new Error('Please pass in a valid hexadecimal string (i.e., FF33AA or #FF33AA)');
         }
 
         // Map the hexadecimal string segments to decimal integers

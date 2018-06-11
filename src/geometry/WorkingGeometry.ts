@@ -34,8 +34,9 @@ export class WorkingGeometry {
     public vertices: vec4[];
 
     /**
-     * The normals that correspond to the vertices. For each normal n, n[3] must be equal to 1 to
-     * ensure that it is a vector.
+     * The normals that correspond to the vertices. For each vertex, it must retain a copy of
+     * the normal for each face it composes. For each normal n, n[3] must be equal to 1 to ensure
+     * that it is a vector.
      */
     public normals: vec4[];
 

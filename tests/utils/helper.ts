@@ -81,13 +81,37 @@ export namespace TestHelper {
             vec3.fromValues(1, 0, 1)
         ];
         const normals = [
+            // Vertex 0
+            vec3.fromValues(-1, 0, 0),
+            vec3.fromValues(0, -1, 0),
             vec3.fromValues(0, 0, -1),
+            // Vertex 1
+            vec3.fromValues(-1, 0, 0),
+            vec3.fromValues(0, 1, 0),
             vec3.fromValues(0, 0, -1),
+            // Vertex 2
+            vec3.fromValues(1, 0, 0),
+            vec3.fromValues(0, 1, 0),
             vec3.fromValues(0, 0, -1),
+            // Vertex 3
+            vec3.fromValues(1, 0, 0),
+            vec3.fromValues(0, -1, 0),
             vec3.fromValues(0, 0, -1),
+            // Vertex 4
+            vec3.fromValues(-1, 0, 0),
+            vec3.fromValues(0, -1, 0),
             vec3.fromValues(0, 0, 1),
+            // Vertex 5
+            vec3.fromValues(-1, 0, 0),
+            vec3.fromValues(0, 1, 0),
             vec3.fromValues(0, 0, 1),
+            // Vertex 6
+            vec3.fromValues(1, 0, 0),
+            vec3.fromValues(0, 1, 0),
             vec3.fromValues(0, 0, 1),
+            // Vertex 7
+            vec3.fromValues(1, 0, 0),
+            vec3.fromValues(0, -1, 0),
             vec3.fromValues(0, 0, 1)
         ];
         const faces = [

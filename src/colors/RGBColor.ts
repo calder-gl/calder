@@ -123,7 +123,7 @@ export class RGBColor implements Color {
 
         // Map the normalized RGB values for `this` to new RGB values
         const mappedColors = this.asArray().map(
-            (c: number, i: number) => (c * ratio + colorsArray[i] * (1 - ratio)) * 255
+            (c: number, i: number) => (c * ratio + colorsArray[i] * (1 - ratio)) * 255 / ratio
         );
 
         // Return a new RGB color mixed from the two

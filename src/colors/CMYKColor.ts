@@ -109,7 +109,7 @@ export class CMYKColor implements Color {
 
         // Map the normalized RGB values for `this` to new RGB values
         const mappedColors = this.asArray().map(
-            (c: number, i: number) => (c * ratio + colorsArray[i] * (1 - ratio)) / ratio
+            (c: number, i: number) => c * ratio + colorsArray[i] * (1 - ratio)
         );
 
         // Get the percentage of `K` (black)

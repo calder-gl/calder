@@ -1,14 +1,14 @@
 import { vec3 } from 'gl-matrix';
-import { RGBColor } from "../../src/calder";
+import { RGBColor } from '../../src/calder';
 
 import '../glMatrix';
 
 describe('RGBColor', () => {
     describe('RGBColor.fromHex', () => {
         it('properly returns the appropriate normalized RGB values', () => {
-            const red: RGBColor = RGBColor.fromHex("FF0000");
-            const green: RGBColor = RGBColor.fromHex("00FF00");
-            const blue: RGBColor = RGBColor.fromHex("0000FF");
+            const red: RGBColor = RGBColor.fromHex('FF0000');
+            const green: RGBColor = RGBColor.fromHex('00FF00');
+            const blue: RGBColor = RGBColor.fromHex('0000FF');
 
             expect(red.asArray()).toEqual([1, 0, 0]);
             expect(green.asArray()).toEqual([0, 1, 0]);
@@ -17,15 +17,15 @@ describe('RGBColor', () => {
 
         it('properly throws errors for invalid hexadecimal strings', () => {
             expect(() => {
-                RGBColor.fromHex("#FF0000");
+                RGBColor.fromHex('#FF0000');
             }).toThrow('Please pass in a hexadecimal string (i.e., FF33AA)');
 
             expect(() => {
-                RGBColor.fromHex("FF");
+                RGBColor.fromHex('FF');
             }).toThrow('Please pass in a hexadecimal string (i.e., FF33AA)');
 
             expect(() => {
-                RGBColor.fromHex("FFFFFFF");
+                RGBColor.fromHex('FFFFFFF');
             }).toThrow('Please pass in a hexadecimal string (i.e., FF33AA)');
         });
     });
@@ -70,9 +70,9 @@ describe('RGBColor', () => {
 
     describe('asArray', () => {
         it('properly returns the appropriate normalized RGB values in an array representation', () => {
-            const red: RGBColor = RGBColor.fromHex("FF0000");
-            const green: RGBColor = RGBColor.fromHex("00FF00");
-            const blue: RGBColor = RGBColor.fromHex("0000FF");
+            const red: RGBColor = RGBColor.fromHex('FF0000');
+            const green: RGBColor = RGBColor.fromHex('00FF00');
+            const blue: RGBColor = RGBColor.fromHex('0000FF');
 
             expect(red.asArray()).toEqual([1, 0, 0]);
             expect(green.asArray()).toEqual([0, 1, 0]);
@@ -82,9 +82,9 @@ describe('RGBColor', () => {
 
     describe('asVec', () => {
         it('properly returns the appropriate normalized RGB values in an array representation', () => {
-            const red: RGBColor = RGBColor.fromHex("FF0000");
-            const green: RGBColor = RGBColor.fromHex("00FF00");
-            const blue: RGBColor = RGBColor.fromHex("0000FF");
+            const red: RGBColor = RGBColor.fromHex('FF0000');
+            const green: RGBColor = RGBColor.fromHex('00FF00');
+            const blue: RGBColor = RGBColor.fromHex('0000FF');
 
             expect(red.asVec()).toEqualVec3(vec3.fromValues(1, 0, 0));
             expect(green.asVec()).toEqualVec3(vec3.fromValues(0, 1, 0));
@@ -98,7 +98,7 @@ describe('RGBColor', () => {
             const blue: RGBColor = RGBColor.fromHex('0000FF');
             const purple: RGBColor = red.mix(blue);
 
-            expect(purple.asArray()).toEqual([1, 0, 1]);
+            expect(purple.asArray()).toEqual([0.5, 0, 0.5]);
         });
 
         it('properly mixes colors with a ratio provided', () => {

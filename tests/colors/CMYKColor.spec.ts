@@ -1,5 +1,5 @@
 import { vec3 } from 'gl-matrix';
-import { CMYKColor } from "../../src/calder";
+import { CMYKColor } from '../../src/calder';
 
 import '../glMatrix';
 
@@ -80,7 +80,7 @@ describe('CMYKColor', () => {
             const blue: CMYKColor = CMYKColor.fromCMYK(1, 1, 0, 0);
             const purple: CMYKColor = red.mix(blue);
 
-            expect(purple.asArray()).toEqual([1, 0, 1]);
+            expect(purple.asArray()).toEqual([0.5, 0, 0.5]);
         });
 
         it('properly mixes colors with a ratio provided', () => {

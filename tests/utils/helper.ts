@@ -80,6 +80,16 @@ export namespace TestHelper {
             vec3.fromValues(1, 1, 1),
             vec3.fromValues(1, 0, 1)
         ];
+        const normals = [
+            vec3.fromValues(0, 0, -1),
+            vec3.fromValues(0, 0, -1),
+            vec3.fromValues(0, 0, -1),
+            vec3.fromValues(0, 0, -1),
+            vec3.fromValues(0, 0, 1),
+            vec3.fromValues(0, 0, 1),
+            vec3.fromValues(0, 0, 1),
+            vec3.fromValues(0, 0, 1)
+        ];
         const faces = [
             // Front side
             new Face([0, 1, 2]),
@@ -109,6 +119,6 @@ export namespace TestHelper {
             return out;
         });
 
-        return new WorkingGeometry(vertices, faces, controlPoints);
+        return new WorkingGeometry(vertices, normals, faces, controlPoints);
     }
 }

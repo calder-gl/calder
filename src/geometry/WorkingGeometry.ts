@@ -152,48 +152,6 @@ export class WorkingGeometry {
     }
 
     /**
-     * Stretch from the pull point to the destination direction by the given
-     * factor, while allowing shearing.
-     *
-     * @param {vec3} pullPoint: the point being pulled away from the origin.
-     * @param {number} destDir: the direction away from the origin that
-     * pullPoint is being pulled to.
-     * @param {vec3} factor: the scaling factor.
-     */
-    private freeformStretch(pullPoint: vec3, destDir: vec3, factor: number) {
-        const rotPullToXAxis = mat4.fromQuat(
-            mat4.create(),
-            quat.rotationTo(
-                quat.create(),
-                vec3.normalize(vec3.create(), pullPoint),
-                vec3.fromValues(1, 0, 0)
-            )
-        );
-
-        const scalePullByFactorOnXAxis = mat4.scale(
-            mat4.create(),
-            mat4.create(),
-            vec3.fromValues(factor, 1, 1)
-        );
-
-        const rotXAxisToDestAxis = mat4.fromQuat(
-            mat4.create(),
-            quat.rotationTo(
-                quat.create(),
-                vec3.fromValues(1, 0, 0),
-                vec3.normalize(vec3.create(), destDir)
-            )
-        );
-
-        // Assemble all the matrices!
-        const matrix = rotXAxisToDestAxis;
-        mat4.mul(matrix, matrix, scalePullByFactorOnXAxis);
-        mat4.mul(matrix, matrix, rotPullToXAxis);
-
-        this.transform(matrix);
-    }
-
-    /**
      * Scale by pulling a point to a new point.
      *
      * @param {vec3} pullPoint: point that scales to destinationPoint after transformation.
@@ -309,5 +267,47 @@ export class WorkingGeometry {
         this.normals = this.normals.map((workingVec: vec4) =>
             vec4.transformMat4(vec4.create(), workingVec, normalMat)
         );
+    }
+
+    /**
+     * Stretch from the pull point to the destination direction by the given
+     * factor, while allowing shearing.
+     *
+     * @param {vec3} pullPoint: the point being pulled away from the origin.
+     * @param {number} destDir: the direction away from the origin that
+     * pullPoint is being pulled to.
+     * @param {vec3} factor: the scaling factor.
+     */
+    private freeformStretch(pullPoint: vec3, destDir: vec3, factor: number) {
+        const rotPullToXAxis = mat4.fromQuat(
+            mat4.create(),
+            quat.rotationTo(
+                quat.create(),
+                vec3.normalize(vec3.create(), pullPoint),
+                vec3.fromValues(1, 0, 0)
+            )
+        );
+
+        const scalePullByFactorOnXAxis = mat4.scale(
+            mat4.create(),
+            mat4.create(),
+            vec3.fromValues(factor, 1, 1)
+        );
+
+        const rotXAxisToDestAxis = mat4.fromQuat(
+            mat4.create(),
+            quat.rotationTo(
+                quat.create(),
+                vec3.fromValues(1, 0, 0),
+                vec3.normalize(vec3.create(), destDir)
+            )
+        );
+
+        // Assemble all the matrices!
+        const matrix = rotXAxisToDestAxis;
+        mat4.mul(matrix, matrix, scalePullByFactorOnXAxis);
+        mat4.mul(matrix, matrix, rotPullToXAxis);
+
+        this.transform(matrix);
     }
 }

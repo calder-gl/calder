@@ -103,8 +103,31 @@ export class RGBColor implements Color {
         );
     }
 
-    public interpolate() {
-        // TODO(andrew)
+    /**
+     * Mix a color with another one. By default, it will mix the two colors
+     * equally with a `ratio` value of `0.5`.
+     *
+     * @method mix
+     * @param {Color} color The color object you wish to mix with `this`.
+     * @param {number} ratio The ratio at which to mix the first color with the second.
+     * @returns {RGBColor}
+     */
+    public mix(color: Color, ratio: number = 0.5) {
+        // Assert the ratio is within the range [0, 1]
+        if (ratio < 0 || ratio > 1) {
+            throw new RangeError(`ratio's value (${ratio}) must be in range [0, 1]`);
+        }
+
+        // Get the normalized RGB values for the second color
+        const colorsArray = color.asArray();
+
+        // Map the normalized RGB values for `this` to new RGB values
+        const mappedColors = this.asArray().map(
+            (c: number, i: number) => (c * ratio + colorsArray[i] * (1 - ratio)) * 255
+        );
+
+        // Return a new RGB color mixed from the two
+        return new RGBColor(mappedColors[0], mappedColors[1], mappedColors[2]);
     }
 
     private vecValue(value: number): number {

@@ -67,7 +67,7 @@ export class CMYKColor implements Color {
      * @returns {number[]}
      */
     public asArray(): number[] {
-        return this.rgb();
+        return this.toRGB();
     }
 
     /**
@@ -78,16 +78,47 @@ export class CMYKColor implements Color {
      * @returns {gl-matrix.vec3}
      */
     public asVec(): vec3 {
-        const rgb = this.rgb();
+        const rgb = this.toRGB();
 
         return vec3.fromValues(rgb[0], rgb[1], rgb[2]);
     }
 
-    public interpolate() {
-        // TODO(andrew)
+    /**
+     * Mix a color with another one. By default, it will mix the two colors
+     * equally with a `ratio` value of `0.5`.
+     *
+     * @method mix
+     * @param {Color} color The color object you wish to mix with `this`.
+     * @param {number} ratio The ratio at which to mix the first color with the second.
+     * @returns {RGBColor}
+     */
+    public mix(color: Color, ratio: number = 0.5) {
+        // Assert the ratio is within the range [0, 1]
+        if (ratio < 0 || ratio > 1) {
+            throw new RangeError(`ratio's value (${ratio}) must be in range [0, 1]`);
+        }
+
+        // Get the normalized RGB values for the second color
+        const colorsArray = color.asArray();
+
+        // Map the normalized RGB values for `this` to new RGB values
+        const mappedColors = this.asArray().map(
+            (c: number, i: number) => c * ratio + colorsArray[i] * (1 - ratio)
+        );
+
+        // Get the percentage of `K` (black)
+        const K = 1 - Math.max(mappedColors[0], mappedColors[1], mappedColors[2]);
+
+        // Return a new CMYK color mixed from the two
+        return new CMYKColor(
+            (1 - mappedColors[0] - K) / (1 - K),
+            (1 - mappedColors[1] - K) / (1 - K),
+            (1 - mappedColors[2] - K) / (1 - K),
+            K
+        );
     }
 
-    private rgb(): number[] {
+    private toRGB(): number[] {
         const red = (1 - this.cyan) * (1 - this.black);
         const green = (1 - this.magenta) * (1 - this.black);
         const blue = (1 - this.yellow) * (1 - this.black);

@@ -7,7 +7,6 @@ export interface Color {
     /**
      * Returns a three element array representation of the `Color` object.
      *
-     * @class RGBColor
      * @method asArray
      * @returns {number[]}
      */
@@ -21,5 +20,13 @@ export interface Color {
      */
     asVec(): vec3;
 
-    interpolate();
+    /**
+     * Mix a color with another one.
+     *
+     * @method mix
+     * @param {Color} color The color object you wish to mix with `this`.
+     * @param {number} ratio The ratio at which to mix the first color with the second.
+     * @returns {Color}
+     */
+    mix(color: Color, seed: number);
 }

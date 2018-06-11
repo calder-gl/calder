@@ -26,6 +26,12 @@ export namespace TestHelper {
             vec3.fromValues(1, 1, 0),
             vec3.fromValues(1, 0, 0)
         ];
+        const normals = [
+            vec3.fromValues(0, 0, -1),
+            vec3.fromValues(0, 0, -1),
+            vec3.fromValues(0, 0, -1),
+            vec3.fromValues(0, 0, -1)
+        ];
         const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
         const controlPoints = [start];
 
@@ -36,7 +42,7 @@ export namespace TestHelper {
             return out;
         });
 
-        return new WorkingGeometry(vertices, faces, controlPoints);
+        return new WorkingGeometry(vertices, normals, faces, controlPoints);
     }
 
     /**

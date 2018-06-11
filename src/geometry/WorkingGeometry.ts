@@ -2,7 +2,7 @@ import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { Affine } from '../utils/affine';
 import { BakedGeometry } from './BakedGeometry';
 
-import { flatten, flatMap, range } from 'lodash';
+import { flatMap, range } from 'lodash';
 import { RGBColor } from '../calder';
 import { Color } from '../colors/Color';
 
@@ -106,7 +106,7 @@ export class WorkingGeometry {
     public bake(): BakedGeometry {
         this.combine();
 
-        const bakedVertices = this.vertices.map((workingVec: vec4) => [
+        const bakedVertices = flatMap(this.vertices, (workingVec: vec4) => [
             workingVec[0],
             workingVec[1],
             workingVec[2]
@@ -114,17 +114,16 @@ export class WorkingGeometry {
         const bakedIndices = this.faces.reduce((accum: number[], face: Face) => {
             return accum.concat(face.indices);
         }, []);
-        const bakedNormals = this.normals.map((workingVec: vec4) => [
+        const bakedNormals = flatMap(this.normals, (workingVec: vec4) => [
             workingVec[0],
             workingVec[1],
             workingVec[2]
         ]);
-
         const bakedColors = flatMap(range(bakedVertices.length), () => this.fillColor.asArray());
 
         return {
-            vertices: Float32Array.from(flatten(bakedVertices)),
-            normals: Float32Array.from(flatten(bakedNormals)),
+            vertices: Float32Array.from(bakedVertices),
+            normals: Float32Array.from(bakedNormals),
             indices: Int16Array.from(bakedIndices),
             colors: Float32Array.from(bakedColors)
         };

@@ -2,7 +2,9 @@ import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { Affine } from '../utils/affine';
 import { BakedGeometry } from './BakedGeometry';
 
-import { flatten } from 'lodash';
+import { flatten, flatMap, range } from 'lodash';
+import { RGBColor } from '../calder';
+import { Color } from '../colors/Color';
 
 /**
  * A representation of a surface on an object.
@@ -57,19 +59,26 @@ export class WorkingGeometry {
     private mergedObjects: WorkingGeometry[];
 
     /**
+     * A `Color` to fill the `WorkingGeometry` with.
+     */
+    private fillColor: Color;
+
+    /**
      * Creates a working geometry from a given set of vertices, faces, and control points.
      *
      * @param {vec3[]} vertices: The points that make up the geometry.
      * @param {vec3[]} normals: The normals corresponding to the vertices.
      * @param {Face[]} faces: The surfaces of the object, relating the vertices to each other.
      * @param {vec3[]} controlPoints: A set of points to snap to or reference.
+     * @param {Color} fillColor: The color to fill the geometry with (defaults to red).
      * @return {WorkingGeometry}
      */
     constructor(
         vertices: vec3[] = [],
         normals: vec3[] = [],
         faces: Face[] = [],
-        controlPoints: vec3[] = []
+        controlPoints: vec3[] = [],
+        fillColor: Color = RGBColor.fromHex('#FF0000')
     ) {
         // TODO(pbardea): Check if max(indices) of all faces is <= the len(vertices)
         this.vertices = vertices.map(Affine.createPoint);
@@ -77,6 +86,7 @@ export class WorkingGeometry {
         this.faces = faces;
         this.controlPoints = controlPoints.map(Affine.createPoint);
         this.mergedObjects = [];
+        this.fillColor = fillColor;
     }
 
     /**
@@ -110,14 +120,13 @@ export class WorkingGeometry {
             workingVec[2]
         ]);
 
-        // Make all of the baked shapes red for now.
-        const bakedColors = bakedVertices.map(() => [1, 0, 0]);
+        const bakedColors = flatMap(range(bakedVertices.length), () => this.fillColor.asArray());
 
         return {
             vertices: Float32Array.from(flatten(bakedVertices)),
             normals: Float32Array.from(flatten(bakedNormals)),
             indices: Int16Array.from(bakedIndices),
-            colors: Float32Array.from(flatten(bakedColors))
+            colors: Float32Array.from(bakedColors)
         };
     }
 
@@ -226,6 +235,17 @@ export class WorkingGeometry {
             holdPoint
         );
         this.transform(scalingMatrix);
+    }
+
+    /**
+     * Sets the fill of the `BakedGeometry` to a single `Color`.
+     *
+     * @class BakedGeometry
+     * @method setFill
+     * @param {Color} color The color to fill the geometry with.
+     */
+    public setFill(color: Color) {
+        this.fillColor = color;
     }
 
     /**

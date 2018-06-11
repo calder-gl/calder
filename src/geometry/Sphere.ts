@@ -1,7 +1,7 @@
 import { vec3 } from 'gl-matrix';
-import { flatMap, range } from 'lodash';
+import { range } from 'lodash';
 
-import { BakedGeometry } from './BakedGeometry';
+import { Face, WorkingGeometry } from '../calder';
 import { genIsoSurface } from './MarchingCubes';
 import { ScalarField } from './ScalarField';
 
@@ -13,15 +13,10 @@ function sphereSignedDistFunc(coord: vec3): number {
     return Math.sqrt(coord[0] * coord[0] + coord[1] * coord[1] + coord[2] * coord[2]) - RADIUS;
 }
 
-// TODO(abhimadan): Create WorkingGeometry here instead
-export function genSphere(): BakedGeometry {
+export function genSphere(): WorkingGeometry {
     const sphere = new ScalarField(DIM, LENGTH, sphereSignedDistFunc);
     const vertices = genIsoSurface(sphere);
+    const face = new Face(range(vertices.length));
 
-    return {
-        vertices: Float32Array.from(flatMap(vertices, (v: vec3) => [v[0], v[1], v[2]])),
-        normals: Float32Array.from(flatMap(vertices, (v: vec3) => [v[0], v[1], v[2]])),
-        indices: Int16Array.from(range(vertices.length)),
-        colors: Float32Array.from([]) // colors are created by the caller
-    };
+    return new WorkingGeometry(vertices, vertices, [face]);
 }

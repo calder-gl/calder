@@ -6,9 +6,9 @@ import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
 
 import { mat4, quat, vec3 } from 'gl-matrix';
-import { flatMap, range } from 'lodash';
+import { range } from 'lodash';
 import { Constraints } from '../armature/Constraints';
-import { CMYKColor, RGBColor } from '../calder';
+import { BakedGeometry, CMYKColor, RGBColor, WorkingGeometry } from '../calder';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
 const light2: Light = { lightPosition: [700, 500, 50], lightColor: [3, 3, 3], lightIntensity: 100 };
@@ -23,13 +23,15 @@ const renderer: Renderer = new Renderer(800, 600, 2, vec3.fromValues(0.0, 0.1, 0
 renderer.addLight(light1);
 renderer.addLight(light2);
 
-const sphere = genSphere();
-
-// Populate sphere colours
+// Setup colors
 const blue: RGBColor = RGBColor.fromHex('0000FF');
 const red: CMYKColor = CMYKColor.fromCMYK(0, 1, 1, 0);
 const purple: CMYKColor = red.mix(blue);
-sphere.colors = Int16Array.from(flatMap(range(sphere.vertices.length / 3), () => purple.asArray()));
+
+// Setup sphere
+const workingSphere: WorkingGeometry = genSphere();
+workingSphere.setFill(purple);
+const sphere: BakedGeometry = workingSphere.bake();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 2: create armature

@@ -152,6 +152,48 @@ export class WorkingGeometry {
     }
 
     /**
+     * Stretch from the pull point to the destination direction by the given
+     * factor, while allowing shearing.
+     *
+     * @param {vec3} pullPoint: the point being pulled away from the origin.
+     * @param {number} destDir: the direction away from the origin that
+     * pullPoint is being pulled to.
+     * @param {vec3} factor: the scaling factor.
+     */
+    private freeformStretch(pullPoint: vec3, destDir: vec3, factor: number) {
+        const rotPullToXAxis = mat4.fromQuat(
+            mat4.create(),
+            quat.rotationTo(
+                quat.create(),
+                vec3.normalize(vec3.create(), pullPoint),
+                vec3.fromValues(1, 0, 0)
+            )
+        );
+
+        const scalePullByFactorOnXAxis = mat4.scale(
+            mat4.create(),
+            mat4.create(),
+            vec3.fromValues(factor, 1, 1)
+        );
+
+        const rotXAxisToDestAxis = mat4.fromQuat(
+            mat4.create(),
+            quat.rotationTo(
+                quat.create(),
+                vec3.fromValues(1, 0, 0),
+                vec3.normalize(vec3.create(), destDir)
+            )
+        );
+
+        // Assemble all the matrices!
+        const matrix = rotXAxisToDestAxis;
+        mat4.mul(matrix, matrix, scalePullByFactorOnXAxis);
+        mat4.mul(matrix, matrix, rotPullToXAxis);
+
+        this.transform(matrix);
+    }
+
+    /**
      * Scale by pulling a point to a new point.
      *
      * @param {vec3} pullPoint: point that scales to destinationPoint after transformation.
@@ -168,57 +210,55 @@ export class WorkingGeometry {
             mat4.create(),
             vec3.negate(vec3.create(), holdPoint)
         );
+        this.transform(moveHoldToOrigin);
 
         const translatedPullPoint = vec3.sub(vec3.create(), pullPoint, holdPoint);
         const translatedDestinationPoint = vec3.sub(vec3.create(), destinationPoint, holdPoint);
 
-        const rotPullToXAxis = mat4.fromQuat(
-            mat4.create(),
-            quat.rotationTo(
-                quat.create(),
-                vec3.normalize(vec3.create(), translatedPullPoint),
-                vec3.fromValues(1, 0, 0)
-            )
-        );
-
-        const scalePullToDestOnXAxis = mat4.scale(
-            mat4.create(),
-            mat4.create(),
-            vec3.fromValues(
-                vec3.len(translatedDestinationPoint) / vec3.len(translatedPullPoint),
-                1,
-                1
-            )
-        );
-
-        const rotXAxisToDestAxis = mat4.fromQuat(
-            mat4.create(),
-            quat.rotationTo(
-                quat.create(),
-                vec3.fromValues(1, 0, 0),
-                vec3.normalize(vec3.create(), translatedDestinationPoint)
-            )
+        this.freeformStretch(
+            translatedPullPoint,
+            translatedDestinationPoint,
+            vec3.len(translatedDestinationPoint) / vec3.len(translatedPullPoint)
         );
 
         const moveOriginToHold = mat4.translate(mat4.create(), mat4.create(), holdPoint);
-
-        // Assemble all the matrices!
-        const matrix = moveOriginToHold;
-        mat4.mul(matrix, matrix, rotXAxisToDestAxis);
-        mat4.mul(matrix, matrix, scalePullToDestOnXAxis);
-        mat4.mul(matrix, matrix, rotPullToXAxis);
-        mat4.mul(matrix, matrix, moveHoldToOrigin);
-
-        this.transform(matrix);
+        this.transform(moveOriginToHold);
     }
 
     /**
-     * Scale by a given factor away from a given point.
+     * Scale by pulling a point away from a hold point by a provided factor.
+     *
+     * @param {number} factor: scaling factor away from holdPoint.
+     * @param {vec3} pullPoint: point that scales to destinationPoint after transformation.
+     * @param {vec3} holdPoint: point to scale from, default to true origin.
+     */
+    public freeformStretchByFactor(
+        factor: number,
+        pullPoint: vec3,
+        holdPoint: vec3 = vec3.create()
+    ) {
+        const moveHoldToOrigin = mat4.translate(
+            mat4.create(),
+            mat4.create(),
+            vec3.negate(vec3.create(), holdPoint)
+        );
+        this.transform(moveHoldToOrigin);
+
+        const translatedPullPoint = vec3.sub(vec3.create(), pullPoint, holdPoint);
+
+        this.freeformStretch(translatedPullPoint, translatedPullPoint, factor);
+
+        const moveOriginToHold = mat4.translate(mat4.create(), mat4.create(), holdPoint);
+        this.transform(moveOriginToHold);
+    }
+
+    /**
+     * Uniformly scale by a given factor away from a given point.
      *
      * @param {number} factor: scaling factor.
      * @param {vec3} holdPoint: point to scale from, default to true origin.
      */
-    public proportionalStretchTo(factor: number, holdPoint: vec3 = vec3.create()) {
+    public proportionalStretchByFactor(factor: number, holdPoint: vec3 = vec3.create()) {
         const factorVector: vec3 = vec3.fromValues(factor, factor, factor);
         const scalingMatrix: mat4 = mat4.fromRotationTranslationScaleOrigin(
             mat4.create(),
@@ -255,7 +295,7 @@ export class WorkingGeometry {
     /**
      * Iteratively perform transforms on all vertices.
      *
-     * @param {mat4} matrix: transformation matrix.
+     * @param {mat4} matrix: Transformation matrix.
      */
     private transform(matrix: mat4) {
         this.vertices = this.vertices.map((workingVec: vec4) =>

@@ -655,7 +655,7 @@ export class GeometryNode extends Node {
 /**
  * A point on an armature that other armature nodes can attach to.
  */
-class Point {
+export class Point {
     public readonly node: Node;
     public readonly position: vec3;
 
@@ -686,11 +686,14 @@ class Point {
      * Attaches the specified geometry to the current point on a node.
      *
      * @param {BakedGeometry} geometry The geometry to attach to the current point.
+     * @returns {GeometryNode} The node created to hold the geometry.
      */
-    public attach(geometry: BakedGeometry) {
+    public attach(geometry: BakedGeometry): GeometryNode {
         const geometryNode = new GeometryNode(geometry);
         geometryNode.setAnchor(vec3.fromValues(0, 0, 0));
         geometryNode.setPosition(this.position);
         this.node.addChild(geometryNode);
+
+        return geometryNode;
     }
 }

@@ -5,7 +5,7 @@ import { Light } from '../renderer/interfaces/Light';
 import { Renderer } from '../renderer/Renderer';
 
 import { mat4, quat, vec3 } from 'gl-matrix';
-import { flatMap } from 'lodash';
+import { RGBColor } from '../calder';
 
 const light1: Light = {
     lightPosition: [10, 10, 10],
@@ -28,11 +28,17 @@ const renderer: Renderer = new Renderer(800, 600, 2, vec3.fromValues(0.2, 0.2, 0
 renderer.addLight(light1);
 renderer.addLight(light2);
 
-const leafSphere = genSphere();
-leafSphere.colors = Float32Array.from(flatMap(leafSphere.vertices, () => [0.8, 1, 0.8]));
+// Setup leaf
+const leafColor = RGBColor.fromRGB(204, 255, 204);
+const workingLeafSphere = genSphere();
+workingLeafSphere.setFill(leafColor);
+const leafSphere = workingLeafSphere.bake();
 
-const branchSphere = genSphere();
-branchSphere.colors = Float32Array.from(flatMap(branchSphere.vertices, () => [0.4, 0.3, 0.3]));
+// Setup branch
+const branchColor = RGBColor.fromRGB(102, 76.5, 76.5);
+const workingBranchSphere = genSphere();
+workingBranchSphere.setFill(branchColor);
+const branchSphere = workingBranchSphere.bake();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 2: create armature

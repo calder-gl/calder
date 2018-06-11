@@ -44,16 +44,21 @@ export class RGBColor implements Color {
      *
      * @class RGBColor
      * @method fromHex
-     * @param {string} value A hex string of the form `FF0000`.
+     * @param {string} value A hex string of the form `FF0000` or `#FF0000`.
      * @returns {RGBColor}
      */
     public static fromHex(value: string): RGBColor {
-        if (value.length !== 6) {
-            throw new Error('Please pass in a hexadecimal string (i.e., FF33AA)');
+        // Ensure the user passed in a valid hexadecimal string
+        if (
+            value.length > 7 ||
+            value.length < 6 ||
+            (value.length === 7 && value.lastIndexOf('#', 0) !== 0)
+        ) {
+            throw new Error('Please pass in a valid hexadecimal string (i.e., FF33AA or #FF33AA)');
         }
 
         // Split the hexadecimal string into segments of length 2
-        const matches = value.match(/.{2}/g);
+        const matches = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(value);
 
         // Throw error if `matches` is null. Shouldn't be the case because of
         // the previous assertion - but tslint was complaining ¯\_(ツ)_/¯
@@ -62,7 +67,7 @@ export class RGBColor implements Color {
         }
 
         // Map the hexadecimal string segments to decimal integers
-        const hexValues = matches.map((hex: string) => parseInt(hex, 16));
+        const hexValues = matches.slice(1).map((hex: string) => parseInt(hex, 16));
 
         // Return the new color
         return new RGBColor(hexValues[0], hexValues[1], hexValues[2]);

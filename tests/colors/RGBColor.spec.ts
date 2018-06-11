@@ -7,26 +7,24 @@ describe('RGBColor', () => {
     describe('RGBColor.fromHex', () => {
         it('properly returns the appropriate normalized RGB values', () => {
             const red: RGBColor = RGBColor.fromHex('FF0000');
+            const redTwo: RGBColor = RGBColor.fromHex('#FF0000');
             const green: RGBColor = RGBColor.fromHex('00FF00');
             const blue: RGBColor = RGBColor.fromHex('0000FF');
 
             expect(red.asArray()).toEqual([1, 0, 0]);
+            expect(redTwo.asArray()).toEqual([1, 0, 0]);
             expect(green.asArray()).toEqual([0, 1, 0]);
             expect(blue.asArray()).toEqual([0, 0, 1]);
         });
 
         it('properly throws errors for invalid hexadecimal strings', () => {
             expect(() => {
-                RGBColor.fromHex('#FF0000');
-            }).toThrow('Please pass in a hexadecimal string (i.e., FF33AA)');
-
-            expect(() => {
                 RGBColor.fromHex('FF');
-            }).toThrow('Please pass in a hexadecimal string (i.e., FF33AA)');
+            }).toThrow('Please pass in a valid hexadecimal string (i.e., FF33AA or #FF33AA)');
 
             expect(() => {
                 RGBColor.fromHex('FFFFFFF');
-            }).toThrow('Please pass in a hexadecimal string (i.e., FF33AA)');
+            }).toThrow('Please pass in a valid hexadecimal string (i.e., FF33AA or #FF33AA)');
         });
     });
 

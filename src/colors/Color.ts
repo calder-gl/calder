@@ -28,5 +28,5 @@ export interface Color {
      * @param {number} ratio The ratio at which to mix the first color with the second.
      * @returns {Color}
      */
-    mix(color: Color, seed: number);
+    mix(color: Color, ratio: number);
 }

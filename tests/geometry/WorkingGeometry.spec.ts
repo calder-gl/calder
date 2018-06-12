@@ -2,7 +2,7 @@ import { Face, WorkingGeometry } from '../../src/geometry/WorkingGeometry';
 import { TestHelper } from '../utils/helper';
 
 import { vec3, vec4 } from 'gl-matrix';
-import { flatten, range } from 'lodash';
+import { flatten, flatMap } from 'lodash';
 
 import '../glMatrix';
 
@@ -30,6 +30,7 @@ describe('WorkingGeometry', () => {
             const geo = new WorkingGeometry();
 
             expect(geo.vertices).toEqual([]);
+            expect(geo.normals).toEqual([]);
             expect(geo.faces).toEqual([]);
             expect(geo.controlPoints).toEqual([]);
         });
@@ -40,9 +41,15 @@ describe('WorkingGeometry', () => {
                 vec3.fromValues(1, 1, 0),
                 vec3.fromValues(1, 0, 0)
             ];
+            const normals = [
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1)
+            ];
             const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
-            const geo = new WorkingGeometry(vertices, faces, controlPoints);
+            const geo = new WorkingGeometry(vertices, normals, faces, controlPoints);
 
             expect(geo.vertices).toEqual([
                 vec4.fromValues(0, 0, 0, 1),
@@ -62,21 +69,26 @@ describe('WorkingGeometry', () => {
                 vec3.fromValues(1, 1, 0),
                 vec3.fromValues(1, 0, 0)
             ];
+            const normals = [
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1),
+                vec3.fromValues(0, 0, -1)
+            ];
             const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
-            const square = new WorkingGeometry(vertices, faces, controlPoints);
+            const square = new WorkingGeometry(vertices, normals, faces, controlPoints);
             const bakedSquare = square.bake();
 
             // Not testing the colors yet since they don't do anything useful
-            const expectedNormal = [0, 0, -1];
             expect(bakedSquare.indices).toEqual(Int16Array.from([0, 1, 2, 0, 2, 3]));
             compareFloatArrays(
                 bakedSquare.vertices,
-                Float32Array.from([0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0])
+                Float32Array.from(flatMap(vertices, (v: vec3) => [v[0], v[1], v[2]]))
             );
             compareFloatArrays(
                 bakedSquare.normals,
-                Float32Array.from([...expectedNormal, ...expectedNormal])
+                Float32Array.from(flatMap(normals, (n: vec3) => [n[0], n[1], n[2]]))
             );
         });
         it('can bake a WorkingGeometry that has many merged objects', () => {
@@ -140,11 +152,29 @@ describe('WorkingGeometry', () => {
                     ])
                 )
             );
-            // Normals should be an array of 8 (indices/3) [0, 0, 1] vectors
-            const indexStride = 3;
-            const normalCount = bakedObject.indices.length / indexStride;
-            const expectedNormals = range(normalCount).map(() => [0, 0, -1]);
-            compareFloatArrays(bakedObject.normals, Float32Array.from(flatten(expectedNormals)));
+            compareFloatArrays(
+                bakedObject.normals,
+                Float32Array.from(
+                    flatten([
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1],
+                        [0, 0, -1]
+                    ])
+                )
+            );
         });
     });
     describe('merge', () => {
@@ -307,55 +337,64 @@ describe('WorkingGeometry', () => {
             expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
         });
     });
-    describe('scale', () => {
+    describe('freeformStretchTo', () => {
         it('can scale from (1, 1, 0) to (2, 2, 0) about origin', () => {
             const square = TestHelper.square();
 
-            square.scale(vec3.fromValues(1, 1, 0), vec3.fromValues(2, 2, 0));
+            square.freeformStretchTo(vec3.fromValues(1, 1, 0), vec3.fromValues(2, 2, 0));
 
-            expect(square.vertices).toEqual([
+            expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(0, 0, 0, 1),
-                vec4.fromValues(0, 2, 0, 1),
+                vec4.fromValues(0.5, 1.5, 0, 1),
                 vec4.fromValues(2, 2, 0, 1),
-                vec4.fromValues(2, 0, 0, 1)
+                vec4.fromValues(1.5, 0.5, 0, 1)
             ]);
         });
         it('can scale from (0, 0, 0) to (-1, -1, 0) about (1, 1, 0)', () => {
             const square = TestHelper.square();
 
-            square.scale(
+            square.freeformStretchTo(
                 vec3.fromValues(0, 0, 0),
                 vec3.fromValues(-1, -1, 0),
                 vec3.fromValues(1, 1, 0)
             );
 
-            expect(square.vertices).toEqual([
+            expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(-1, -1, 0, 1),
-                vec4.fromValues(-1, 1, 0, 1),
+                vec4.fromValues(-0.5, 0.5, 0, 1),
                 vec4.fromValues(1, 1, 0, 1),
-                vec4.fromValues(1, -1, 0, 1)
+                vec4.fromValues(0.5, -0.5, 0, 1)
             ]);
         });
         it('can scale to itself and remain unchanged', () => {
             const square = TestHelper.square();
 
-            square.scale(vec3.fromValues(1, 1, 0), vec3.fromValues(1, 1, 0));
+            square.freeformStretchTo(vec3.fromValues(1, 1, 0), vec3.fromValues(1, 1, 0));
 
             expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
         });
-        it('will throw an error when it is skewed', () => {
+        it('will perform a rotation when the pull and destination points are not collinear', () => {
             const square = TestHelper.square();
 
-            expect(() => {
-                square.scale(vec3.create(), vec3.fromValues(1, 1, 0), vec3.fromValues(1, 0, 0));
-            }).toThrowError('Destination and pull vectors must be in the same direction.');
+            square.freeformStretchTo(
+                vec3.create(),
+                vec3.fromValues(1, 1, 0),
+                vec3.fromValues(1, 0, 0)
+            );
+
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(1, 1, 0, 1),
+                vec4.fromValues(2, 1, 0, 1),
+                vec4.fromValues(2, 0, 0, 1),
+                vec4.fromValues(1, 0, 0, 1)
+            ]);
         });
     });
-    describe('scaleByFactor', () => {
-        it('can scale by a factor of 2 on the positive axes about origin', () => {
+    describe('proportionalStretchByFactor', () => {
+        it('can scale by a factor of 2 about origin', () => {
             const square = TestHelper.square();
 
-            square.scaleByFactor(2, vec3.fromValues(1, 1, 0));
+            square.proportionalStretchByFactor(2);
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(0, 0, 0, 1),
@@ -364,10 +403,10 @@ describe('WorkingGeometry', () => {
                 vec4.fromValues(2, 0, 0, 1)
             ]);
         });
-        it('can scale by a factor of 2 on the negative axes about (1, 1, 0)', () => {
+        it('can scale by a factor of 2 about (1, 1, 0)', () => {
             const square = TestHelper.square();
 
-            square.scaleByFactor(2, vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 0));
+            square.proportionalStretchByFactor(2, vec3.fromValues(1, 1, 0));
 
             expect(square.vertices).toEqualArrVec4([
                 vec4.fromValues(-1, -1, 0, 1),
@@ -379,7 +418,40 @@ describe('WorkingGeometry', () => {
         it('can scale by a factor of 1 and remain unchanged', () => {
             const square = TestHelper.square();
 
-            square.scaleByFactor(1, vec3.fromValues(1, 1, 0));
+            square.proportionalStretchByFactor(1);
+
+            expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
+        });
+    });
+    describe('freeformStretchByFactor', () => {
+        it('can scale by a factor of 2 from (0, 1, 0) about origin', () => {
+            const square = TestHelper.square();
+
+            square.freeformStretchByFactor(2, vec3.fromValues(0, 1, 0));
+
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(0, 0, 0, 1),
+                vec4.fromValues(0, 2, 0, 1),
+                vec4.fromValues(1, 2, 0, 1),
+                vec4.fromValues(1, 0, 0, 1)
+            ]);
+        });
+        it('can scale by a factor of 2 from (0, 0, 0) about (1, 1, 0)', () => {
+            const square = TestHelper.square();
+
+            square.freeformStretchByFactor(2, vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 0));
+
+            expect(square.vertices).toEqualArrVec4([
+                vec4.fromValues(-1, -1, 0, 1),
+                vec4.fromValues(-0.5, 0.5, 0, 1),
+                vec4.fromValues(1, 1, 0, 1),
+                vec4.fromValues(0.5, -0.5, 0, 1)
+            ]);
+        });
+        it('can scale by a factor of 1 and remain unchanged', () => {
+            const square = TestHelper.square();
+
+            square.proportionalStretchByFactor(1, vec3.fromValues(0, 1, 0));
 
             expect(square.vertices).toEqualArrVec4(TestHelper.square().vertices);
         });

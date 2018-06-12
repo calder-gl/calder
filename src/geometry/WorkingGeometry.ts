@@ -30,6 +30,9 @@ export class WorkingGeometry {
     /**
      * The points that make up the geometry, in no particular order. For each vertex v, v[3] must
      * be equal to 0 to ensure that it is a point in Affine space rather than a vector.
+     *
+     * For faceted objects, a vertex is needed for every facet it touches.
+     *
      */
     public vertices: vec4[];
 

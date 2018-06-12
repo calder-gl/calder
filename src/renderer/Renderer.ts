@@ -12,6 +12,7 @@ import REGL = require('regl');
 import { Animation } from '../armature/Animation';
 import { Constraints } from '../armature/Constraints';
 import { Node } from '../armature/Node';
+import { RGBColor } from '../calder';
 import { DebugParams } from './interfaces/DebugParams';
 import { RenderParams } from './interfaces/RenderParams';
 
@@ -273,9 +274,9 @@ export class Renderer {
         const redHex = '#FF0000';
         const greenHex = '#00FF00';
         const blueHex = '#0000FF';
-        const redRGB = vec3.fromValues(1, 0, 0); // redHex
-        const greenRGB = vec3.fromValues(0, 1, 0); // greenHex
-        const blueRGB = vec3.fromValues(0, 0, 1); // blueHex
+        const redRGB = RGBColor.fromHex(redHex).asVec();
+        const greenRGB = RGBColor.fromHex(greenHex).asVec();
+        const blueRGB = RGBColor.fromHex(blueHex).asVec();
 
         this.drawAxes([
             {

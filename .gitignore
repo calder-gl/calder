@@ -15,3 +15,7 @@ npm-debug.log*
 
 # Transpiled files
 build/
+src/**/*.js
+src/**/*.js.map
+tests/**/*.js
+tests/**/*.js.map

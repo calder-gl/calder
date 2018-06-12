@@ -50,7 +50,7 @@ const tower = bone();
 
 let top = tower;
 
-for (let i = 0; i < 5; i++) {
+for (let i = 0; i < 5; i += 1) {
     const nextPiece = bone();
     nextPiece.point('base').stickTo(top.point('tip'));
     nextPiece.point('base').attach(sphere);

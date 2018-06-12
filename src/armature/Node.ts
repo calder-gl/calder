@@ -87,8 +87,9 @@ export class Node {
     }
 
     public createPoint(name: string, positionCoord: coord) {
-        // tslint:disable-next-line:no-use-before-declare
         const position = Mapper.coordToVector(positionCoord);
+
+        // tslint:disable-next-line:no-use-before-declare
         this.points[name] = new Point(this, position);
     }
 

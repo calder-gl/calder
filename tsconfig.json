@@ -19,5 +19,9 @@
   "include": [
     "src/**/*",
     "tests/**/*"
-  ]
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "build"
+  }
 }

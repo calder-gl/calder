@@ -1,4 +1,4 @@
-import { mat4, quat, vec3, vec4 } from 'gl-matrix';
+import { mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { Armature } from '../../src/armature/Armature';
 import { GeometryNode, Node } from '../../src/armature/Node';
 import { BakedGeometry } from '../../src/geometry/BakedGeometry';
@@ -405,7 +405,7 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(1, 0, 1, 1);
 
-            const renderObjects: RenderObject[] = root.traverse(mat4.create(), true, false)
+            const renderObjects: RenderObject[] = root.traverse(mat4.create(), mat3.create(), true, false)
                 .geometry;
 
             expect(renderObjects.length).toBe(1);
@@ -438,7 +438,7 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(0, 1, 0, 1);
 
-            const renderObjects: RenderObject[] = root.traverse(mat4.create(), true, false)
+            const renderObjects: RenderObject[] = root.traverse(mat4.create(), mat3.create(), true, false)
                 .geometry;
 
             expect(renderObjects.length).toBe(1);
@@ -473,7 +473,7 @@ describe('Node', () => {
             const expectedWorldSpaceBase = vec4.fromValues(0, 0, 0, 1);
             const expectedWorldSpaceTip = vec4.fromValues(1, 1, 0, 1);
 
-            const bones: RenderObject[] = root.traverse(mat4.create(), true, true).bones;
+            const bones: RenderObject[] = root.traverse(mat4.create(), mat3.create(), true, true).bones;
             expect(bones.length).toBe(1);
 
             const transformedBase = vec4.create();

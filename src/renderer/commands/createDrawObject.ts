@@ -1,6 +1,6 @@
 import { blankLight, Light } from '../interfaces/Light';
 
-import { mat4, vec3 } from 'gl-matrix';
+import { mat3, mat4, vec3 } from 'gl-matrix';
 import { range } from 'lodash';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
@@ -12,6 +12,7 @@ interface Uniforms {
     projection: mat4;
     view: mat4;
     model: mat4;
+    normalTransform: mat3;
     numLights: number;
     ambientLight: vec3;
     isShadeless: boolean;
@@ -29,6 +30,7 @@ interface Attributes {
  */
 export interface DrawObjectProps {
     model: mat4;
+    normalTransform: mat3;
     cameraTransform: mat4;
     projectionMatrix: mat4;
     positions: REGL.Buffer;
@@ -61,6 +63,7 @@ export function createDrawObject(
             uniform mat4 projection;
             uniform mat4 view;
             uniform mat4 model;
+            uniform mat3 normalTransform;
 
             varying vec3 vertexPosition;
             varying vec3 vertexNormal;
@@ -68,7 +71,7 @@ export function createDrawObject(
 
             void main() {
                 vertexPosition = (view * model * vec4(position, 1.0)).xyz;
-                vertexNormal = (view * model * vec4(normal, 0.0)).xyz;
+                vertexNormal = (view * normalTransform * normal).xyz;
                 vertexColor = color;
                 gl_Position = projection * vec4(vertexPosition, 1.0);
             }
@@ -129,6 +132,7 @@ export function createDrawObject(
             projection: regl.prop<DrawObjectProps, keyof DrawObjectProps>('projectionMatrix'),
             view: regl.prop<DrawObjectProps, keyof DrawObjectProps>('cameraTransform'),
             model: regl.prop<DrawObjectProps, keyof DrawObjectProps>('model'),
+            normalTransform: regl.prop<DrawObjectProps, keyof DrawObjectProps>('normalTransform'),
             numLights: regl.prop<DrawObjectProps, keyof DrawObjectProps>('numLights'),
             ambientLight: regl.prop<DrawObjectProps, keyof DrawObjectProps>('ambientLight'),
             isShadeless: regl.prop<DrawObjectProps, keyof DrawObjectProps>('isShadeless'),

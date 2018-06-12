@@ -1,4 +1,4 @@
-import { mat4, quat, vec3, vec4 } from 'gl-matrix';
+import { mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { BakedGeometry } from '../geometry/BakedGeometry';
 import { closestPointOnLine, vec3From4, vec3ToPoint } from '../math/utils';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
@@ -283,13 +283,14 @@ export class Node {
      * transformations multiplied by the `coordinateSpace` parameter.
      *
      * @param {mat4} coordinateSpace The coordinate space this node resides in.
+     * @param {mat3} coordinateSpace The coordinate space this node resides in.
      * @param {boolean} isRoot Whether or not this node is attached to another armature node.
      * @param {boolean} makeBones Whether or not the armature heirarchy should be visualized.
      * @returns {NodeRenderObject} The geometry for this armature subtree, and possibly geometry
      * representing the armature itself.
      */
-    public traverse(coordinateSpace: mat4, isRoot: boolean, makeBones: boolean): NodeRenderObject {
-        return this.traverseChildren(coordinateSpace, isRoot, makeBones).objects;
+    public traverse(coordinateSpace: mat4, normalTransform: mat3, isRoot: boolean, makeBones: boolean): NodeRenderObject {
+        return this.traverseChildren(coordinateSpace, normalTransform, isRoot, makeBones).objects;
     }
 
     /**
@@ -299,16 +300,20 @@ export class Node {
      */
     protected traverseChildren(
         parentMatrix: mat4,
+        parentNormalMatrix: mat3,
         isRoot: boolean,
         makeBones: boolean
-    ): { currentMatrix: mat4; objects: NodeRenderObject } {
+    ): { currentMatrix: mat4; currentNormalMatrix: mat3; objects: NodeRenderObject } {
         const currentMatrix = this.transformation.getTransformation();
+        const currentNormalMatrix = this.transformation.getNormalTransformation();
         mat4.multiply(currentMatrix, parentMatrix, currentMatrix);
+        mat3.multiply(currentNormalMatrix, parentNormalMatrix, currentNormalMatrix);
 
         const objects: NodeRenderObject = this.children.reduce(
             (accum: NodeRenderObject, child: Node) => {
                 const childRenderObject: NodeRenderObject = child.traverse(
                     currentMatrix,
+                    currentNormalMatrix,
                     false,
                     makeBones
                 );
@@ -324,10 +329,10 @@ export class Node {
         );
 
         if (makeBones && !isRoot) {
-            objects.bones.push(this.boneRenderObject(parentMatrix));
+            objects.bones.push(this.boneRenderObject(parentMatrix, parentNormalMatrix));
         }
 
-        return { currentMatrix, objects };
+        return { currentMatrix, currentNormalMatrix, objects };
     }
 
     /**
@@ -338,7 +343,7 @@ export class Node {
      * @returns {RenderObject} A RenderObject for a bone stretching from the parent node's origin
      * to the current node's origin.
      */
-    protected boneRenderObject(parentMatrix: mat4): RenderObject {
+    protected boneRenderObject(parentMatrix: mat4, parentNormalMatrix: mat3): RenderObject {
         const position = this.getPosition();
 
         const transform: mat4 = mat4.scale(
@@ -365,8 +370,14 @@ export class Node {
         );
         const transformationMatrix = mat4.create();
         mat4.multiply(transformationMatrix, parentMatrix, transform);
+        const localNormal = mat3.normalFromMat4(mat3.create(), transform);
+        if (localNormal === null) {
+            throw new Error('Transformation matrix could not be inverted!');
+        }
 
-        return { geometry: Node.bone, transform: transformationMatrix, isShadeless: true };
+        const normalTransform = mat3.multiply(mat3.create(), parentNormalMatrix, localNormal);
+
+        return { geometry: Node.bone, transform: transformationMatrix, normalTransform, isShadeless: true };
     }
 
     /**
@@ -640,13 +651,14 @@ export class GeometryNode extends Node {
      * @returns {NodeRenderObject} The geometry for this armature subtree, and possibly geometry
      * representing the armature itself.
      */
-    public traverse(coordinateSpace: mat4, isRoot: boolean, makeBones: boolean): NodeRenderObject {
-        const { currentMatrix, objects } = this.traverseChildren(
+    public traverse(coordinateSpace: mat4, normalTransform: mat3, isRoot: boolean, makeBones: boolean): NodeRenderObject {
+        const { currentMatrix, currentNormalMatrix, objects } = this.traverseChildren(
             coordinateSpace,
+            normalTransform,
             isRoot,
             makeBones
         );
-        objects.geometry.push({ geometry: this.geometry, transform: currentMatrix });
+        objects.geometry.push({ geometry: this.geometry, transform: currentMatrix, normalTransform: currentNormalMatrix });
 
         return objects;
     }

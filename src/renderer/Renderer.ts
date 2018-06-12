@@ -5,7 +5,7 @@ import { Light } from './interfaces/Light';
 import { RenderObject } from './interfaces/RenderObject';
 import { Camera } from './Camera';
 
-import { mat4, vec3, vec4 } from 'gl-matrix';
+import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
 
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
@@ -112,6 +112,7 @@ export class Renderer {
             (accum: NodeRenderObject, node: Node) => {
                 const childObjects = node.traverse(
                     mat4.create(),
+                    mat3.create(),
                     true,
                     debug.drawArmatureBones === true
                 );
@@ -143,6 +144,7 @@ export class Renderer {
             renderObjects.geometry.map((o: RenderObject) => {
                 return {
                     model: o.transform,
+                    normal: o.normalTransform,
                     cameraTransform: this.camera.getTransform(),
                     projectionMatrix: this.projectionMatrix,
                     positions: o.geometry.verticesBuffer,
@@ -164,6 +166,7 @@ export class Renderer {
                 renderObjects.bones.map((o: RenderObject) => {
                     return {
                         model: o.transform,
+                        normal: o.normalTransform,
                         cameraTransform: this.camera.getTransform(),
                         projectionMatrix: this.projectionMatrix,
                         positions: o.geometry.verticesBuffer,

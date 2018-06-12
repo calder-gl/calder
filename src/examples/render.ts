@@ -29,8 +29,7 @@ const red: CMYKColor = CMYKColor.fromCMYK(0, 1, 1, 0);
 const purple: CMYKColor = red.mix(blue);
 
 // Setup sphere
-const workingSphere: WorkingGeometry = genSphere();
-workingSphere.setFill(purple);
+const workingSphere: WorkingGeometry = genSphere(purple);
 const sphere: BakedGeometry = workingSphere.bake();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

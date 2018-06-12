@@ -1,7 +1,8 @@
 import { vec3 } from 'gl-matrix';
 import { range } from 'lodash';
 
-import { Face, WorkingGeometry } from '../calder';
+import { Face, RGBColor, WorkingGeometry } from '../calder';
+import { Color } from '../colors/Color';
 import { genIsoSurface } from './MarchingCubes';
 import { ScalarField } from './ScalarField';
 
@@ -13,10 +14,11 @@ function sphereSignedDistFunc(coord: vec3): number {
     return Math.sqrt(coord[0] * coord[0] + coord[1] * coord[1] + coord[2] * coord[2]) - RADIUS;
 }
 
-export function genSphere(): WorkingGeometry {
+export function genSphere(fillColor: Color = RGBColor.fromHex('#FF0000')): WorkingGeometry {
     const sphere = new ScalarField(DIM, LENGTH, sphereSignedDistFunc);
     const vertices = genIsoSurface(sphere);
-    const face = new Face(range(vertices.length));
+    const faces = range(vertices.length / 3)
+        .map((i: number) => new Face(range(i, i + 3)));
 
-    return new WorkingGeometry(vertices, vertices, [face]);
+    return new WorkingGeometry(vertices, vertices, faces, [], fillColor);
 }

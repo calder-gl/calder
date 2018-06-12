@@ -30,14 +30,12 @@ renderer.addLight(light2);
 
 // Setup leaf
 const leafColor = RGBColor.fromRGB(204, 255, 204);
-const workingLeafSphere = genSphere();
-workingLeafSphere.setFill(leafColor);
+const workingLeafSphere = genSphere(leafColor);
 const leafSphere = workingLeafSphere.bake();
 
 // Setup branch
 const branchColor = RGBColor.fromRGB(102, 76.5, 76.5);
-const workingBranchSphere = genSphere();
-workingBranchSphere.setFill(branchColor);
+const workingBranchSphere = genSphere(branchColor);
 const branchSphere = workingBranchSphere.bake();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

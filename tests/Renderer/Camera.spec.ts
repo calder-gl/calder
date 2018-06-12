@@ -10,8 +10,8 @@ describe('Camera', () => {
 
     it('can be moved', () => {
         const camera = new Camera();
-        camera.lookAt(vec3.fromValues(0, 0, -1));
-        camera.moveTo(vec3.fromValues(0, 1, 1));
+        camera.lookAt({ x: 0, y: 0, z: -1 });
+        camera.moveTo({ x: 0, y: 1, z: 1 });
         expect(mat4.getTranslation(vec3.create(), camera.getTransform())).toEqualVec3(
             vec3.fromValues(0, -1, -1)
         );
@@ -20,8 +20,8 @@ describe('Camera', () => {
 
     it('can be moved without changing the target', () => {
         const camera = new Camera();
-        camera.lookAt(vec3.fromValues(0, 0, -1));
-        camera.moveToWithFixedTarget(vec3.fromValues(0, 2, 1));
+        camera.lookAt({ x: 0, y: 0, z: -1 });
+        camera.moveToWithFixedTarget({ x: 0, y: 2, z: 1 });
         expect(
             vec3.transformMat4(vec3.create(), vec3.fromValues(0, 0, -1), camera.getTransform())
         ).toEqualVec3(vec3.fromValues(0, 0, -Math.sqrt(2) * 2));
@@ -29,9 +29,9 @@ describe('Camera', () => {
 
     it('can be moved incrementally', () => {
         const camera = new Camera();
-        camera.lookAt(vec3.fromValues(0, 0, -1));
-        camera.moveTo(vec3.fromValues(0, 1, 0));
-        camera.moveBy(vec3.fromValues(0, 0, 1));
+        camera.lookAt({ x: 0, y: 0, z: -1 });
+        camera.moveTo({ x: 0, y: 1, z: 0 });
+        camera.moveBy({ x: 0, y: 0, z: 1 });
         expect(mat4.getTranslation(vec3.create(), camera.getTransform())).toEqualVec3(
             vec3.fromValues(0, -1, -1)
         );
@@ -40,9 +40,9 @@ describe('Camera', () => {
 
     it('can be moved incrementally without changing the target', () => {
         const camera = new Camera();
-        camera.lookAt(vec3.fromValues(0, 0, -1));
-        camera.moveToWithFixedTarget(vec3.fromValues(0, 1, 1));
-        camera.moveByWithFixedTarget(vec3.fromValues(0, 1, 0));
+        camera.lookAt({ x: 0, y: 0, z: -1 });
+        camera.moveToWithFixedTarget({ x: 0, y: 1, z: 1 });
+        camera.moveByWithFixedTarget({ x: 0, y: 1, z: 0 });
         expect(
             vec3.transformMat4(vec3.create(), vec3.fromValues(0, 0, -1), camera.getTransform())
         ).toEqualVec3(vec3.fromValues(0, 0, -Math.sqrt(2) * 2));

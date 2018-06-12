@@ -381,8 +381,8 @@ export class Node {
      * @returns {vec3} The point in the current node's local coordinate space.
      */
     private localPointCoordinate(point: Point | coord): vec3 {
-        // tslint:disable-next-line:no-use-before-declare
         const pointRelative = vec3ToPoint(
+            // tslint:disable-next-line:no-use-before-declare
             point instanceof Point ? point.position : Mapper.coordToVector(point)
         );
 
@@ -451,7 +451,7 @@ export class Node {
         } else {
             throw new Error(
                 `There are too many held points (${
-                constrainedPoints.length
+                    constrainedPoints.length
                 }), so the node can't be rotated`
             );
         }

@@ -122,7 +122,7 @@ export class WorkingGeometry {
             workingVec[1],
             workingVec[2]
         ]);
-        const bakedColors = flatMap(range(bakedVertices.length), () => this.fillColor.asArray());
+        const bakedColors = flatMap(range(this.vertices.length), () => this.fillColor.asArray());
 
         return {
             vertices: Float32Array.from(bakedVertices),

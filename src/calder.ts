@@ -28,6 +28,7 @@
  * Armature
  *****************************/
 
+export * from './armature/Animation';
 export * from './armature/Armature';
 export * from './armature/Constraints';
 export * from './armature/Node';
@@ -72,4 +73,11 @@ export * from './renderer/commands/createDrawObject';
  *****************************/
 
 export * from './types/ConstraintTypes';
-export * from './types/VectorTypes';
+export * from './types/ExternalTypes';
+
+/*****************************
+ * Utils
+ *****************************/
+
+export * from './utils/quaternion';
+export * from './utils/matrix';

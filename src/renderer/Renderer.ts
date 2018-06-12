@@ -12,7 +12,8 @@ import REGL = require('regl');
 import { Animation } from '../armature/Animation';
 import { Constraints } from '../armature/Constraints';
 import { Node } from '../armature/Node';
-import { RGBColor } from '../calder';
+import { coord, RGBColor } from '../calder';
+import { Mapper } from '../utils/mapper';
 import { DebugParams } from './interfaces/DebugParams';
 import { RenderParams } from './interfaces/RenderParams';
 
@@ -43,13 +44,13 @@ export class Renderer {
         width: number,
         height: number,
         maxLights: number,
-        ambientLight: vec3 = vec3.create()
+        ambientLightCoord: coord = { x: 0, y: 0, z: 0 }
     ) {
         this.width = width;
         this.height = height;
         this.maxLights = maxLights;
         this.lights = [];
-        this.ambientLight = ambientLight;
+        this.ambientLight = Mapper.coordToVector(ambientLightCoord);
 
         // Create a single element to contain the renderer view
         this.stage = document.createElement('div');

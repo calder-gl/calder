@@ -1,12 +1,11 @@
-import { vec3 } from 'gl-matrix';
 import { Animation } from '../../src/armature/Animation';
 import { Armature } from '../../src/armature/Armature';
 import { Node } from '../../src/armature/Node';
 import { Transformation } from '../../src/armature/Transformation';
 
 const bone = Armature.define((root: Node) => {
-    root.createPoint('base', vec3.fromValues(0, 0, 0));
-    root.createPoint('tip', vec3.fromValues(0, 1, 0));
+    root.createPoint('base', { x: 0, y: 0, z: 0 });
+    root.createPoint('tip', { x: 0, y: 1, z: 0 });
 });
 
 describe('Animation', () => {

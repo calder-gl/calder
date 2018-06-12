@@ -6,8 +6,8 @@ import { RenderObject } from '../../src/renderer/interfaces/RenderObject';
 import '../glMatrix';
 
 const bone = Armature.define((root: Node) => {
-    root.createPoint('base', vec3.fromValues(0, 0, 0));
-    root.createPoint('tip', vec3.fromValues(0, 1, 0));
+    root.createPoint('base', { x: 0, y: 0, z: 0 });
+    root.createPoint('tip', { x: 0, y: 1, z: 0 });
 });
 
 describe('Node', () => {
@@ -22,7 +22,7 @@ describe('Node', () => {
 
         it('respects translations', () => {
             const node = bone();
-            node.setPosition(vec3.fromValues(1, 1, 1));
+            node.setPosition({ x: 1, y: 1, z: 1 });
 
             const point = vec4.fromValues(1, 0, 0, 1);
             vec4.transformMat4(point, point, node.globalToLocalTransform());
@@ -73,7 +73,7 @@ describe('Node', () => {
 
         it('respects translations', () => {
             const node = bone();
-            node.setPosition(vec3.fromValues(1, 1, 1));
+            node.setPosition({ x: 1, y: 1, z: 1 });
 
             const point = vec4.fromValues(0, -1, -1, 1);
             vec4.transformMat4(point, point, node.localToGlobalTransform());
@@ -161,7 +161,7 @@ describe('Node', () => {
     describe('pointAt', () => {
         it('rotates a node about an axis', () => {
             const node = bone();
-            node.createPoint('handle', vec3.fromValues(1, 0.5, 0));
+            node.createPoint('handle', { x: 1, y: 0.5, z: 0 });
 
             /*
              * Node's control points:
@@ -178,7 +178,7 @@ describe('Node', () => {
                 .hold(node.point('base'))
                 .hold(node.point('tip'))
                 .grab(node.point('handle'))
-                .pointAt(vec3.fromValues(0, 0, 2))
+                .pointAt({ x: 0, y: 0, z: 2 })
                 .release();
 
             expect(node.getRotation()).toEqualMat4(
@@ -191,7 +191,7 @@ describe('Node', () => {
             node
                 .hold(node.point('base'))
                 .grab(node.point('tip'))
-                .pointAt(vec3.fromValues(0, 0, 2))
+                .pointAt({ x: 0, y: 0, z: 2 })
                 .release();
 
             expect(node.getRotation()).toEqualMat4(
@@ -207,7 +207,7 @@ describe('Node', () => {
             parent
                 .hold(parent.point('base'))
                 .grab(parent.point('tip'))
-                .pointAt(vec3.fromValues(0, 0, -2))
+                .pointAt({ x: 0, y: 0, z: -2 })
                 .release();
 
             expect(parent.getRotation()).toEqualMat4(
@@ -216,7 +216,7 @@ describe('Node', () => {
 
             child
                 .grab(child.point('tip'))
-                .pointAt(vec3.fromValues(0, 1, -1))
+                .pointAt({ x: 0, y: 1, z: -1 })
                 .release();
 
             expect(child.getRotation()).toEqualMat4(
@@ -227,18 +227,18 @@ describe('Node', () => {
         it('can rotate constrained to an axis a node to look at a point in another node', () => {
             const parent = bone();
             const child = bone();
-            child.createPoint('handle', vec3.fromValues(1, 0.5, 0));
+            child.createPoint('handle', { x: 1, y: 0.5, z: 0 });
             child.point('base').stickTo(parent.point('tip'));
 
             const targetParent = bone();
             const target = bone();
             target.point('base').stickTo(targetParent.point('tip'));
-            targetParent.setPosition(vec3.fromValues(0, -1, -1));
+            targetParent.setPosition({ x: 0, y: -1, z: -1 });
 
             parent
                 .hold(parent.point('base'))
                 .grab(parent.point('tip'))
-                .pointAt(vec3.fromValues(0, 0, -2))
+                .pointAt({ x: 0, y: 0, z: -2 })
                 .release();
 
             child
@@ -263,12 +263,12 @@ describe('Node', () => {
             child.point('base').stickTo(parent.point('tip'));
 
             const target = bone();
-            target.setPosition(vec3.fromValues(0, 0, -1));
+            target.setPosition({ x: 0, y: 0, z: -1 });
 
             parent
                 .hold(parent.point('base'))
                 .grab(parent.point('tip'))
-                .pointAt(vec3.fromValues(0, 0, -2))
+                .pointAt({ x: 0, y: 0, z: -2 })
                 .release();
 
             child
@@ -284,7 +284,7 @@ describe('Node', () => {
         it('can rotate a node to look at a point in another node while scaled', () => {
             const node = bone();
             node.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(1, 2, 1)));
-            node.setPosition(vec3.fromValues(4, 0, 0));
+            node.setPosition({ x: 4, y: 0, z: 0 });
 
             const target = bone();
 
@@ -312,7 +312,7 @@ describe('Node', () => {
             node
                 .hold(node.point('tip'))
                 .grab(node.point('base'))
-                .pointAt(vec3.fromValues(1, 1, 0))
+                .pointAt({ x: 1, y: 1, z: 0 })
                 .release();
 
             const tipPoint = vec4.fromValues(0, 1, 0, 1);
@@ -331,7 +331,7 @@ describe('Node', () => {
             node
                 .hold(node.point('base'))
                 .grab(node.point('tip'))
-                .stretchTo(vec3.fromValues(0, 0, 2))
+                .stretchTo({ x: 0, y: 0, z: 2 })
                 .release();
 
             // Check that the tip of the bone ends up at the target
@@ -347,7 +347,7 @@ describe('Node', () => {
             node
                 .hold(node.point('base'))
                 .grab(node.point('tip'))
-                .stretchTo(vec3.fromValues(0, 0, 2))
+                .stretchTo({ x: 0, y: 0, z: 2 })
                 .release();
 
             // Check that the tip of the bone ends up at the target
@@ -358,13 +358,13 @@ describe('Node', () => {
 
         it('brings the grabbed point as close as it can to the target when there is 1 degree of freedom', () => {
             const node = bone();
-            node.createPoint('handle', vec3.fromValues(1, 0.5, 0));
+            node.createPoint('handle', { x: 1, y: 0.5, z: 0 });
 
             node
                 .hold(node.point('base'))
                 .hold(node.point('tip'))
                 .grab(node.point('handle'))
-                .stretchTo(vec3.fromValues(0, 0, 2))
+                .stretchTo({ x: 0, y: 0, z: 2 })
                 .release();
 
             // Check that the handle of the bone ends up at the target
@@ -387,7 +387,7 @@ describe('Node', () => {
             const root = new Node([nodeChild]);
 
             // Translate the root node 1 unit in the x-direction.
-            root.setPosition(vec3.fromValues(1, 0, 0));
+            root.setPosition({ x: 1, y: 0, z: 0 });
 
             // Rotate this child matrix 90 degrees about the x-axis.
             const rotation = mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 90, 0, 0));
@@ -466,7 +466,7 @@ describe('Node', () => {
             const geometryChild = new GeometryNode(geometry);
             const root = new Node([geometryChild]);
 
-            geometryChild.setPosition(vec3.fromValues(1, 1, 0));
+            geometryChild.setPosition({ x: 1, y: 1, z: 0 });
 
             /**
              * The bone should start at the root position (0, 0, 0) and stretch to the base of the

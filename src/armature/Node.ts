@@ -289,7 +289,12 @@ export class Node {
      * @returns {NodeRenderObject} The geometry for this armature subtree, and possibly geometry
      * representing the armature itself.
      */
-    public traverse(coordinateSpace: mat4, normalTransform: mat3, isRoot: boolean, makeBones: boolean): NodeRenderObject {
+    public traverse(
+        coordinateSpace: mat4,
+        normalTransform: mat3,
+        isRoot: boolean,
+        makeBones: boolean
+    ): NodeRenderObject {
         return this.traverseChildren(coordinateSpace, normalTransform, isRoot, makeBones).objects;
     }
 
@@ -360,11 +365,7 @@ export class Node {
                 )
             ),
 
-            vec3.fromValues(
-                Math.max(1e-6, vec3.length(position)),
-                1,
-                1
-            )
+            vec3.fromValues(Math.max(1e-6, vec3.length(position)), 1, 1)
         );
         const transformationMatrix = mat4.create();
         mat4.multiply(transformationMatrix, parentMatrix, transform);
@@ -375,7 +376,12 @@ export class Node {
 
         const normalTransform = mat3.multiply(mat3.create(), parentNormalMatrix, localNormal);
 
-        return { geometry: Node.bone, transform: transformationMatrix, normalTransform, isShadeless: true };
+        return {
+            geometry: Node.bone,
+            transform: transformationMatrix,
+            normalTransform,
+            isShadeless: true
+        };
     }
 
     /**
@@ -649,14 +655,23 @@ export class GeometryNode extends Node {
      * @returns {NodeRenderObject} The geometry for this armature subtree, and possibly geometry
      * representing the armature itself.
      */
-    public traverse(coordinateSpace: mat4, normalTransform: mat3, isRoot: boolean, makeBones: boolean): NodeRenderObject {
+    public traverse(
+        coordinateSpace: mat4,
+        normalTransform: mat3,
+        isRoot: boolean,
+        makeBones: boolean
+    ): NodeRenderObject {
         const { currentMatrix, currentNormalMatrix, objects } = this.traverseChildren(
             coordinateSpace,
             normalTransform,
             isRoot,
             makeBones
         );
-        objects.geometry.push({ geometry: this.geometry, transform: currentMatrix, normalTransform: currentNormalMatrix });
+        objects.geometry.push({
+            geometry: this.geometry,
+            transform: currentMatrix,
+            normalTransform: currentNormalMatrix
+        });
 
         return objects;
     }

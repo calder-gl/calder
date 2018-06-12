@@ -41,7 +41,7 @@ export class Transformation {
      */
     public getNormalTransformation(): mat3 {
         const transform = this.getTransformation();
-        const normal =  mat3.normalFromMat4(mat3.create(), transform);
+        const normal = mat3.normalFromMat4(mat3.create(), transform);
 
         if (normal === null) {
             throw new Error('Transformation was not invertable!');

@@ -405,8 +405,12 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(1, 0, 1, 1);
 
-            const renderObjects: RenderObject[] = root.traverse(mat4.create(), mat3.create(), true, false)
-                .geometry;
+            const renderObjects: RenderObject[] = root.traverse(
+                mat4.create(),
+                mat3.create(),
+                true,
+                false
+            ).geometry;
 
             expect(renderObjects.length).toBe(1);
 
@@ -438,8 +442,12 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(0, 1, 0, 1);
 
-            const renderObjects: RenderObject[] = root.traverse(mat4.create(), mat3.create(), true, false)
-                .geometry;
+            const renderObjects: RenderObject[] = root.traverse(
+                mat4.create(),
+                mat3.create(),
+                true,
+                false
+            ).geometry;
 
             expect(renderObjects.length).toBe(1);
 
@@ -473,7 +481,8 @@ describe('Node', () => {
             const expectedWorldSpaceBase = vec4.fromValues(0, 0, 0, 1);
             const expectedWorldSpaceTip = vec4.fromValues(1, 1, 0, 1);
 
-            const bones: RenderObject[] = root.traverse(mat4.create(), mat3.create(), true, true).bones;
+            const bones: RenderObject[] = root.traverse(mat4.create(), mat3.create(), true, true)
+                .bones;
             expect(bones.length).toBe(1);
 
             const transformedBase = vec4.create();

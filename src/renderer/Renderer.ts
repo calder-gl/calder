@@ -143,7 +143,12 @@ export class Renderer {
 
         this.drawObject(
             renderObjects.geometry.map((o: RenderObject): DrawObjectProps => {
-                if (o.geometry.verticesBuffer === undefined || o.geometry.normalsBuffer === undefined || o.geometry.colorsBuffer === undefined || o.geometry.indicesBuffer === undefined) {
+                if (
+                    o.geometry.verticesBuffer === undefined ||
+                    o.geometry.normalsBuffer === undefined ||
+                    o.geometry.colorsBuffer === undefined ||
+                    o.geometry.indicesBuffer === undefined
+                ) {
                     throw new Error('Buffers were not created correctly');
                 }
 
@@ -169,7 +174,12 @@ export class Renderer {
 
             this.drawObject(
                 renderObjects.bones.map((o: RenderObject): DrawObjectProps => {
-                    if (o.geometry.verticesBuffer === undefined || o.geometry.normalsBuffer === undefined || o.geometry.colorsBuffer === undefined || o.geometry.indicesBuffer === undefined) {
+                    if (
+                        o.geometry.verticesBuffer === undefined ||
+                        o.geometry.normalsBuffer === undefined ||
+                        o.geometry.colorsBuffer === undefined ||
+                        o.geometry.indicesBuffer === undefined
+                    ) {
                         throw new Error('Buffers were not created correctly');
                     }
 

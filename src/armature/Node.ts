@@ -369,6 +369,9 @@ export class Node {
                 )
             ),
 
+            // If you have a child node that is also at the root of the parent, then the bone
+            // connecting them has length 0 and its transformation matrix can't be inverted. This
+            // `max` is to make sure the bone doesn't entirely disappear into two dimensions.
             vec3.fromValues(Math.max(1e-6, vec3.length(position)), 1, 1)
         );
         const transformationMatrix = mat4.create();

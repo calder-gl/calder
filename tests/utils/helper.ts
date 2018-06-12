@@ -1,6 +1,8 @@
 import { vec3 } from 'gl-matrix';
 import { Face, WorkingGeometry } from '../../src/geometry/WorkingGeometry';
 
+import { flatMap } from 'lodash';
+
 export namespace TestHelper {
     /**
      * Creates a square whose front-lower-left corner is at `start` and that has a width of `size`.
@@ -68,7 +70,7 @@ export namespace TestHelper {
 		 *    |/      |/    |/
 		 *    0-------3     +--x
 		 */
-        const unitVertices = [
+        const cubeVertices = [
             // Front side of cube.
             vec3.fromValues(0, 0, 0),
             vec3.fromValues(0, 1, 0),
@@ -80,35 +82,68 @@ export namespace TestHelper {
             vec3.fromValues(1, 1, 1),
             vec3.fromValues(1, 0, 1)
         ];
-        const faces = [
-            // Front side
-            new Face([0, 1, 2]),
-            new Face([0, 2, 3]),
-            // Left side
-            new Face([0, 1, 5]),
-            new Face([1, 4, 5]),
-            // Right side
-            new Face([3, 2, 6]),
-            new Face([3, 6, 7]),
-            // Back side
-            new Face([4, 5, 6]),
-            new Face([4, 6, 7]),
-            // Top side
-            new Face([1, 2, 6]),
-            new Face([1, 5, 6]),
-            // Bottom side
-            new Face([0, 4, 7]),
-            new Face([0, 3, 7])
+        const unitPositions = [
+            // Front
+            cubeVertices[0],
+            cubeVertices[1],
+            cubeVertices[2],
+            cubeVertices[3],
+            // Left
+            cubeVertices[0],
+            cubeVertices[1],
+            cubeVertices[5],
+            cubeVertices[4],
+            // Back
+            cubeVertices[4],
+            cubeVertices[5],
+            cubeVertices[6],
+            cubeVertices[7],
+            // Right
+            cubeVertices[3],
+            cubeVertices[2],
+            cubeVertices[6],
+            cubeVertices[7],
+            // Top
+            cubeVertices[1],
+            cubeVertices[5],
+            cubeVertices[6],
+            cubeVertices[2],
+            // Bottom
+            cubeVertices[0],
+            cubeVertices[4],
+            cubeVertices[7],
+            cubeVertices[3]
         ];
+        const normalDirections = [
+            // Front
+            vec3.fromValues(0, 0, -1),
+            // Left
+            vec3.fromValues(-1, 0, 0),
+            // Back
+            vec3.fromValues(0, 0, 1),
+            // Right
+            vec3.fromValues(1, 0, 0),
+            // Top
+            vec3.fromValues(0, 1, 0),
+            // Bottom
+            vec3.fromValues(0, -1, 0)
+        ];
+        const normals = flatMap(normalDirections, (v: vec3) => [v, v, v, v]);
+        const faces: Face[] = [];
+        for (let i = 0; i < 6; i += 1) {
+            const base = i * 4;
+            faces.push(new Face([base, base + 1, base + 2]));
+            faces.push(new Face([base, base + 2, base + 3]));
+        }
         const controlPoints = [start];
 
-        const vertices = unitVertices.map((vertex: vec3) => {
+        const vertices = unitPositions.map((vertex: vec3) => {
             const out = vec3.create();
             vec3.scaleAndAdd(out, start, vertex, size);
 
             return out;
         });
 
-        return new WorkingGeometry(vertices, faces, controlPoints);
+        return new WorkingGeometry(vertices, normals, faces, controlPoints);
     }
 }

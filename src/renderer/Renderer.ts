@@ -142,10 +142,14 @@ export class Renderer {
         );
 
         this.drawObject(
-            renderObjects.geometry.map((o: RenderObject) => {
+            renderObjects.geometry.map((o: RenderObject): DrawObjectProps => {
+                if (o.geometry.verticesBuffer === undefined || o.geometry.normalsBuffer === undefined || o.geometry.colorsBuffer === undefined || o.geometry.indicesBuffer === undefined) {
+                    throw new Error('Buffers were not created correctly');
+                }
+
                 return {
                     model: o.transform,
-                    normal: o.normalTransform,
+                    normalTransform: o.normalTransform,
                     cameraTransform: this.camera.getTransform(),
                     projectionMatrix: this.projectionMatrix,
                     positions: o.geometry.verticesBuffer,
@@ -164,10 +168,14 @@ export class Renderer {
             this.clearDepth();
 
             this.drawObject(
-                renderObjects.bones.map((o: RenderObject) => {
+                renderObjects.bones.map((o: RenderObject): DrawObjectProps => {
+                    if (o.geometry.verticesBuffer === undefined || o.geometry.normalsBuffer === undefined || o.geometry.colorsBuffer === undefined || o.geometry.indicesBuffer === undefined) {
+                        throw new Error('Buffers were not created correctly');
+                    }
+
                     return {
                         model: o.transform,
-                        normal: o.normalTransform,
+                        normalTransform: o.normalTransform,
                         cameraTransform: this.camera.getTransform(),
                         projectionMatrix: this.projectionMatrix,
                         positions: o.geometry.verticesBuffer,

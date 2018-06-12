@@ -361,9 +361,7 @@ export class Node {
             ),
 
             vec3.fromValues(
-                Math.sqrt(
-                    Math.pow(position[0], 2) + Math.pow(position[1], 2) + Math.pow(position[2], 2)
-                ),
+                Math.max(1e-6, vec3.length(position)),
                 1,
                 1
             )

@@ -71,7 +71,7 @@ export function createDrawObject(
 
             void main() {
                 vertexPosition = (view * model * vec4(position, 1.0)).xyz;
-                vertexNormal = (view * normalTransform * normal).xyz;
+                vertexNormal = mat3(view) * mat3(normalTransform) * normal;
                 vertexColor = color;
                 gl_Position = projection * vec4(vertexPosition, 1.0);
             }

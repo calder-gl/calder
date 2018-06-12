@@ -5,7 +5,7 @@ import { Light } from './interfaces/Light';
 import { RenderObject } from './interfaces/RenderObject';
 import { Camera } from './Camera';
 
-import { mat4, vec3, vec4 } from 'gl-matrix';
+import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
 
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
@@ -114,6 +114,7 @@ export class Renderer {
             (accum: NodeRenderObject, node: Node) => {
                 const childObjects = node.traverse(
                     mat4.create(),
+                    mat3.create(),
                     true,
                     debug.drawArmatureBones === true
                 );
@@ -142,9 +143,19 @@ export class Renderer {
         );
 
         this.drawObject(
-            renderObjects.geometry.map((o: RenderObject) => {
+            renderObjects.geometry.map((o: RenderObject): DrawObjectProps => {
+                if (
+                    o.geometry.verticesBuffer === undefined ||
+                    o.geometry.normalsBuffer === undefined ||
+                    o.geometry.colorsBuffer === undefined ||
+                    o.geometry.indicesBuffer === undefined
+                ) {
+                    throw new Error('Buffers were not created correctly');
+                }
+
                 return {
                     model: o.transform,
+                    normalTransform: o.normalTransform,
                     cameraTransform: this.camera.getTransform(),
                     projectionMatrix: this.projectionMatrix,
                     positions: o.geometry.verticesBuffer,
@@ -163,9 +174,19 @@ export class Renderer {
             this.clearDepth();
 
             this.drawObject(
-                renderObjects.bones.map((o: RenderObject) => {
+                renderObjects.bones.map((o: RenderObject): DrawObjectProps => {
+                    if (
+                        o.geometry.verticesBuffer === undefined ||
+                        o.geometry.normalsBuffer === undefined ||
+                        o.geometry.colorsBuffer === undefined ||
+                        o.geometry.indicesBuffer === undefined
+                    ) {
+                        throw new Error('Buffers were not created correctly');
+                    }
+
                     return {
                         model: o.transform,
+                        normalTransform: o.normalTransform,
                         cameraTransform: this.camera.getTransform(),
                         projectionMatrix: this.projectionMatrix,
                         positions: o.geometry.verticesBuffer,

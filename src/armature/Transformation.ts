@@ -1,4 +1,4 @@
-import { mat4, quat, vec3 } from 'gl-matrix';
+import { mat3, mat4, quat, vec3 } from 'gl-matrix';
 import { matrix4, vector3 } from '../types/InternalVectorTypes';
 
 /**
@@ -31,6 +31,23 @@ export class Transformation {
         mat4.multiply(transform, transform, this.getScale());
 
         return transform;
+    }
+
+    /**
+     * Returns a matrix representation of the transformation this object
+     * represents, but for transforming normals instead of vertices.
+     *
+     * @returns {mat3}
+     */
+    public getNormalTransformation(): mat3 {
+        const transform = this.getTransformation();
+        const normal = mat3.normalFromMat4(mat3.create(), transform);
+
+        if (normal === null) {
+            throw new Error('Transformation was not invertable!');
+        }
+
+        return normal;
     }
 
     public getPosition(): vec3 {

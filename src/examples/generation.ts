@@ -59,10 +59,10 @@ const tree = treeGen
         const theta = Math.random() * 70;
         const phi = Math.random() * 360;
         node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi, 0)));
-        node.setScale(Matrix.fromScaling4({ x: 0.8, y: 0.8, z: 0.8 })); // Shrink a bit
+        node.setScale(Matrix.fromScaling({ x: 0.8, y: 0.8, z: 0.8 })); // Shrink a bit
 
         const trunk = node.point('mid').attach(branchSphere);
-        trunk.setScale(Matrix.fromScaling4({ x: 0.2, y: 0.8, z: 0.2 }));
+        trunk.setScale(Matrix.fromScaling({ x: 0.2, y: 0.8, z: 0.2 }));
 
         // branching factor of 2
         treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
@@ -76,7 +76,7 @@ const tree = treeGen
     })
     .define('leaf', 1, (root: Point) => {
         const leaf = root.attach(leafSphere);
-        leaf.setScale(Matrix.fromScaling4({ x: 0.5, y: 0.5, z: 0.5 }));
+        leaf.setScale(Matrix.fromScaling({ x: 0.5, y: 0.5, z: 0.5 }));
     })
     .generate({ start: 'branch', depth: 15 });
 

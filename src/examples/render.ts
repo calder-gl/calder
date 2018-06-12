@@ -61,7 +61,7 @@ for (let i = 0; i < 5; i += 1) {
 const test = bone();
 test.setPosition({ x: 3, y: 0, z: 0 });
 
-test.setScale(Matrix.fromScaling4({ x: 1, y: 3, z: 1 }));
+test.setScale(Matrix.fromScaling({ x: 1, y: 3, z: 1 }));
 const testChild = bone();
 testChild.point('base').stickTo(test.point('tip'));
 

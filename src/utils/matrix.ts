@@ -21,7 +21,7 @@ export namespace Matrix {
      * @param {mat4} matrix An optional matrix (by default the identity matrix).
      * @returns {mat4}
      */
-    export function fromScaling4(c: coord, matrix: mat4 = mat4.create()): mat4 {
+    export function fromScaling(c: coord, matrix: mat4 = mat4.create()): mat4 {
         return mat4.fromScaling(matrix, Mapper.coordToVector(c));
     }
 }

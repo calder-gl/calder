@@ -1,4 +1,6 @@
 import { mat4, quat, vec3 } from 'gl-matrix';
+import { coord } from '../calder';
+import { Mapper } from '../utils/mapper';
 
 /**
  * This represents the orientation of the camera in a scene, defined by a position for the camera and
@@ -17,9 +19,10 @@ export class Camera {
     private dirty: boolean = true;
 
     /**
-     * @param {vec3} position The world-space coordinate to move the camera to, preserving rotation.
+     * @param {coord} positionCoord The world-space coordinate to move the camera to, preserving rotation.
      */
-    public moveTo(position: vec3) {
+    public moveTo(positionCoord: coord) {
+        const position = Mapper.coordToVector(positionCoord);
         const direction = vec3.subtract(vec3.create(), position, this.position);
         vec3.add(this.target, this.target, direction);
         vec3.copy(this.position, position);
@@ -27,43 +30,46 @@ export class Camera {
     }
 
     /**
-     * @param {vec3} position The world-space coordinate to move the camera to, keeping the camera
+     * @param {coord} positionCoord The world-space coordinate to move the camera to, keeping the camera
      * rotated towards its previous target.
      */
-    public moveToWithFixedTarget(position: vec3) {
+    public moveToWithFixedTarget(positionCoord: coord) {
+        const position = Mapper.coordToVector(positionCoord);
         vec3.copy(this.position, position);
         this.dirty = true;
     }
 
     /**
-     * @param {vec3} direction A world-space direction vector that will be added to the camera's
+     * @param {coord} directionCoord A world-space direction vector that will be added to the camera's
      * position, preserving its existing rotation.
      */
-    public moveBy(direction: vec3) {
+    public moveBy(directionCoord: coord) {
+        const direction = Mapper.coordToVector(directionCoord);
         vec3.add(this.position, this.position, direction);
         vec3.add(this.target, this.target, direction);
         this.dirty = true;
     }
 
     /**
-     * @param {vec3} direction A world-space direction vector that will be added to the camera's
+     * @param {coord} directionCoord A world-space direction vector that will be added to the camera's
      * position, keeping the camera pointed towards its previous target.
      */
-    public moveByWithFixedTarget(direction: vec3) {
+    public moveByWithFixedTarget(directionCoord: coord) {
+        const direction = Mapper.coordToVector(directionCoord);
         vec3.add(this.position, this.position, direction);
         this.dirty = true;
     }
 
     /**
-     * @param {vec3} target A world-space coordinate that the camera will rotate to face.
+     * @param {coord} targetCoord A world-space coordinate that the camera will rotate to face.
      */
-    public lookAt(target: vec3) {
-        vec3.copy(this.target, target);
+    public lookAt(targetCoord: coord) {
+        vec3.copy(this.target, Mapper.coordToVector(targetCoord));
         this.dirty = true;
     }
 
     /**
-     * @param {vec3} target A quaternion that will be applied to the camera's current rotation.
+     * @param {quat} rotation A quaternion that will be applied to the camera's current rotation.
      */
     public rotate(rotation: quat) {
         const direction = vec3.subtract(vec3.create(), this.target, this.position);
@@ -74,7 +80,7 @@ export class Camera {
     }
 
     /**
-     * @param {vec3} target A quaternion that will replace the camera's current rotation.
+     * @param {quat} rotation A quaternion that will replace the camera's current rotation.
      */
     public setRotation(rotation: quat) {
         const direction = vec3.copy(vec3.create(), Camera.defaultDirection);

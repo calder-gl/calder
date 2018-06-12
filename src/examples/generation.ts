@@ -1,11 +1,14 @@
-import { Armature } from '../armature/Armature';
-import { Node, Point } from '../armature/Node';
-import { genSphere } from '../geometry/Sphere';
-import { Light } from '../renderer/interfaces/Light';
-import { Renderer } from '../renderer/Renderer';
-
-import { mat4, quat, vec3 } from 'gl-matrix';
-import { RGBColor } from '../calder';
+import {
+    genSphere,
+    Armature,
+    Light,
+    Matrix,
+    Node,
+    Point,
+    Quaternion,
+    Renderer,
+    RGBColor
+} from '../calder';
 
 const light1: Light = {
     lightPosition: [10, 10, 10],
@@ -18,7 +21,7 @@ const light2: Light = {
     lightIntensity: 100
 };
 
-const renderer: Renderer = new Renderer(800, 600, 2, vec3.fromValues(0.2, 0.2, 0.2));
+const renderer: Renderer = new Renderer(800, 600, 2, { x: 0.2, y: 0.2, z: 0.2 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 1: create geometry
@@ -43,9 +46,9 @@ const branchSphere = workingBranchSphere.bake();
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const bone = Armature.define((root: Node) => {
-    root.createPoint('base', vec3.fromValues(0, 0, 0));
-    root.createPoint('mid', vec3.fromValues(0, 0.5, 0));
-    root.createPoint('tip', vec3.fromValues(0, 1, 0));
+    root.createPoint('base', { x: 0, y: 0, z: 0 });
+    root.createPoint('mid', { x: 0, y: 0.5, z: 0 });
+    root.createPoint('tip', { x: 0, y: 1, z: 0 });
 });
 
 const treeGen = Armature.generator();
@@ -55,13 +58,11 @@ const tree = treeGen
         node.point('base').stickTo(root);
         const theta = Math.random() * 70;
         const phi = Math.random() * 360;
-        node.setRotation(
-            mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), theta, phi, 0))
-        );
-        node.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(0.8, 0.8, 0.8))); // Shrink a bit
+        node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi, 0)));
+        node.setScale(Matrix.fromScaling({ x: 0.8, y: 0.8, z: 0.8 })); // Shrink a bit
 
         const trunk = node.point('mid').attach(branchSphere);
-        trunk.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(0.2, 0.8, 0.2)));
+        trunk.setScale(Matrix.fromScaling({ x: 0.2, y: 0.8, z: 0.2 }));
 
         // branching factor of 2
         treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
@@ -75,7 +76,7 @@ const tree = treeGen
     })
     .define('leaf', 1, (root: Point) => {
         const leaf = root.attach(leafSphere);
-        leaf.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(0.5, 0.5, 0.5)));
+        leaf.setScale(Matrix.fromScaling({ x: 0.5, y: 0.5, z: 0.5 }));
     })
     .generate({ start: 'branch', depth: 15 });
 
@@ -85,14 +86,14 @@ const tree = treeGen
 
 document.body.appendChild(renderer.stage);
 
-renderer.camera.moveTo(vec3.fromValues(0, 0, 8));
-renderer.camera.lookAt(vec3.fromValues(2, 2, -4));
+renderer.camera.moveTo({ x: 0, y: 0, z: 8 });
+renderer.camera.lookAt({ x: 2, y: 2, z: -4 });
 
 // Draw the armature
 let angle = 0;
 const draw = () => {
     angle += 0.5;
-    tree.setRotation(mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), 0, angle, 0)));
+    tree.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 
     return {
         objects: [tree],

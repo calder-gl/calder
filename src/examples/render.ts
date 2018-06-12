@@ -1,19 +1,24 @@
-import { Animation } from '../armature/Animation';
-import { Armature } from '../armature/Armature';
-import { Node } from '../armature/Node';
-import { genSphere } from '../geometry/Sphere';
-import { Light } from '../renderer/interfaces/Light';
-import { Renderer } from '../renderer/Renderer';
-
-import { mat4, quat, vec3 } from 'gl-matrix';
-import { range } from 'lodash';
-import { Constraints } from '../armature/Constraints';
-import { BakedGeometry, CMYKColor, RGBColor, WorkingGeometry } from '../calder';
+import {
+    genSphere,
+    identityMatrix4,
+    Animation,
+    Armature,
+    BakedGeometry,
+    Constraints,
+    CMYKColor,
+    Light,
+    Matrix,
+    Node,
+    Quaternion,
+    Renderer,
+    RGBColor,
+    WorkingGeometry
+} from '../calder';
 
 const light1: Light = { lightPosition: [10, 10, 10], lightColor: [1, 1, 1], lightIntensity: 256 };
 const light2: Light = { lightPosition: [700, 500, 50], lightColor: [3, 3, 3], lightIntensity: 100 };
 
-const renderer: Renderer = new Renderer(800, 600, 2, vec3.fromValues(0.0, 0.1, 0.0));
+const renderer: Renderer = new Renderer(800, 600, 2, { x: 0.0, y: 0.1, z: 0.0 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 1: create geometry
@@ -37,30 +42,26 @@ const sphere: BakedGeometry = workingSphere.bake();
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const bone = Armature.define((root: Node) => {
-    root.createPoint('base', vec3.fromValues(0, 0, 0));
-    root.createPoint('tip', vec3.fromValues(0, 1, 0));
+    root.createPoint('base', { x: 0, y: 0, z: 0 });
+    root.createPoint('tip', { x: 0, y: 1, z: 0 });
 });
 
 const tower = bone();
 
 let top = tower;
-range(5).forEach(() => {
+
+for (let i = 0; i < 5; i += 1) {
     const nextPiece = bone();
     nextPiece.point('base').stickTo(top.point('tip'));
     nextPiece.point('base').attach(sphere);
-    nextPiece.setRotation(
-        mat4.fromQuat(
-            mat4.create(),
-            quat.fromEuler(quat.create(), Math.random() * 90 - 45, Math.random() * 90 - 45, 0)
-        )
-    );
-
+    nextPiece.setRotation(Matrix.fromQuat4(Quaternion.fromEuler()));
     top = nextPiece;
-});
+}
 
 const test = bone();
-test.setPosition(vec3.fromValues(3, 0, 0));
-test.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(1, 3, 1)));
+test.setPosition({ x: 3, y: 0, z: 0 });
+
+test.setScale(Matrix.fromScaling({ x: 1, y: 3, z: 1 }));
 const testChild = bone();
 testChild.point('base').stickTo(test.point('tip'));
 
@@ -70,8 +71,8 @@ testChild.point('base').stickTo(test.point('tip'));
 
 document.body.appendChild(renderer.stage);
 
-renderer.camera.moveTo(vec3.fromValues(0, 0, 8));
-renderer.camera.lookAt(vec3.fromValues(2, 2, -4));
+renderer.camera.moveTo({ x: 0, y: 0, z: 8 });
+renderer.camera.lookAt({ x: 2, y: 2, z: -4 });
 
 // Draw the armature
 
@@ -90,10 +91,8 @@ Animation.create({
     to: (node: Node) => {
         const theta = Math.random() * 90;
         const phi = Math.random() * 360;
-        node.setRotation(
-            mat4.fromQuat(mat4.create(), quat.fromEuler(quat.create(), theta, phi, 0))
-        );
-        node.setScale(mat4.create());
+        node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi, 0)));
+        node.setScale(identityMatrix4);
     },
     duration: 1000,
     times: 0,

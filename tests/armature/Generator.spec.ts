@@ -1,11 +1,9 @@
 import { Armature } from '../../src/armature/Armature';
 import { Node, Point } from '../../src/armature/Node';
 
-import { vec3 } from 'gl-matrix';
-
 const bone = Armature.define((root: Node) => {
-    root.createPoint('base', vec3.fromValues(0, 0, 0));
-    root.createPoint('tip', vec3.fromValues(0, 1, 0));
+    root.createPoint('base', { x: 0, y: 0, z: 0 });
+    root.createPoint('tip', { x: 0, y: 1, z: 0 });
 });
 
 describe('Generator', () => {

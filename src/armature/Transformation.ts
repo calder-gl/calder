@@ -1,5 +1,5 @@
 import { mat4, quat, vec3 } from 'gl-matrix';
-import { matrix4, vector3 } from '../types/VectorTypes';
+import { matrix4, vector3 } from '../types/InternalVectorTypes';
 
 /**
  * Not intended to be user facing.

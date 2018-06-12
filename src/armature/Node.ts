@@ -2,11 +2,13 @@ import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { BakedGeometry } from '../geometry/BakedGeometry';
 import { closestPointOnLine, vec3From4, vec3ToPoint } from '../math/utils';
 import { RenderObject } from '../renderer/interfaces/RenderObject';
-import { matrix4, vector3 } from '../types/VectorTypes';
+import { matrix4, vector3 } from '../types/InternalVectorTypes';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
 
 import { flatten, flatMap } from 'lodash';
+import { coord, coordFunc } from '../calder';
+import { Mapper } from '../utils/mapper';
 
 /**
  * A `Node` in a scene-graph.
@@ -77,14 +79,16 @@ export class Node {
         );
         cloned.parent = node.parent;
         Object.keys(node.points).forEach((key: string) => {
-            cloned.createPoint(key, node.points[key].position);
+            cloned.createPoint(key, Mapper.vectorToCoord(node.points[key].position));
         });
         cloned.anchor = node.anchor;
 
         return cloned;
     }
 
-    public createPoint(name: string, position: vec3) {
+    public createPoint(name: string, positionCoord: coord) {
+        const position = Mapper.coordToVector(positionCoord);
+
         // tslint:disable-next-line:no-use-before-declare
         this.points[name] = new Point(this, position);
     }
@@ -106,7 +110,7 @@ export class Node {
      * control point on the current or any other node.
      * @returns {Node} The current node, for method chaining.
      */
-    public hold(point: Point | vec3): Node {
+    public hold(point: Point | coord): Node {
         this.held.push(this.localPointCoordinate(point));
 
         return this;
@@ -130,7 +134,7 @@ export class Node {
      * @param {Point | vec3} point The point to grab.
      * @returns {Node} The current node, for method chaining.
      */
-    public grab(point: Point | vec3): Node {
+    public grab(point: Point | coord): Node {
         this.grabbed = this.localPointCoordinate(point);
 
         return this;
@@ -141,7 +145,7 @@ export class Node {
      *
      * @param {Point | vec3} point The point to rotate towards.
      */
-    public pointAt(point: Point | vec3): Node {
+    public pointAt(point: Point | coord): Node {
         return this.pointAndstretchTo(point, false);
     }
 
@@ -151,7 +155,7 @@ export class Node {
      *
      * @param {Point | vec3} point The point to rotate and stretch towards.
      */
-    public stretchTo(point: Point | vec3): Node {
+    public stretchTo(point: Point | coord): Node {
         return this.pointAndstretchTo(point, true);
     }
 
@@ -222,8 +226,8 @@ export class Node {
      *
      * @param {vec3} position
      */
-    public setPosition(position: vector3) {
-        this.transformation.setPosition(position);
+    public setPosition(position: coordFunc) {
+        this.transformation.setPosition(Mapper.coordToVector(position));
     }
 
     /**
@@ -376,9 +380,11 @@ export class Node {
      * coordinate space.
      * @returns {vec3} The point in the current node's local coordinate space.
      */
-    private localPointCoordinate(point: Point | vec3): vec3 {
-        // tslint:disable-next-line:no-use-before-declare
-        const pointRelative = vec3ToPoint(point instanceof Point ? point.position : point);
+    private localPointCoordinate(point: Point | coord): vec3 {
+        const pointRelative = vec3ToPoint(
+            // tslint:disable-next-line:no-use-before-declare
+            point instanceof Point ? point.position : Mapper.coordToVector(point)
+        );
 
         const pointToLocal = mat4.create();
 
@@ -409,7 +415,7 @@ export class Node {
      * @param {Point | vec3} point The point to rotate and stretch towards.
      * @param {boolean} stretch Whether or not to stretch to the target.
      */
-    private pointAndstretchTo(point: Point | vec3, stretch: boolean): Node {
+    private pointAndstretchTo(point: Point | coord, stretch: boolean): Node {
         if (this.grabbed === null) {
             throw new Error('You must grab a point before pointing it at something');
         }
@@ -679,7 +685,8 @@ export class Point {
         }
         target.node.addChild(this.node);
         this.node.setAnchor(this.position);
-        this.node.setPosition(vec3.subtract(vec3.create(), target.position, this.position));
+        const vecSub = vec3.subtract(vec3.create(), target.position, this.position);
+        this.node.setPosition(Mapper.vectorToCoord(vecSub));
     }
 
     /**
@@ -691,7 +698,7 @@ export class Point {
     public attach(geometry: BakedGeometry): GeometryNode {
         const geometryNode = new GeometryNode(geometry);
         geometryNode.setAnchor(vec3.fromValues(0, 0, 0));
-        geometryNode.setPosition(this.position);
+        geometryNode.setPosition(Mapper.vectorToCoord(this.position));
         this.node.addChild(geometryNode);
 
         return geometryNode;

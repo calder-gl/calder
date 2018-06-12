@@ -1,4 +1,3 @@
-import { vec3 } from 'gl-matrix';
 import { Node, Point } from './Node';
 
 import { range } from 'lodash';
@@ -72,7 +71,7 @@ export class Generator {
 
         // Create root node and initial spawn point
         const root = new Node();
-        root.createPoint('spawn', vec3.fromValues(0, 0, 0));
+        root.createPoint('spawn', { x: 0, y: 0, z: 0 });
         this.addDetail({ component: start, at: root.point('spawn') });
 
         // Run `depth` rounds of generation

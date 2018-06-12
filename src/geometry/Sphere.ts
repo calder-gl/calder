@@ -17,7 +17,7 @@ function sphereSignedDistFunc(coord: vec3): number {
 export function genSphere(fillColor: Color = RGBColor.fromHex('#FF0000')): WorkingGeometry {
     const sphere = new ScalarField(DIM, LENGTH, sphereSignedDistFunc);
     const vertices = genIsoSurface(sphere);
-    const faces = range(vertices.length / 3).map((i: number) => new Face(range(i, i + 3)));
+    const faces = range(vertices.length / 3).map((i: number) => new Face(range(i * 3, (i + 1) * 3)));
 
     return new WorkingGeometry(vertices, vertices, faces, [], fillColor);
 }

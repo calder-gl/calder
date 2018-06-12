@@ -91,7 +91,7 @@ Animation.create({
     to: (node: Node) => {
         const theta = Math.random() * 90;
         const phi = Math.random() * 360;
-        node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi)));
+        node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi, 0)));
         node.setScale(identityMatrix4);
     },
     duration: 1000,

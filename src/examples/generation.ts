@@ -58,7 +58,7 @@ const tree = treeGen
         node.point('base').stickTo(root);
         const theta = Math.random() * 70;
         const phi = Math.random() * 360;
-        node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi)));
+        node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi, 0)));
         node.setScale(Matrix.fromScaling4({ x: 0.8, y: 0.8, z: 0.8 })); // Shrink a bit
 
         const trunk = node.point('mid').attach(branchSphere);
@@ -93,7 +93,7 @@ renderer.camera.lookAt({ x: 2, y: 2, z: -4 });
 let angle = 0;
 const draw = () => {
     angle += 0.5;
-    tree.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle)));
+    tree.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 
     return {
         objects: [tree],

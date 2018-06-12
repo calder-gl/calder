@@ -19,7 +19,7 @@ export class Camera {
     private dirty: boolean = true;
 
     /**
-     * @param {vec3} position The world-space coordinate to move the camera to, preserving rotation.
+     * @param {coord} positionCoord The world-space coordinate to move the camera to, preserving rotation.
      */
     public moveTo(positionCoord: coord) {
         const position = Mapper.coordToVector(positionCoord);
@@ -30,7 +30,7 @@ export class Camera {
     }
 
     /**
-     * @param {vec3} position The world-space coordinate to move the camera to, keeping the camera
+     * @param {coord} positionCoord The world-space coordinate to move the camera to, keeping the camera
      * rotated towards its previous target.
      */
     public moveToWithFixedTarget(positionCoord: coord) {
@@ -40,7 +40,7 @@ export class Camera {
     }
 
     /**
-     * @param {vec3} direction A world-space direction vector that will be added to the camera's
+     * @param {coord} directionCoord A world-space direction vector that will be added to the camera's
      * position, preserving its existing rotation.
      */
     public moveBy(directionCoord: coord) {
@@ -51,7 +51,7 @@ export class Camera {
     }
 
     /**
-     * @param {vec3} direction A world-space direction vector that will be added to the camera's
+     * @param {coord} directionCoord A world-space direction vector that will be added to the camera's
      * position, keeping the camera pointed towards its previous target.
      */
     public moveByWithFixedTarget(directionCoord: coord) {
@@ -61,7 +61,7 @@ export class Camera {
     }
 
     /**
-     * @param {vec3} target A world-space coordinate that the camera will rotate to face.
+     * @param {coord} targetCoord A world-space coordinate that the camera will rotate to face.
      */
     public lookAt(targetCoord: coord) {
         vec3.copy(this.target, Mapper.coordToVector(targetCoord));
@@ -69,7 +69,7 @@ export class Camera {
     }
 
     /**
-     * @param {vec3} target A quaternion that will be applied to the camera's current rotation.
+     * @param {quat} rotation A quaternion that will be applied to the camera's current rotation.
      */
     public rotate(rotation: quat) {
         const direction = vec3.subtract(vec3.create(), this.target, this.position);
@@ -80,7 +80,7 @@ export class Camera {
     }
 
     /**
-     * @param {vec3} target A quaternion that will replace the camera's current rotation.
+     * @param {quat} rotation A quaternion that will replace the camera's current rotation.
      */
     public setRotation(rotation: quat) {
         const direction = vec3.copy(vec3.create(), Camera.defaultDirection);

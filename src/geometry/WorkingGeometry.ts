@@ -30,13 +30,15 @@ export class WorkingGeometry {
     /**
      * The points that make up the geometry, in no particular order. For each vertex v, v[3] must
      * be equal to 0 to ensure that it is a point in Affine space rather than a vector.
+     *
+     * For faceted objects, a vertex is needed for every facet it touches.
+     *
      */
     public vertices: vec4[];
 
     /**
-     * The normals that correspond to the vertices. For each vertex, it must retain a copy of
-     * the normal for each face it composes. For each normal n, n[3] must be equal to 1 to ensure
-     * that it is a vector.
+     * The normals that correspond to the vertices. For each normal n, n[3] must be equal to 1 to
+     * ensure that it is a vector.
      */
     public normals: vec4[];
 

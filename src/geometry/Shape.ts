@@ -77,6 +77,17 @@ export namespace Shape {
         [0, 1].forEach((side: number) => {
             range(PRECISION).forEach((i: number) => {
                 const offset = side * (PRECISION + 1);
+
+                // Connect vertices i and i+1 to the middle:
+                //
+                //    X---X
+                //   / \ / \
+                //  X---0---i
+                //   \ / \ /
+                //    X---i+1
+                //
+                // The offset is the first index of either the top or the bottom ring.
+
                 faces.push(new Face([offset, offset + i + 1, offset + (i + 1) % PRECISION + 1]));
             });
         });
@@ -84,9 +95,36 @@ export namespace Shape {
         // Connect top and bottom rings
         range(PRECISION).forEach((i: number) => {
             const offset = (PRECISION + 1) * 2;
+
+            // We want to make a rectangle connecting two vertices on the top ring to two vertices
+            // on the bottom ring. The offset represents the starting index of the duplicate rings
+            // of vertices that we use for the side faces, and there are PRECISION vertices in each
+            // ring.
+
+            // Triangle 1:
+            //
+            // -------i-----i+1----
+            //        |    /
+            //        |   /
+            //        |  /
+            //        | /
+            //        |/
+            // -----p+i-----p+i+1--
+            // (p = PRECISION, which is # vertices in the ring)
             faces.push(
                 new Face([offset + i, offset + (i + 1) % PRECISION, offset + PRECISION + i])
             );
+
+            // Triangle 2:
+            //
+            // -------i-----i+1----
+            //             /|
+            //            / |
+            //           /  |
+            //          /   |
+            //         /    |
+            // -----p+i-----p+i+1--
+            // (p = PRECISION, which is # vertices in the ring)
             faces.push(
                 new Face([
                     offset + (i + 1) % PRECISION,

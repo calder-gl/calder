@@ -41,13 +41,11 @@ export namespace Shape {
             [1, -1].forEach((side: number) => {
                 // We are going to make triangles coming radially out from the center.
                 // e.g., for PRECISION = 6:
-                //
                 //    5---6
                 //   / \ / \
                 //  4---0---1
                 //   \ / \ /
                 //    3---2
-                //
 
                 if (onEnd) {
                     // Place the middle vertex
@@ -79,13 +77,11 @@ export namespace Shape {
                 const offset = side * (PRECISION + 1);
 
                 // Connect vertices i and i+1 to the middle:
-                //
                 //    X---X
                 //   / \ / \
                 //  X---0---i
                 //   \ / \ /
                 //    X---i+1
-                //
                 // The offset is the first index of either the top or the bottom ring.
 
                 faces.push(new Face([offset, offset + i + 1, offset + (i + 1) % PRECISION + 1]));
@@ -102,12 +98,9 @@ export namespace Shape {
             // ring.
 
             // Triangle 1:
-            //
             // -------i-----i+1----
             //        |    /
-            //        |   /
             //        |  /
-            //        | /
             //        |/
             // -----p+i-----p+i+1--
             // (p = PRECISION, which is # vertices in the ring)
@@ -116,12 +109,9 @@ export namespace Shape {
             );
 
             // Triangle 2:
-            //
             // -------i-----i+1----
             //             /|
-            //            / |
             //           /  |
-            //          /   |
             //         /    |
             // -----p+i-----p+i+1--
             // (p = PRECISION, which is # vertices in the ring)

@@ -37,12 +37,25 @@ export namespace Shape {
         // We need to duplicate the vertices so that ones for the faces on the ends can have
         // different normals from the ones in the middle segment of the cylinder
         [true, false].forEach((onEnd: boolean) => {
+            // Add a ring on the top and a ring on the bottom
             [1, -1].forEach((side: number) => {
+                // We are going to make triangles coming radially out from the center.
+                // e.g., for PRECISION = 6:
+                //
+                //    5---6
+                //   / \ / \
+                //  4---0---1
+                //   \ / \ /
+                //    3---2
+                //
+
                 if (onEnd) {
+                    // Place the middle vertex
                     vertices.push(vec3.fromValues(0, side * LENGTH / 2, 0));
                     normals.push(vec3.fromValues(0, side, 0));
                 }
 
+                // Place the surrounding ring of vertices
                 range(PRECISION).forEach((i: number) => {
                     const angle = Math.PI * 2 * (i / PRECISION);
                     vertices.push(
@@ -60,7 +73,7 @@ export namespace Shape {
 
         const faces: Face[] = [];
 
-        // Top and bottom faces
+        // Top and bottom faces: connect outer ring vertices to central vertex
         [0, 1].forEach((side: number) => {
             range(PRECISION).forEach((i: number) => {
                 const offset = side * (PRECISION + 1);
@@ -68,7 +81,7 @@ export namespace Shape {
             });
         });
 
-        // Connecting faces
+        // Connect top and bottom rings
         range(PRECISION).forEach((i: number) => {
             const offset = (PRECISION + 1) * 2;
             faces.push(

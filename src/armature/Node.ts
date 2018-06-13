@@ -544,6 +544,7 @@ export class Node {
             mat4.multiply(pointToParent, this.parent.globalToLocalTransform(), pointToParent);
         }
 
+        // tslint:disable-next-line:no-use-before-declare
         if (point instanceof Point && point.node === this) {
             mat4.multiply(pointToParent, this.transformation.getTransformation(), pointToParent);
         }

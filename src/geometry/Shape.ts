@@ -13,7 +13,9 @@ export namespace Shape {
         const LENGTH = 2.5;
 
         function sphereSignedDistFunc(coord: vec3): number {
-            return Math.sqrt(coord[0] * coord[0] + coord[1] * coord[1] + coord[2] * coord[2]) - RADIUS;
+            return (
+                Math.sqrt(coord[0] * coord[0] + coord[1] * coord[1] + coord[2] * coord[2]) - RADIUS
+            );
         }
 
         const sphereField = new ScalarField(DIM, LENGTH, sphereSignedDistFunc);
@@ -37,13 +39,15 @@ export namespace Shape {
         [true, false].forEach((onEnd: boolean) => {
             [1, -1].forEach((side: number) => {
                 if (onEnd) {
-                    vertices.push(vec3.fromValues(0, side * LENGTH/2, 0));
+                    vertices.push(vec3.fromValues(0, side * LENGTH / 2, 0));
                     normals.push(vec3.fromValues(0, side, 0));
                 }
 
                 range(PRECISION).forEach((i: number) => {
                     const angle = Math.PI * 2 * (i / PRECISION);
-                    vertices.push(vec3.fromValues(Math.cos(angle), side * LENGTH/2, Math.sin(angle)));
+                    vertices.push(
+                        vec3.fromValues(Math.cos(angle), side * LENGTH / 2, Math.sin(angle))
+                    );
 
                     if (onEnd) {
                         normals.push(vec3.fromValues(0, side, 0));
@@ -67,8 +71,16 @@ export namespace Shape {
         // Connecting faces
         range(PRECISION).forEach((i: number) => {
             const offset = (PRECISION + 1) * 2;
-            faces.push(new Face([offset + i, offset + (i + 1) % PRECISION, offset + PRECISION + i]));
-            faces.push(new Face([offset + (i + 1) % PRECISION, offset + PRECISION + (i + 1) % PRECISION, offset + PRECISION + i]));
+            faces.push(
+                new Face([offset + i, offset + (i + 1) % PRECISION, offset + PRECISION + i])
+            );
+            faces.push(
+                new Face([
+                    offset + (i + 1) % PRECISION,
+                    offset + PRECISION + (i + 1) % PRECISION,
+                    offset + PRECISION + i
+                ])
+            );
         });
 
         return new WorkingGeometry(vertices, normals, faces, [], fillColor);

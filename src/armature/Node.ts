@@ -106,7 +106,7 @@ export class Node {
      * Holds the current node in place at a given point so that it can be manipulated about
      * that point.
      *
-     * @param {Point | vec3} point The point to be held, either as a local coordinate, or a
+     * @param {Point | coord} point The point to be held, either as a local coordinate, or a
      * control point on the current or any other node.
      * @returns {Node} The current node, for method chaining.
      */
@@ -129,9 +129,9 @@ export class Node {
     }
 
     /**
-     * Marks a point as grabbed so that it can be used to push or pull the node
+     * Marks a point as grabbed so that it can be used to push or pull the node.
      *
-     * @param {Point | vec3} point The point to grab.
+     * @param {Point | coord} point The point to grab.
      * @returns {Node} The current node, for method chaining.
      */
     public grab(point: Point | coord): Node {
@@ -140,7 +140,20 @@ export class Node {
         return this;
     }
 
+    /**
+     * Moves the node so that the grabbed point is aligned with the target point.
+     *
+     * @param {Point | coord} point The point to move to.
+     * @returns {Node} The current node, for method chaining.
+     */
     public moveTo(point: Point | coord): Node {
+        if (this.anchor !== null) {
+            throw new Error("Can't move a node that is anchored to a parent!");
+        }
+        if (this.held.length > 0) {
+            throw new Error("Can't move a node when points are held!");
+        }
+
         const grabbed =
             this.grabbed === null
                 ? vec4.fromValues(0, 0, 0, 1)
@@ -162,9 +175,63 @@ export class Node {
     }
 
     /**
+     * Moves the node from the grabbed point in the direction of the target point by a given
+     * amount.
+     *
+     * @param {Point | coord} point The point to move to.
+     * @param {number} amount The distance to move by.
+     * @returns {Node} The current node, for method chaining.
+     */
+    public moveTowards(point: Point | coord, amount: number): Node {
+        if (this.anchor !== null) {
+            throw new Error("Can't move a node that is anchored to a parent!");
+        }
+        if (this.held.length > 0) {
+            throw new Error("Can't move a node when points are held!");
+        }
+
+        const grabbed =
+            this.grabbed === null
+                ? vec4.fromValues(0, 0, 0, 1)
+                : vec4.copy(vec4.create(), vec3ToPoint(this.grabbed));
+        vec4.transformMat4(grabbed, grabbed, this.transformation.getTransformation());
+        const target = this.parentPointCoordinate(point);
+        const toTarget = vec3.sub(vec3.create(), target, vec3From4(grabbed));
+        vec3.normalize(toTarget, toTarget);
+        vec3.scale(toTarget, toTarget, amount);
+
+        this.setPosition(
+            Mapper.vectorToCoord(vec3.add(vec3.create(), this.getPosition(), toTarget))
+        );
+
+        return this;
+    }
+
+    /**
+     * Moves the node by the given amount in parent coordinates.
+     *
+     * @param {coord} amount The amount to move in each axis.
+     * @returns {Node} The current node, for method chaining.
+     */
+    public moveBy(point: coord): Node {
+        if (this.anchor !== null) {
+            throw new Error("Can't move a node that is anchored to a parent!");
+        }
+        if (this.held.length > 0) {
+            throw new Error("Can't move a node when points are held!");
+        }
+
+        const amount = Mapper.coordToVector(point);
+
+        this.setPosition(Mapper.vectorToCoord(vec3.add(vec3.create(), this.getPosition(), amount)));
+
+        return this;
+    }
+
+    /**
      * Given the current constraints on the node, rotates the node to look at a point.
      *
-     * @param {Point | vec3} point The point to rotate towards.
+     * @param {Point | coord} point The point to rotate towards.
      */
     public pointAt(point: Point | coord): Node {
         return this.pointAndstretchTo(point, false);
@@ -174,7 +241,7 @@ export class Node {
      * Given the current constraints on the node, rotates the node to look at a point, and stretches
      * the node until it is aligned with the target.
      *
-     * @param {Point | vec3} point The point to rotate and stretch towards.
+     * @param {Point | coord} point The point to rotate and stretch towards.
      */
     public stretchTo(point: Point | coord): Node {
         return this.pointAndstretchTo(point, true);
@@ -415,7 +482,7 @@ export class Node {
     /**
      * Given a point, convert it into the local coordinate space of the current node.
      *
-     * @param {Point | vec3} point The point to convert. A raw vec3 is considered to be in global
+     * @param {Point | coord} point The point to convert. A raw vec3 is considered to be in global
      * coordinate space.
      * @returns {vec3} The point in the current node's local coordinate space.
      */
@@ -450,7 +517,7 @@ export class Node {
     /**
      * Given a point, convert it into the parent coordinate space of the current node.
      *
-     * @param {Point | vec3} point The point to convert. A raw vec3 is considered to be in global
+     * @param {Point | coord} point The point to convert. A raw vec3 is considered to be in global
      * coordinate space.
      * @returns {vec3} The point in the current node's parent coordinate space.
      */
@@ -490,7 +557,7 @@ export class Node {
      * Given the current constraints on the node, rotates the node to look at a point, and optionally
      * stretches the node until it is aligned with the target.
      *
-     * @param {Point | vec3} point The point to rotate and stretch towards.
+     * @param {Point | coord} point The point to rotate and stretch towards.
      * @param {boolean} stretch Whether or not to stretch to the target.
      */
     private pointAndstretchTo(point: Point | coord, stretch: boolean): Node {

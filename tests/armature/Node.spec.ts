@@ -199,9 +199,8 @@ describe('Node', () => {
 
             expect(node.getPosition()).toEqualVec3(vec3.fromValues(1, 1, 0));
         });
-    });
 
-    it('moves from a grabbed point when rotated and scaled', () => {
+        it('moves from a grabbed point when rotated and scaled', () => {
             const node = bone();
             const other = bone();
             other.setPosition({ x: 2, y: 0, z: 0 });
@@ -217,6 +216,44 @@ describe('Node', () => {
                 .release();
 
             expect(node.getPosition()).toEqualVec3(vec3.fromValues(0, 1, 0));
+        });
+    });
+
+    describe('moveTowards', () => {
+        it('moves the specified distance', () => {
+            const node = bone();
+            const other = bone();
+            other.setPosition({ x: 2, y: 0, z: 0 });
+
+            node
+                .hold(node.point('base'))
+                .grab(node.point('tip'))
+                .stretchTo(other.point('base'))
+                .release();
+            node
+                .grab(node.point('tip'))
+                .moveTowards(other.point('tip'), 0.5)
+                .release();
+
+            expect(node.getPosition()).toEqualVec3(vec3.fromValues(0, 0.5, 0));
+        });
+    });
+
+    describe('moveBy', () => {
+        it('moves by the specified amount', () => {
+            const node = bone();
+            const other = bone();
+            other.setPosition({ x: 2, y: 0, z: 0 });
+
+            node
+                .hold(node.point('base'))
+                .grab(node.point('tip'))
+                .stretchTo(other.point('base'))
+                .release();
+
+            node.moveBy({ x: 0, y: 0.5, z: 0 });
+
+            expect(node.getPosition()).toEqualVec3(vec3.fromValues(0, 0.5, 0));
         });
     });
 

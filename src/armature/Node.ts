@@ -156,11 +156,14 @@ export class Node {
 
         const grabbed =
             this.grabbed === null
-                ? vec4.fromValues(0, 0, 0, 1)
+                ? vec4.fromValues(0, 0, 0, 1) // Default to the origin
                 : vec4.copy(vec4.create(), vec3ToPoint(this.grabbed));
+
+        // Bring grab point and target into parent coordinate space
         vec4.transformMat4(grabbed, grabbed, this.transformation.getTransformation());
         const target = this.parentPointCoordinate(point);
 
+        // Add the difference to the current position
         this.setPosition(
             Mapper.vectorToCoord(
                 vec3.add(
@@ -192,14 +195,19 @@ export class Node {
 
         const grabbed =
             this.grabbed === null
-                ? vec4.fromValues(0, 0, 0, 1)
+                ? vec4.fromValues(0, 0, 0, 1) // Default to the origin
                 : vec4.copy(vec4.create(), vec3ToPoint(this.grabbed));
+
+        // Bring the grab point and target into parent coordinate space
         vec4.transformMat4(grabbed, grabbed, this.transformation.getTransformation());
         const target = this.parentPointCoordinate(point);
+
+        // Get the direction from grab to target, and scale it to the given length
         const toTarget = vec3.sub(vec3.create(), target, vec3From4(grabbed));
         vec3.normalize(toTarget, toTarget);
         vec3.scale(toTarget, toTarget, amount);
 
+        // Add the scaled direction to the current position
         this.setPosition(
             Mapper.vectorToCoord(vec3.add(vec3.create(), this.getPosition(), toTarget))
         );

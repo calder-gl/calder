@@ -46,7 +46,7 @@ export * from './colors/RGBColor';
 
 export * from './geometry/BakedGeometry';
 export * from './geometry/ScalarField';
-export * from './geometry/Sphere';
+export * from './geometry/Shape';
 export * from './geometry/WorkingGeometry';
 
 /*****************************

@@ -158,6 +158,68 @@ describe('Node', () => {
         });
     });
 
+    describe('moveTo', () => {
+        it('moves the origin when no point is grabbed', () => {
+            const node = bone();
+            const other = bone();
+            other.setPosition({ x: 2, y: 2, z: 2 });
+
+            node.moveTo(other.point('tip'));
+
+            expect(node.getPosition()).toEqualVec3(vec3.fromValues(2, 3, 2));
+        });
+
+        it('moves from a grabbed point', () => {
+            const node = bone();
+            const other = bone();
+            other.setPosition({ x: 2, y: 2, z: 2 });
+
+            node
+                .grab(node.point('tip'))
+                .moveTo(other.point('tip'))
+                .release();
+
+            expect(node.getPosition()).toEqualVec3(vec3.fromValues(2, 2, 2));
+        });
+
+        it('moves from a grabbed point when rotated', () => {
+            const node = bone();
+            const other = bone();
+            other.setPosition({ x: 2, y: 0, z: 0 });
+
+            node
+                .hold(node.point('base'))
+                .grab(node.point('tip'))
+                .pointAt(other.point('base'))
+                .release();
+            node
+                .grab(node.point('tip'))
+                .moveTo(other.point('tip'))
+                .release();
+
+            expect(node.getPosition()).toEqualVec3(vec3.fromValues(1, 1, 0));
+        });
+    });
+
+    it('moves from a grabbed point when rotated and scaled', () => {
+            const node = bone();
+            const other = bone();
+            other.setPosition({ x: 2, y: 0, z: 0 });
+
+            node
+                .hold(node.point('base'))
+                .grab(node.point('tip'))
+                .stretchTo(other.point('base'))
+                .release();
+            node
+                .grab(node.point('tip'))
+                .moveTo(other.point('tip'))
+                .release();
+
+            expect(node.getPosition()).toEqualVec3(vec3.fromValues(0, 1, 0));
+        });
+    });
+
     describe('pointAt', () => {
         it('rotates a node about an axis', () => {
             const node = bone();

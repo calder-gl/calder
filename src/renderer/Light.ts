@@ -1,0 +1,59 @@
+import REGL = require('regl');
+import { coord, RGBColor } from '../calder';
+import { Color } from '../colors/Color';
+import { Mapper } from '../utils/mapper';
+
+/**
+ * Required parameters when defining a `Light` source.
+ */
+export type LightParams = {
+    position: coord;
+    color: Color;
+    intensity: number;
+};
+
+/**
+ * A Light representation with a position, color, and intensity.
+ *
+ * @class Light
+ */
+export class Light {
+    public readonly lightPosition: REGL.Vec3;
+    public readonly lightColor: REGL.Vec3;
+    public readonly lightIntensity: number;
+
+    /**
+     * Instantiate a new Light object.
+     *
+     * @class Light
+     * @constructor
+     * @param {LightParams} params The named parameters for the light source.
+     */
+    constructor(params: LightParams) {
+        this.lightPosition = Mapper.coordToVector(params.position);
+        this.lightColor = params.color.asVec();
+        this.lightIntensity = params.intensity
+    }
+
+    /**
+     * Returns a representation of a light which may be used in the shader.
+     *
+     * @class Light
+     */
+    public bake() {
+        return {
+            lightPosition: this.lightPosition,
+            lightColor: this.lightColor,
+            lightIntensity: this.lightIntensity
+        }
+    }
+}
+
+/**
+ * A blank light with 0 intensity.
+ */
+export const blankLight: Light = new Light({
+    position: { x: 0, y: 0, z: 0 },
+    color: RGBColor.fromRGB(0, 0, 0),
+    intensity: 0
+});

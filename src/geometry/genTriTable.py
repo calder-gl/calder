@@ -110,7 +110,7 @@ for i in range(256):
       elif len(surfacePointGraph[v2]) == 2:
         #print("e2")
         v3 = list(surfacePointGraph[v2] - set([v]))[0]
-        
+
         if len(surfacePointGraph[v3]) == 1:
           #print("e21")
           vEdges = getNeighbourEdges(v, vertexNeighbours[v] - ns)
@@ -194,7 +194,7 @@ for i in range(256):
       v2Edges = getNeighbourEdges(v2, vertexNeighbours[v2] - surfacePointGraph[v2])
       v3Edges = getNeighbourEdges(v3, vertexNeighbours[v3] - surfacePointGraph[v3])
       v4Edges = getNeighbourEdges(v4, vertexNeighbours[v4] - surfacePointGraph[v4])
-      
+
       v2PEdges = set()
       for e in v2Edges:
         v2PEdges |= parallelEdges[e]
@@ -232,5 +232,3 @@ for i in range(256):
   print(' [ %s ],' % ', '.join(map(str, list(itertools.chain.from_iterable(triangles)))))
 
 print('];')
-
-

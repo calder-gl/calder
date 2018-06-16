@@ -1,9 +1,8 @@
-import { blankLight, Light } from '../interfaces/Light';
-
 import { mat3, mat4, vec3 } from 'gl-matrix';
 import { range } from 'lodash';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
+import { blankLight, Light } from '../Light';
 
 // tslint:disable:no-unsafe-any
 

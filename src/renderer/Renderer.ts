@@ -1,9 +1,9 @@
 import { NodeRenderObject } from '../armature/NodeRenderObject';
 import { createDrawAxes, DrawAxesProps } from './commands/createDrawAxes';
 import { createDrawObject, DrawObjectProps } from './commands/createDrawObject';
-import { Light } from './interfaces/Light';
 import { RenderObject } from './interfaces/RenderObject';
 import { Camera } from './Camera';
+import { Light } from './Light';
 
 import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
 

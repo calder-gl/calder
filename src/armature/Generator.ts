@@ -1,3 +1,4 @@
+import { RandomGenerator } from '../utils/random';
 import { Node, Point } from './Node';
 
 import { range } from 'lodash';
@@ -20,6 +21,7 @@ export class Generator {
     private rules: { [name: string]: { totalWeight: number; definitions: Definition[] } } = {};
     private spawnPoints: SpawnPoint[] = [];
     private nextSpawnPoints: SpawnPoint[] = [];
+    private random: RandomGenerator = Math.random;
 
     /**
      * Define a component to procedurally generate a component of a struture.
@@ -107,7 +109,7 @@ export class Generator {
             throw new Error(`Cannot find definition for component "${component}"`);
         }
 
-        const value = Math.random() * this.rules[component].totalWeight;
+        const value = this.random() * this.rules[component].totalWeight;
         let weight = 0;
         for (const definition of this.rules[component].definitions) {
             weight += definition.weight;

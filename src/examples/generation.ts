@@ -10,26 +10,28 @@ import {
     Shape
 } from '../calder';
 
-const light1: Light = {
-    lightPosition: [10, 10, 10],
-    lightColor: [0.3, 0.3, 0.3],
-    lightIntensity: 256
-};
-const light2: Light = {
-    lightPosition: [700, 500, 50],
-    lightColor: [0.3, 0.3, 0.3],
-    lightIntensity: 100
-};
-
+// Create the renderer
 const renderer: Renderer = new Renderer(800, 600, 2, { x: 0.2, y: 0.2, z: 0.2 });
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Step 1: create geometry
-///////////////////////////////////////////////////////////////////////////////////////////////////
+// Create light sources for the renderer
+const light1: Light = new Light({
+    position: { x: 10, y: 10, z: 10 },
+    color: RGBColor.fromHex('#FFFFFF'),
+    intensity: 256
+});
+const light2: Light = new Light({
+    position: { x: 700, y: 500, z: 50 },
+    color: RGBColor.fromHex('#FFFFFF'),
+    intensity: 100
+});
 
 // Add lights to the renderer
 renderer.addLight(light1);
 renderer.addLight(light2);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Step 1: create geometry
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Setup leaf
 const leafColor = RGBColor.fromRGB(204, 255, 204);

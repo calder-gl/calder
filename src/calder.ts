@@ -63,7 +63,7 @@ export * from './renderer/Camera';
 export * from './renderer/Renderer';
 export * from './renderer/interfaces/DebugParams';
 export * from './renderer/interfaces/RenderParams';
-export * from './renderer/interfaces/Light';
+export * from './renderer/Light';
 export * from './renderer/interfaces/RenderObject';
 export * from './renderer/commands/createDrawAxes';
 export * from './renderer/commands/createDrawObject';

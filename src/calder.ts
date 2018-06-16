@@ -37,6 +37,7 @@ export * from './armature/Node';
  * Colors
  *****************************/
 
+export * from './colors/Color';
 export * from './colors/CMYKColor';
 export * from './colors/RGBColor';
 
@@ -50,6 +51,12 @@ export * from './geometry/Shape';
 export * from './geometry/WorkingGeometry';
 
 /*****************************
+ * Interfaces
+ *****************************/
+
+export * from './interfaces/Bakeable';
+
+/*****************************
  * Math
  *****************************/
 
@@ -61,10 +68,7 @@ export * from './math/utils';
 
 export * from './renderer/Camera';
 export * from './renderer/Renderer';
-export * from './renderer/interfaces/DebugParams';
-export * from './renderer/interfaces/RenderParams';
 export * from './renderer/Light';
-export * from './renderer/interfaces/RenderObject';
 export * from './renderer/commands/createDrawAxes';
 export * from './renderer/commands/createDrawObject';
 
@@ -73,7 +77,10 @@ export * from './renderer/commands/createDrawObject';
  *****************************/
 
 export * from './types/ConstraintTypes';
+export * from './types/DebugParams';
 export * from './types/ExternalTypes';
+export * from './types/RenderParams';
+export * from './types/RenderObject';
 
 /*****************************
  * Utils

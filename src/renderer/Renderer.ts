@@ -1,21 +1,24 @@
-import { NodeRenderObject } from '../armature/NodeRenderObject';
-import { createDrawAxes, DrawAxesProps } from './commands/createDrawAxes';
-import { createDrawObject, DrawObjectProps } from './commands/createDrawObject';
-import { RenderObject } from './interfaces/RenderObject';
-import { Camera } from './Camera';
-import { Light } from './Light';
-
 import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
-
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
-import { Animation } from '../armature/Animation';
-import { Constraints } from '../armature/Constraints';
-import { Node } from '../armature/Node';
-import { coord, RGBColor } from '../calder';
+import { NodeRenderObject } from '../armature/NodeRenderObject';
+import {
+    coord,
+    createDrawAxes,
+    createDrawObject,
+    Animation,
+    Camera,
+    Constraints,
+    DebugParams,
+    DrawAxesProps,
+    DrawObjectProps,
+    Light,
+    Node,
+    RenderObject,
+    RenderParams,
+    RGBColor
+} from '../calder';
 import { Mapper } from '../utils/mapper';
-import { DebugParams } from './interfaces/DebugParams';
-import { RenderParams } from './interfaces/RenderParams';
 
 /**
  * Manages all scene information and is responsible for rendering it to the screen

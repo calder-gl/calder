@@ -1,4 +1,4 @@
-import { Node } from '../armature/Node';
+import { Node } from '../calder';
 
 export type ConstraintCallback = (node: Node) => void;
 

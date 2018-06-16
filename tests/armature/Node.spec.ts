@@ -1,8 +1,5 @@
 import { mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
-import { Armature } from '../../src/armature/Armature';
-import { GeometryNode, Node } from '../../src/armature/Node';
-import { BakedGeometry } from '../../src/geometry/BakedGeometry';
-import { RenderObject } from '../../src/renderer/interfaces/RenderObject';
+import { Armature, BakedGeometry, GeometryNode, Node, RenderObject } from '../../src/calder';
 import '../glMatrix';
 
 const bone = Armature.define((root: Node) => {

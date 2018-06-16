@@ -1,12 +1,6 @@
 import { mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { flatten, flatMap } from 'lodash';
-import {
-    closestPointOnLine,
-    coord,
-    coordFunc,
-    BakedGeometry,
-    RenderObject
-} from '../calder';
+import { closestPointOnLine, coord, coordFunc, BakedGeometry, RenderObject } from '../calder';
 import { vec3From4, vec3ToPoint } from '../math/utils';
 import { matrix4, vector3 } from '../types/InternalVectorTypes';
 import { Mapper } from '../utils/mapper';
@@ -608,7 +602,7 @@ export class Node {
         } else {
             throw new Error(
                 `There are too many held points (${
-                constrainedPoints.length
+                    constrainedPoints.length
                 }), so the node can't be rotated`
             );
         }

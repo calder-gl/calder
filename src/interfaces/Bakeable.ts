@@ -1,7 +1,4 @@
-import {
-    BakedGeometry,
-    BakedLight
-} from '../calder';
+import { BakedGeometry, BakedLight } from '../calder';
 
 /**
  * Classes implementing this interface must implement the method `bake`, which

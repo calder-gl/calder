@@ -10,7 +10,12 @@ describe('Renderer', () => {
 
     xdescribe('addLight', () => {
         it('can append a new light to the `lights` array', () => {
-            const renderer: Renderer = new Renderer(800, 600, maxLights);
+            const renderer: Renderer = new Renderer({
+                width: 800,
+                height: 600,
+                maxLights: maxLights,
+                ambientLightColor: RGBColor.fromHex('#000000')
+            });
             expect(renderer.getLights().length).toEqual(0);
             renderer.addLight(light);
             expect(renderer.getLights().length).toEqual(1);
@@ -19,7 +24,12 @@ describe('Renderer', () => {
 
     xdescribe('removeLight', () => {
         it('can remove an existing light from the `lights` array', () => {
-            const renderer: Renderer = new Renderer(800, 600, maxLights);
+            const renderer: Renderer = new Renderer({
+                width: 800,
+                height: 600,
+                maxLights: maxLights,
+                ambientLightColor: RGBColor.fromHex('#000000')
+            });
             renderer.addLight(light);
             expect(renderer.getLights().length).toEqual(1);
             renderer.removeLight(light);

@@ -11,7 +11,12 @@ import {
 } from '../calder';
 
 // Create the renderer
-const renderer: Renderer = new Renderer(800, 600, 2, { x: 0.2, y: 0.2, z: 0.2 });
+const renderer: Renderer = new Renderer({
+    width: 800,
+    height: 600,
+    maxLights: 2,
+    ambientLightColor: RGBColor.fromRGB(51, 51, 51)
+});
 
 // Create light sources for the renderer
 const light1: Light = new Light({

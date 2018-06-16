@@ -21,6 +21,16 @@ import {
 import { Mapper } from '../utils/mapper';
 
 /**
+ * Required parameters when defining a `Renderer`.
+ */
+export type RendererParams = {
+    width: number;
+    height: number;
+    maxLights: number;
+    ambientLightPosition: coord;
+};
+
+/**
  * Manages all scene information and is responsible for rendering it to the screen
  */
 export class Renderer {
@@ -44,21 +54,23 @@ export class Renderer {
     private ctx2D: CanvasRenderingContext2D;
 
     constructor(
-        width: number,
-        height: number,
-        maxLights: number,
-        ambientLightCoord: coord = { x: 0, y: 0, z: 0 }
+        params: RendererParams = {
+            width: 0,
+            height: 0,
+            maxLights: 0,
+            ambientLightPosition: { x: 0, y: 0, z: 0 }
+        }
     ) {
-        this.width = width;
-        this.height = height;
-        this.maxLights = maxLights;
+        this.width = params.width;
+        this.height = params.height;
+        this.maxLights = params.maxLights;
         this.lights = [];
-        this.ambientLight = Mapper.coordToVector(ambientLightCoord);
+        this.ambientLight = Mapper.coordToVector(params.ambientLightPosition);
 
         // Create a single element to contain the renderer view
         this.stage = document.createElement('div');
-        this.stage.style.width = `${width}px`;
-        this.stage.style.height = `${height}px`;
+        this.stage.style.width = `${this.width}px`;
+        this.stage.style.height = `${this.height}px`;
         this.stage.style.position = 'relative';
 
         const canvas3D: HTMLCanvasElement = document.createElement('canvas');
@@ -66,8 +78,8 @@ export class Renderer {
 
         // Place both canvases in a container, so we can draw on top of the 3D canvas in 2D
         [canvas3D, canvas2D].forEach((canvas: HTMLCanvasElement) => {
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = this.width;
+            canvas.height = this.height;
             canvas.style.position = 'absolute';
             this.stage.appendChild(canvas);
         });
@@ -82,7 +94,7 @@ export class Renderer {
 
         // Set up perspective projection
         const fieldOfView = Math.PI / 4;
-        const aspect = width / height;
+        const aspect = this.width / this.height;
         const zNear = 1;
         const zFar = 1000;
         mat4.perspective(this.projectionMatrix, fieldOfView, aspect, zNear, zFar);

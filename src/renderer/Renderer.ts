@@ -142,7 +142,7 @@ export class Renderer {
             { geometry: [], bones: [] }
         );
 
-        const bakedLights = this.lights.map(l => l.bake());
+        const bakedLights = this.lights.map((l: Light) => l.bake());
 
         this.drawObject(
             renderObjects.geometry.map((o: RenderObject): DrawObjectProps => {

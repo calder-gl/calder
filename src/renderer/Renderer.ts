@@ -142,6 +142,8 @@ export class Renderer {
             { geometry: [], bones: [] }
         );
 
+        const bakedLights = this.lights.map(l => l.bake());
+
         this.drawObject(
             renderObjects.geometry.map((o: RenderObject): DrawObjectProps => {
                 if (
@@ -165,7 +167,7 @@ export class Renderer {
                     isShadeless: o.isShadeless === true,
                     numLights: this.lights.length,
                     ambientLight: this.ambientLight,
-                    lights: this.lights
+                    lights: bakedLights
                 };
             })
         );
@@ -196,7 +198,7 @@ export class Renderer {
                         isShadeless: o.isShadeless === true,
                         numLights: this.lights.length,
                         ambientLight: this.ambientLight,
-                        lights: this.lights
+                        lights: bakedLights
                     };
                 })
             );

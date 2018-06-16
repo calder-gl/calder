@@ -13,6 +13,15 @@ export type LightParams = {
 };
 
 /**
+ * The representation of the `Light` source to pass in the shader.
+ */
+export type BakedLight = {
+    lightPosition: vec3;
+    lightColor: vec3;
+    lightIntensity: number;
+};
+
+/**
  * A Light representation with a position, color, and intensity.
  *
  * @class Light
@@ -39,8 +48,9 @@ export class Light {
      * Returns a representation of a light which may be used in the shader.
      *
      * @class Light
+     * @returns {BakedLight}
      */
-    public bake() {
+    public bake(): BakedLight {
         return {
             lightPosition: this.lightPosition,
             lightColor: this.lightColor,

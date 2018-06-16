@@ -1,4 +1,4 @@
-import { RenderObject } from '../renderer/interfaces/RenderObject';
+import { RenderObject } from '../calder';
 
 export type NodeRenderObject = {
     geometry: RenderObject[];

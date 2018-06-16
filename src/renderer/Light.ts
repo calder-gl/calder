@@ -1,6 +1,5 @@
 import { vec3 } from 'gl-matrix';
-import { coord, RGBColor } from '../calder';
-import { Color } from '../colors/Color';
+import { coord, Bakeable, Color, RGBColor } from '../calder';
 import { Mapper } from '../utils/mapper';
 
 /**
@@ -26,7 +25,7 @@ export type BakedLight = {
  *
  * @class Light
  */
-export class Light {
+export class Light implements Bakeable {
     public readonly lightPosition: vec3;
     public readonly lightColor: vec3;
     public readonly lightIntensity: number;

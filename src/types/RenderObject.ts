@@ -1,5 +1,5 @@
 import { mat3, mat4 } from 'gl-matrix';
-import { BakedGeometry } from '../../geometry/BakedGeometry';
+import { BakedGeometry } from '../calder';
 
 /*
  * A collection of the properties needed to render something using the default

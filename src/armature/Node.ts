@@ -1,14 +1,17 @@
 import { mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
-import { BakedGeometry } from '../geometry/BakedGeometry';
-import { closestPointOnLine, vec3From4, vec3ToPoint } from '../math/utils';
-import { RenderObject } from '../renderer/interfaces/RenderObject';
+import { flatten, flatMap } from 'lodash';
+import {
+    closestPointOnLine,
+    coord,
+    coordFunc,
+    BakedGeometry,
+    RenderObject
+} from '../calder';
+import { vec3From4, vec3ToPoint } from '../math/utils';
 import { matrix4, vector3 } from '../types/InternalVectorTypes';
+import { Mapper } from '../utils/mapper';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
-
-import { flatten, flatMap } from 'lodash';
-import { coord, coordFunc } from '../calder';
-import { Mapper } from '../utils/mapper';
 
 /**
  * A `Node` in a scene-graph.
@@ -605,7 +608,7 @@ export class Node {
         } else {
             throw new Error(
                 `There are too many held points (${
-                    constrainedPoints.length
+                constrainedPoints.length
                 }), so the node can't be rotated`
             );
         }

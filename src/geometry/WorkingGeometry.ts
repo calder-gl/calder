@@ -1,10 +1,7 @@
 import { mat4, quat, vec3, vec4 } from 'gl-matrix';
-import { Affine } from '../utils/affine';
-import { BakedGeometry } from './BakedGeometry';
-
 import { flatMap, range } from 'lodash';
-import { RGBColor } from '../calder';
-import { Color } from '../colors/Color';
+import { Bakeable, BakedGeometry, Color, RGBColor } from '../calder';
+import { Affine } from '../utils/affine';
 
 /**
  * A representation of a surface on an object.
@@ -28,7 +25,7 @@ export class Face {
 /**
  * A representation of geometry while modelling is happening.
  */
-export class WorkingGeometry {
+export class WorkingGeometry implements Bakeable {
     /**
      * The points that make up the geometry, in no particular order. For each vertex v, v[3] must
      * be equal to 0 to ensure that it is a point in Affine space rather than a vector.

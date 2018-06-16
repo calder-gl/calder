@@ -3,11 +3,11 @@ import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
 import REGL = require('regl');
 import { NodeRenderObject } from '../armature/NodeRenderObject';
 import {
-    coord,
     createDrawAxes,
     createDrawObject,
     Animation,
     Camera,
+    Color,
     Constraints,
     DebugParams,
     DrawAxesProps,
@@ -18,7 +18,6 @@ import {
     RenderParams,
     RGBColor
 } from '../calder';
-import { Mapper } from '../utils/mapper';
 
 /**
  * Required parameters when defining a `Renderer`.
@@ -27,7 +26,7 @@ export type RendererParams = {
     width: number;
     height: number;
     maxLights: number;
-    ambientLightPosition: coord;
+    ambientLightColor: Color;
 };
 
 /**
@@ -58,14 +57,14 @@ export class Renderer {
             width: 0,
             height: 0,
             maxLights: 0,
-            ambientLightPosition: { x: 0, y: 0, z: 0 }
+            ambientLightColor: RGBColor.fromHex('#000000')
         }
     ) {
         this.width = params.width;
         this.height = params.height;
         this.maxLights = params.maxLights;
         this.lights = [];
-        this.ambientLight = Mapper.coordToVector(params.ambientLightPosition);
+        this.ambientLight = params.ambientLightColor.asVec();
 
         // Create a single element to contain the renderer view
         this.stage = document.createElement('div');

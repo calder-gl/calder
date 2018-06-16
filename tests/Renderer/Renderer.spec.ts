@@ -14,7 +14,7 @@ describe('Renderer', () => {
                 width: 800,
                 height: 600,
                 maxLights: maxLights,
-                ambientLightPosition: { x: 0, y: 0, z: 0 }
+                ambientLightColor: RGBColor.fromHex('#000000')
             });
             expect(renderer.getLights().length).toEqual(0);
             renderer.addLight(light);
@@ -28,7 +28,7 @@ describe('Renderer', () => {
                 width: 800,
                 height: 600,
                 maxLights: maxLights,
-                ambientLightPosition: { x: 0, y: 0, z: 0 }
+                ambientLightColor: RGBColor.fromHex('#000000')
             });
             renderer.addLight(light);
             expect(renderer.getLights().length).toEqual(1);

@@ -1,4 +1,4 @@
-import REGL = require('regl');
+import { vec3 } from 'gl-matrix';
 import { coord, RGBColor } from '../calder';
 import { Color } from '../colors/Color';
 import { Mapper } from '../utils/mapper';
@@ -18,8 +18,8 @@ export type LightParams = {
  * @class Light
  */
 export class Light {
-    public readonly lightPosition: REGL.Vec3;
-    public readonly lightColor: REGL.Vec3;
+    public readonly lightPosition: vec3;
+    public readonly lightColor: vec3;
     public readonly lightIntensity: number;
 
     /**
@@ -32,7 +32,7 @@ export class Light {
     constructor(params: LightParams) {
         this.lightPosition = Mapper.coordToVector(params.position);
         this.lightColor = params.color.asVec();
-        this.lightIntensity = params.intensity
+        this.lightIntensity = params.intensity;
     }
 
     /**
@@ -45,7 +45,7 @@ export class Light {
             lightPosition: this.lightPosition,
             lightColor: this.lightColor,
             lightIntensity: this.lightIntensity
-        }
+        };
     }
 }
 

@@ -4,7 +4,7 @@ describe('Renderer', () => {
     const maxLights: number = 3;
     const light: Light = new Light({
         position: { x: 1, y: 1, z: 1 },
-        color: RGBColor.fromHex("#000000"),
+        color: RGBColor.fromHex('#000000'),
         intensity: 256
     });
 

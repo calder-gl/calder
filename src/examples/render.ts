@@ -21,12 +21,12 @@ const renderer: Renderer = new Renderer(800, 600, 2, { x: 0.0, y: 0.1, z: 0.0 })
 // Create light sources for the renderer
 const light1: Light = new Light({
     position: { x: 10, y: 10, z: 10 },
-    color: RGBColor.fromHex("#FFFFFF"),
+    color: RGBColor.fromHex('#FFFFFF'),
     intensity: 256
 });
 const light2: Light = new Light({
     position: { x: 700, y: 500, z: 50 },
-    color: RGBColor.fromHex("#FFFFFF"),
+    color: RGBColor.fromHex('#FFFFFF'),
     intensity: 100
 });
 

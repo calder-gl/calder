@@ -118,6 +118,10 @@ export class Renderer {
         this.drawAxes = createDrawAxes(this.regl);
     }
 
+    public destroy() {
+        this.regl.destroy();
+    }
+
     public draw(
         objects: Node[],
         debug: DebugParams = { drawAxes: false, drawArmatureBones: false }

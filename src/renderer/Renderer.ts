@@ -134,7 +134,6 @@ export class Renderer {
                 const childObjects = node.traverse(
                     mat4.create(),
                     mat3.create(),
-                    true,
                     debug.drawArmatureBones === true
                 );
 
@@ -301,8 +300,13 @@ export class Renderer {
                 vec4.transformMat4(vector, vector, this.camera.getTransform());
 
                 // Scale them and place them in the lower left corner of the screen
-                vec4.scale(vector, vector, Math.min(this.width, this.height) * 0.05);
-                vec4.add(vector, vector, [this.width * -0.25, this.height * -0.25, -500, 1]);
+                vec4.scale(vector, vector, 20);
+                vec4.add(vector, vector, [
+                    this.width * -0.3,
+                    this.height * -0.3,
+                    -Math.min(this.width, this.height),
+                    1
+                ]);
 
                 // Project them into 2D coordinates
                 vec4.transformMat4(vector, vector, this.projectionMatrix);

@@ -83,6 +83,13 @@ export class Node {
         return cloned;
     }
 
+    public static invalidateBuffers() {
+        Node.bone.verticesBuffer = undefined;
+        Node.bone.normalsBuffer = undefined;
+        Node.bone.indicesBuffer = undefined;
+        Node.bone.colorsBuffer = undefined;
+    }
+
     public createPoint(name: string, positionCoord: coord) {
         const position = Mapper.coordToVector(positionCoord);
 

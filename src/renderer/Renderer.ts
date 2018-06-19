@@ -120,6 +120,7 @@ export class Renderer {
 
     public destroy() {
         this.regl.destroy();
+        Node.invalidateBuffers();
     }
 
     public draw(

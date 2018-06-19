@@ -87,6 +87,7 @@ export class Node {
         Node.bone.verticesBuffer = undefined;
         Node.bone.normalsBuffer = undefined;
         Node.bone.indicesBuffer = undefined;
+        Node.bone.colorsBuffer = undefined;
     }
 
     public createPoint(name: string, positionCoord: coord) {

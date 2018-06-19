@@ -1,5 +1,5 @@
-import { mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
-import { flatten, flatMap } from 'lodash';
+import { glMatrix, mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
+import { flatten, flatMap, isNumber } from 'lodash';
 import { closestPointOnLine, coord, coordFunc, BakedGeometry, RenderObject } from '../calder';
 import { vec3From4, vec3ToPoint } from '../math/utils';
 import { matrix4, vector3 } from '../types/InternalVectorTypes';
@@ -140,6 +140,100 @@ export class Node {
      */
     public grab(point: Point | coord): Node {
         this.grabbed = this.localPointCoordinate(point);
+
+        return this;
+    }
+
+    /**
+     * Scales the node by the specified amount, either about the node's origin or a single
+     * constrained point.
+     *
+     * @param {number | coord} amount The amount to scale by, either the same in each axis or the
+     * components for each axis.
+     * @returns {Node} The current node, for method chaining.
+     */
+    public scale(amount: number | coord): Node {
+        const amountVec = isNumber(amount)
+            ? vec3.fromValues(amount, amount, amount)
+            : Mapper.coordToVector(amount);
+        const constrainedPoints: vec3[] = [...this.held];
+
+        // If the node is attached to a parent node with an anchor, add it to the list of
+        // constrained points.
+        if (this.anchor !== null) {
+            constrainedPoints.push(this.anchor);
+        }
+
+        if (constrainedPoints.length > 1) {
+            throw new Error("Can't scale when more than one point is held!");
+        }
+
+        const anchor =
+            constrainedPoints.length > 0 ? constrainedPoints[0] : vec3.fromValues(0, 0, 0);
+
+        const incScaling = mat4.fromTranslation(mat4.create(), anchor);
+
+        mat4.scale(incScaling, incScaling, amountVec);
+
+        // Shift the center back again
+        mat4.translate(incScaling, incScaling, vec3.sub(vec3.create(), vec3.create(), anchor));
+
+        this.setScale(mat4.multiply(mat4.create(), this.getScale(), incScaling));
+
+        return this;
+    }
+
+    /**
+     * Rotates the node by the specified amount about the axis defined by two constrained points.
+     *
+     * @param {number} degrees The amount to rotate, in degrees.
+     * @returns {Node} The current node, for method chaining.
+     */
+    public rotate(degrees: number): Node {
+        const constrainedPoints: vec3[] = [...this.held];
+
+        // If the node is attached to a parent node with an anchor, add it to the list of
+        // constrained points.
+        if (this.anchor !== null) {
+            constrainedPoints.push(this.anchor);
+        }
+
+        if (constrainedPoints.length !== 2) {
+            throw new Error('Two points needs to be held to know which axis to rotate about!');
+        }
+
+        const anchor = vec3ToPoint(constrainedPoints[0]);
+        const held = vec3ToPoint(constrainedPoints[1]);
+        const scaleMatrix = this.getScale();
+
+        // Rotation gets applied before scale, so we want to undo this node's scale before
+        // calculating the new rotation
+        vec4.transformMat4(anchor, anchor, scaleMatrix);
+        vec4.transformMat4(held, held, scaleMatrix);
+
+        // Compute the axis between the two constrained points
+        const heldAxis = vec4.sub(vec4.create(), held, anchor);
+        vec4.normalize(heldAxis, heldAxis);
+
+        // Move the center of rotation to the anchor
+        const incRotation = mat4.fromTranslation(mat4.create(), vec3From4(anchor));
+
+        // Add a rotation equal to the shortest rotation from the vector of the anchor to the grab
+        // point to the vector from the anchor to the target point
+        mat4.multiply(
+            incRotation,
+            mat4.fromRotation(mat4.create(), glMatrix.toRadian(degrees), vec3From4(heldAxis)),
+            incRotation
+        );
+
+        // Shift the center back again
+        mat4.translate(
+            incRotation,
+            incRotation,
+            vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor))
+        );
+
+        this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
 
         return this;
     }

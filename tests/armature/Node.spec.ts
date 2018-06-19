@@ -254,6 +254,42 @@ describe('Node', () => {
         });
     });
 
+    describe('scale', () => {
+        it('scales by the given amount', () => {
+            const node = bone();
+            node.scale(2);
+
+            const point = vec4.fromValues(0, 1, 0, 1);
+            vec4.transformMat4(point, point, node.localToGlobalTransform());
+            expect(point).toEqualVec4(vec4.fromValues(0, 2, 0, 1));
+        });
+
+        it('scales about a point', () => {
+            const node = bone();
+            node.hold(node.point('tip')).scale(2);
+
+            const point = vec4.fromValues(0, 0, 0, 1);
+            vec4.transformMat4(point, point, node.localToGlobalTransform());
+            expect(point).toEqualVec4(vec4.fromValues(0, -1, 0, 1));
+        });
+    });
+
+    describe('rotate', () => {
+        it('rotates about an axis', () => {
+            const node = bone();
+
+            node
+                .hold(node.point('base'))
+                .hold(node.point('tip'))
+                .rotate(90)
+                .release();
+
+            const point = vec4.fromValues(1, 0, 0, 1);
+            vec4.transformMat4(point, point, node.localToGlobalTransform());
+            expect(point).toEqualVec4(vec4.fromValues(0, 0, -1, 1));
+        });
+    });
+
     describe('pointAt', () => {
         it('rotates a node about an axis', () => {
             const node = bone();

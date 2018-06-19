@@ -4,7 +4,6 @@ import { closestPointOnLine, coord, coordFunc, BakedGeometry, RenderObject } fro
 import { vec3From4, vec3ToPoint } from '../math/utils';
 import { matrix4, vector3 } from '../types/InternalVectorTypes';
 import { Mapper } from '../utils/mapper';
-import { RandomGenerator } from '../utils/random';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
 
@@ -52,7 +51,6 @@ export class Node {
     private anchor: vec3 | null = null;
     private held: vec3[] = [];
     private grabbed: vec3 | null = null;
-    private random: RandomGenerator = Math.random;
 
     /**
      * Instantiates a new `Node`.

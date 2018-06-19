@@ -537,12 +537,8 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(1, 0, 1, 1);
 
-            const renderObjects: RenderObject[] = root.traverse(
-                mat4.create(),
-                mat3.create(),
-                true,
-                false
-            ).geometry;
+            const renderObjects: RenderObject[] = root.traverse(mat4.create(), mat3.create(), false)
+                .geometry;
 
             expect(renderObjects.length).toBe(1);
 
@@ -574,12 +570,8 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(0, 1, 0, 1);
 
-            const renderObjects: RenderObject[] = root.traverse(
-                mat4.create(),
-                mat3.create(),
-                true,
-                false
-            ).geometry;
+            const renderObjects: RenderObject[] = root.traverse(mat4.create(), mat3.create(), false)
+                .geometry;
 
             expect(renderObjects.length).toBe(1);
 
@@ -589,16 +581,8 @@ describe('Node', () => {
         });
 
         it('shows bones when asked', () => {
-            const geometry: BakedGeometry = {
-                vertices: Float32Array.from([]),
-                normals: Float32Array.from([]),
-                indices: Int16Array.from([]),
-                colors: Float32Array.from([])
-            };
-            const geometryChild = new GeometryNode(geometry);
-            const root = new Node([geometryChild]);
-
-            geometryChild.setPosition({ x: 1, y: 1, z: 0 });
+            const root = bone();
+            root.scale(2);
 
             /**
              * The bone should start at the root position (0, 0, 0) and stretch to the base of the
@@ -611,18 +595,27 @@ describe('Node', () => {
             const boneSpaceTip = vec4.fromValues(1, 0, 0, 1);
 
             const expectedWorldSpaceBase = vec4.fromValues(0, 0, 0, 1);
-            const expectedWorldSpaceTip = vec4.fromValues(1, 1, 0, 1);
+            const expectedWorldSpaceTip = vec4.fromValues(0, 2, 0, 1);
 
-            const bones: RenderObject[] = root.traverse(mat4.create(), mat3.create(), true, true)
-                .bones;
-            expect(bones.length).toBe(1);
+            const bones: RenderObject[] = root.traverse(mat4.create(), mat3.create(), true).bones;
+            expect(bones.length).toBe(2);
 
+            // Check base and tip of bone 1
             const transformedBase = vec4.create();
             vec4.transformMat4(transformedBase, boneSpaceBase, bones[0].transform);
             expect(transformedBase).toEqualVec4(expectedWorldSpaceBase);
 
             const transformedTip = vec4.create();
             vec4.transformMat4(transformedTip, boneSpaceTip, bones[0].transform);
+            expect(transformedTip).toEqualVec4(
+                vec4.add(vec4.create(), expectedWorldSpaceBase, vec4.fromValues(1e-6, 0, 0, 0))
+            );
+
+            // Check base and tip of bone 2
+            vec4.transformMat4(transformedBase, boneSpaceBase, bones[1].transform);
+            expect(transformedBase).toEqualVec4(expectedWorldSpaceBase);
+
+            vec4.transformMat4(transformedTip, boneSpaceTip, bones[1].transform);
             expect(transformedTip).toEqualVec4(expectedWorldSpaceTip);
         });
     });

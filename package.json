@@ -8,10 +8,6 @@
   },
   "main": "build/src/calder.js",
   "devDependencies": {
-    "@types/gl-matrix": "^2.4.0",
-    "@types/jest": "~22.2.2",
-    "@types/lodash": "^4.14.107",
-    "@types/node": "~8.10.0",
     "jest": "~22.4.3",
     "prettier": "^1.12.1",
     "rimraf": "~2.6.2",
@@ -39,6 +35,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@types/gl-matrix": "^2.4.0",
+    "@types/jest": "~22.2.2",
+    "@types/lodash": "^4.14.107",
+    "@types/node": "~8.10.0",
     "typescript": "~2.8.1",
     "gl-matrix": "^2.5.1",
     "lodash": "^4.17.10",

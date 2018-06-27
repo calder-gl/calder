@@ -10,7 +10,7 @@ describe('Generator', () => {
     it('generates to the required depth', () => {
         const towerGen = Armature.generator();
         const tower = towerGen
-            .define('block', 1, (root: Point) => {
+            .define('block', (root: Point) => {
                 const node = bone();
                 node.point('base').stickTo(root);
 
@@ -31,7 +31,7 @@ describe('Generator', () => {
     it('handles terminal nodes', () => {
         const towerGen = Armature.generator();
         const tower = towerGen
-            .define('block', 1, (root: Point) => {
+            .define('block', (root: Point) => {
                 const node = bone();
                 node.point('base').stickTo(root);
 

@@ -23,17 +23,11 @@ const renderer: Renderer = new Renderer({
 const light1: Light = Light.create({
     position: { x: 10, y: 10, z: 10 },
     color: RGBColor.fromHex('#FFFFFF'),
-    strength: 100
-});
-const light2: Light = Light.create({
-    position: { x: 700, y: 500, z: 50 },
-    color: RGBColor.fromHex('#FFFFFF'),
     strength: 200
 });
 
 // Add lights to the renderer
 renderer.addLight(light1);
-renderer.addLight(light2);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 1: create geometry
@@ -61,39 +55,41 @@ const bone = Armature.define((root: Node) => {
 });
 
 const treeGen = Armature.generator();
-const tree = treeGen
-    .define('branch', 1, (root: Point) => {
+treeGen
+    .define('branch', (root: Point) => {
         const node = bone();
         node.point('base').stickTo(root);
-
         node
             .hold(node.point('tip'))
             .rotate(Math.random() * 360)
             .release();
         node
             .hold(node.point('handle'))
-            .rotate(Math.random() * 90 - 45)
+            .rotate(Math.random() * 45)
             .release();
         node.scale(0.8); // Shrink a bit
 
         const trunk = node.point('mid').attach(branchShape);
         trunk.scale({ x: 0.2, y: 1, z: 0.2 });
 
-        // branching factor of 2
-        treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
         treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
     })
-    .define('branchOrLeaf', 1, (root: Point) => {
+    .defineWeighted('branchOrLeaf', 1, (root: Point) => {
         treeGen.addDetail({ component: 'leaf', at: root });
     })
-    .define('branchOrLeaf', 4, (root: Point) => {
+    .defineWeighted('branchOrLeaf', 4, (root: Point) => {
         treeGen.addDetail({ component: 'branch', at: root });
+        treeGen.addDetail({ component: 'maybeBranch', at: root });
+        treeGen.addDetail({ component: 'maybeBranch', at: root });
     })
-    .define('leaf', 1, (root: Point) => {
+    .define('leaf', (root: Point) => {
         const leaf = root.attach(leafSphere);
         leaf.scale(Math.random() * 0.5 + 0.5);
     })
-    .generate({ start: 'branch', depth: 15 });
+    .maybe('maybeBranch', (root: Point) => {
+        treeGen.addDetail({ component: 'branch', at: root });
+    });
+const tree = treeGen.generate({ start: 'branch', depth: 25 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer

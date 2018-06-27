@@ -46,18 +46,16 @@ export class Generator {
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
     public maybe(name: string, generator: (root: Point) => void): Generator {
-        return this
-            .define(name, generator)
-            .define(name, () => {});
+        return this.define(name, generator).define(name, () => {});
     }
 
     /**
-     * Define a component to procedurally generate a component of a struture, with a 50% chance
-     * that is gets created, and a 50% chance that it does not.
+     * Define a component as one of a set of possible choices, all with an equal likelihood
+     * of being selected.
      *
      * @param {string} name The name of the component being generated.
-     * @param {(root: Point) => void} generator A function that takes in a spawn point and generates
-     * geometry at that point. Call `addDetail` in the function to spawn more.
+     * @param {((root: Point) => void)[]} generators Functions that takes in a spawn point and
+     * generates geometry at that point. Call `addDetail` in functions to spawn more.
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
     public choice(name: string, generators: ((root: Point) => void)[]): Generator {
@@ -77,7 +75,11 @@ export class Generator {
      * geometry at that point. Call `addDetail` in the function to spawn more.
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
-    public defineWeighted(name: string, weight: number, generator: (root: Point) => void): Generator {
+    public defineWeighted(
+        name: string,
+        weight: number,
+        generator: (root: Point) => void
+    ): Generator {
         // Make a component for the given name if one doesn't already exist
         if (this.rules[name] === undefined) {
             this.rules[name] = { totalWeight: 0, definitions: [] };

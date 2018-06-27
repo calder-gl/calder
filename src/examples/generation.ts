@@ -54,35 +54,36 @@ const bone = Armature.define((root: Node) => {
 });
 
 const treeGen = Armature.generator();
-treeGen.define('branch', (root: Point) => {
-    const node = bone();
-    node.point('base').stickTo(root);
-    const theta = Math.random() * 45;
-    const phi = Math.random() * 360;
-    node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi, 0)));
-    node.setScale(Matrix.fromScaling({ x: 0.8, y: 0.8, z: 0.8 })); // Shrink a bit
+treeGen
+    .define('branch', (root: Point) => {
+        const node = bone();
+        node.point('base').stickTo(root);
+        const theta = Math.random() * 45;
+        const phi = Math.random() * 360;
+        node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi, 0)));
+        node.setScale(Matrix.fromScaling({ x: 0.8, y: 0.8, z: 0.8 })); // Shrink a bit
 
-    const trunk = node.point('mid').attach(branchShape);
-    trunk.setScale(Matrix.fromScaling({ x: 0.2, y: 1, z: 0.2 }));
+        const trunk = node.point('mid').attach(branchShape);
+        trunk.setScale(Matrix.fromScaling({ x: 0.2, y: 1, z: 0.2 }));
 
-    treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
-})
-.defineWeighted('branchOrLeaf', 1, (root: Point) => {
-    treeGen.addDetail({ component: 'leaf', at: root });
-})
-.defineWeighted('branchOrLeaf', 4, (root: Point) => {
-    treeGen.addDetail({ component: 'branch', at: root });
-    treeGen.addDetail({ component: 'maybeBranch', at: root });
-    treeGen.addDetail({ component: 'maybeBranch', at: root });
-})
-.define('leaf', (root: Point) => {
-    const leaf = root.attach(leafSphere);
-    const scale = Math.random() * 0.5 + 0.5;
-    leaf.setScale(Matrix.fromScaling({ x: scale, y: scale, z: scale }));
-})
-.maybe('maybeBranch', (root: Point) => {
-    treeGen.addDetail({ component: 'branch', at: root });
-});
+        treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
+    })
+    .defineWeighted('branchOrLeaf', 1, (root: Point) => {
+        treeGen.addDetail({ component: 'leaf', at: root });
+    })
+    .defineWeighted('branchOrLeaf', 4, (root: Point) => {
+        treeGen.addDetail({ component: 'branch', at: root });
+        treeGen.addDetail({ component: 'maybeBranch', at: root });
+        treeGen.addDetail({ component: 'maybeBranch', at: root });
+    })
+    .define('leaf', (root: Point) => {
+        const leaf = root.attach(leafSphere);
+        const scale = Math.random() * 0.5 + 0.5;
+        leaf.setScale(Matrix.fromScaling({ x: scale, y: scale, z: scale }));
+    })
+    .maybe('maybeBranch', (root: Point) => {
+        treeGen.addDetail({ component: 'branch', at: root });
+    });
 const tree = treeGen.generate({ start: 'branch', depth: 25 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

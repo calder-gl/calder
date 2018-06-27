@@ -37,7 +37,7 @@ export class Light implements Bakeable {
      * @constructor
      * @param {LightParams} params The named parameters for the light source.
      */
-    constructor(params: LightParams) {
+    private constructor(params: LightParams) {
         this.lightPosition = Mapper.coordToVector(params.position);
         this.lightColor = params.color.asVec();
         this.lightStrength = params.strength;

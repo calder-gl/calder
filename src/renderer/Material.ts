@@ -32,7 +32,7 @@ export class Material implements Bakeable {
      * @constructor
      * @param {MaterialParams} params The named parameters for this material.
      */
-    constructor(params: MaterialParams) {
+    private constructor(params: MaterialParams) {
         this.materialColor = params.color.asVec();
         this.materialShininess = params.shininess;
     }

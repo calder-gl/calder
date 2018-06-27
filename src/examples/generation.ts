@@ -24,15 +24,9 @@ const light1: Light = new Light({
     color: RGBColor.fromHex('#FFFFFF'),
     intensity: 256
 });
-const light2: Light = new Light({
-    position: { x: 700, y: 500, z: 50 },
-    color: RGBColor.fromHex('#FFFFFF'),
-    intensity: 100
-});
 
 // Add lights to the renderer
 renderer.addLight(light1);
-renderer.addLight(light2);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 1: create geometry
@@ -60,39 +54,36 @@ const bone = Armature.define((root: Node) => {
 });
 
 const treeGen = Armature.generator();
-const tree = treeGen
-    .define('branch', 1, (root: Point) => {
-        const node = bone();
-        node.point('base').stickTo(root);
+treeGen.define('branch', (root: Point) => {
+    const node = bone();
+    node.point('base').stickTo(root);
+    const theta = Math.random() * 45;
+    const phi = Math.random() * 360;
+    node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi, 0)));
+    node.setScale(Matrix.fromScaling({ x: 0.8, y: 0.8, z: 0.8 })); // Shrink a bit
 
-        node
-            .hold(node.point('tip'))
-            .rotate(Math.random() * 360)
-            .release();
-        node
-            .hold(node.point('handle'))
-            .rotate(Math.random() * 90 - 45)
-            .release();
-        node.scale(0.8); // Shrink a bit
+    const trunk = node.point('mid').attach(branchShape);
+    trunk.setScale(Matrix.fromScaling({ x: 0.2, y: 1, z: 0.2 }));
 
-        const trunk = node.point('mid').attach(branchShape);
-        trunk.scale({ x: 0.2, y: 1, z: 0.2 });
-
-        // branching factor of 2
-        treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
-        treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
-    })
-    .define('branchOrLeaf', 1, (root: Point) => {
-        treeGen.addDetail({ component: 'leaf', at: root });
-    })
-    .define('branchOrLeaf', 4, (root: Point) => {
-        treeGen.addDetail({ component: 'branch', at: root });
-    })
-    .define('leaf', 1, (root: Point) => {
-        const leaf = root.attach(leafSphere);
-        leaf.scale(Math.random() * 0.5 + 0.5);
-    })
-    .generate({ start: 'branch', depth: 15 });
+    treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
+})
+.defineWeighted('branchOrLeaf', 1, (root: Point) => {
+    treeGen.addDetail({ component: 'leaf', at: root });
+})
+.defineWeighted('branchOrLeaf', 4, (root: Point) => {
+    treeGen.addDetail({ component: 'branch', at: root });
+    treeGen.addDetail({ component: 'maybeBranch', at: root });
+    treeGen.addDetail({ component: 'maybeBranch', at: root });
+})
+.define('leaf', (root: Point) => {
+    const leaf = root.attach(leafSphere);
+    const scale = Math.random() * 0.5 + 0.5;
+    leaf.setScale(Matrix.fromScaling({ x: scale, y: scale, z: scale }));
+})
+.maybe('maybeBranch', (root: Point) => {
+    treeGen.addDetail({ component: 'branch', at: root });
+});
+const tree = treeGen.generate({ start: 'branch', depth: 25 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer

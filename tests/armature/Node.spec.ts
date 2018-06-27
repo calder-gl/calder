@@ -1,11 +1,11 @@
 import { mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
 import {
+    defaultMaterial,
     Armature,
     BakedGeometry,
     GeometryNode,
     Node,
-    RenderObject,
-    defaultMaterial
+    RenderObject
 } from '../../src/calder';
 import '../glMatrix';
 

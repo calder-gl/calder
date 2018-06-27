@@ -58,13 +58,18 @@ treeGen
     .define('branch', (root: Point) => {
         const node = bone();
         node.point('base').stickTo(root);
-        const theta = Math.random() * 45;
-        const phi = Math.random() * 360;
-        node.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(theta, phi, 0)));
-        node.setScale(Matrix.fromScaling({ x: 0.8, y: 0.8, z: 0.8 })); // Shrink a bit
+        node
+            .hold(node.point('tip'))
+            .rotate(Math.random() * 360)
+            .release();
+        node
+            .hold(node.point('handle'))
+            .rotate(Math.random() * 45)
+            .release();
+        node.scale(0.8); // Shrink a bit
 
         const trunk = node.point('mid').attach(branchShape);
-        trunk.setScale(Matrix.fromScaling({ x: 0.2, y: 1, z: 0.2 }));
+        trunk.scale({ x: 0.2, y: 1, z: 0.2 });
 
         treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
     })
@@ -78,8 +83,7 @@ treeGen
     })
     .define('leaf', (root: Point) => {
         const leaf = root.attach(leafSphere);
-        const scale = Math.random() * 0.5 + 0.5;
-        leaf.setScale(Matrix.fromScaling({ x: scale, y: scale, z: scale }));
+        leaf.scale(Math.random() * 0.5 + 0.5);
     })
     .maybe('maybeBranch', (root: Point) => {
         treeGen.addDetail({ component: 'branch', at: root });

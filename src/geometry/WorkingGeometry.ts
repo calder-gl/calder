@@ -1,6 +1,6 @@
 import { mat4, quat, vec3, vec4 } from 'gl-matrix';
-import { flatMap, range } from 'lodash';
-import { Bakeable, BakedGeometry, Color, RGBColor } from '../calder';
+import { flatMap } from 'lodash';
+import { defaultMaterial, Bakeable, BakedGeometry, Material } from '../calder';
 import { Affine } from '../utils/affine';
 
 /**
@@ -59,9 +59,9 @@ export class WorkingGeometry implements Bakeable {
     private mergedObjects: WorkingGeometry[];
 
     /**
-     * A `Color` to fill the `WorkingGeometry` with.
+     * The material for this WorkingGeometry.
      */
-    private fillColor: Color;
+    private material: Material;
 
     /**
      * Creates a working geometry from a given set of vertices, faces, and control points.
@@ -70,7 +70,7 @@ export class WorkingGeometry implements Bakeable {
      * @param {vec3[]} normals: The normals corresponding to the vertices.
      * @param {Face[]} faces: The surfaces of the object, relating the vertices to each other.
      * @param {vec3[]} controlPoints: A set of points to snap to or reference.
-     * @param {Color} fillColor: The color to fill the geometry with (defaults to red).
+     * @param {Material} material: The material for this WorkingGeometry.
      * @return {WorkingGeometry}
      */
     constructor(
@@ -78,7 +78,7 @@ export class WorkingGeometry implements Bakeable {
         normals: vec3[] = [],
         faces: Face[] = [],
         controlPoints: vec3[] = [],
-        fillColor: Color = RGBColor.fromHex('#FF0000')
+        material: Material = defaultMaterial
     ) {
         // TODO(pbardea): Check if max(indices) of all faces is <= the len(vertices)
         this.vertices = vertices.map(Affine.createPoint);
@@ -86,7 +86,7 @@ export class WorkingGeometry implements Bakeable {
         this.faces = faces;
         this.controlPoints = controlPoints.map(Affine.createPoint);
         this.mergedObjects = [];
-        this.fillColor = fillColor;
+        this.material = material;
     }
 
     /**
@@ -119,13 +119,12 @@ export class WorkingGeometry implements Bakeable {
             workingVec[1],
             workingVec[2]
         ]);
-        const bakedColors = flatMap(range(this.vertices.length), () => this.fillColor.asArray());
 
         return {
             vertices: Float32Array.from(bakedVertices),
             normals: Float32Array.from(bakedNormals),
             indices: Int16Array.from(bakedIndices),
-            colors: Float32Array.from(bakedColors)
+            material: this.material.bake()
         };
     }
 
@@ -237,14 +236,14 @@ export class WorkingGeometry implements Bakeable {
     }
 
     /**
-     * Sets the fill of the `BakedGeometry` to a single `Color`.
+     * Sets the fill of the `WorkingGeometry` to a given material.
      *
-     * @class BakedGeometry
+     * @class WorkingGeometry
      * @method setFill
-     * @param {Color} color The color to fill the geometry with.
+     * @param {Material} material The new material for the geometry.
      */
-    public setFill(color: Color) {
-        this.fillColor = color;
+    public setFill(material: Material) {
+        this.material = material;
     }
 
     /**

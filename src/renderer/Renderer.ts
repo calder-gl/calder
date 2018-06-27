@@ -144,9 +144,6 @@ export class Renderer {
                     if (o.geometry.normalsBuffer === undefined) {
                         o.geometry.normalsBuffer = this.regl.buffer(o.geometry.normals);
                     }
-                    if (o.geometry.colorsBuffer === undefined) {
-                        o.geometry.colorsBuffer = this.regl.buffer(o.geometry.colors);
-                    }
                     if (o.geometry.indicesBuffer === undefined) {
                         o.geometry.indicesBuffer = this.regl.elements(o.geometry.indices);
                     }
@@ -167,7 +164,6 @@ export class Renderer {
                 if (
                     o.geometry.verticesBuffer === undefined ||
                     o.geometry.normalsBuffer === undefined ||
-                    o.geometry.colorsBuffer === undefined ||
                     o.geometry.indicesBuffer === undefined
                 ) {
                     throw new Error('Buffers were not created correctly');
@@ -180,8 +176,9 @@ export class Renderer {
                     projectionMatrix: this.projectionMatrix,
                     positions: o.geometry.verticesBuffer,
                     normals: o.geometry.normalsBuffer,
-                    colors: o.geometry.colorsBuffer,
                     indices: o.geometry.indicesBuffer,
+                    materialColor: o.geometry.material.materialColor,
+                    materialShininess: o.geometry.material.materialShininess,
                     isShadeless: o.isShadeless === true,
                     numLights: this.lights.length,
                     ambientLight: this.ambientLight,
@@ -198,7 +195,6 @@ export class Renderer {
                     if (
                         o.geometry.verticesBuffer === undefined ||
                         o.geometry.normalsBuffer === undefined ||
-                        o.geometry.colorsBuffer === undefined ||
                         o.geometry.indicesBuffer === undefined
                     ) {
                         throw new Error('Buffers were not created correctly');
@@ -211,8 +207,9 @@ export class Renderer {
                         projectionMatrix: this.projectionMatrix,
                         positions: o.geometry.verticesBuffer,
                         normals: o.geometry.normalsBuffer,
-                        colors: o.geometry.colorsBuffer,
                         indices: o.geometry.indicesBuffer,
+                        materialColor: o.geometry.material.materialColor,
+                        materialShininess: o.geometry.material.materialShininess,
                         isShadeless: o.isShadeless === true,
                         numLights: this.lights.length,
                         ambientLight: this.ambientLight,

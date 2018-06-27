@@ -6,6 +6,7 @@ import {
     Constraints,
     CMYKColor,
     Light,
+    Material,
     Matrix,
     Node,
     Quaternion,
@@ -20,19 +21,19 @@ const renderer: Renderer = new Renderer({
     width: 800,
     height: 600,
     maxLights: 2,
-    ambientLightColor: RGBColor.fromRGB(0, 25.5, 0)
+    ambientLightColor: RGBColor.fromRGB(0, 25, 25)
 });
 
 // Create light sources for the renderer
-const light1: Light = new Light({
+const light1: Light = Light.create({
     position: { x: 10, y: 10, z: 10 },
     color: RGBColor.fromHex('#FFFFFF'),
-    intensity: 256
+    strength: 300
 });
-const light2: Light = new Light({
+const light2: Light = Light.create({
     position: { x: 700, y: 500, z: 50 },
     color: RGBColor.fromHex('#FFFFFF'),
-    intensity: 100
+    strength: 200
 });
 
 // Add lights to the renderer
@@ -49,7 +50,9 @@ const red: CMYKColor = CMYKColor.fromCMYK(0, 1, 1, 0);
 const purple: CMYKColor = red.mix(blue);
 
 // Setup sphere
-const workingSphere: WorkingGeometry = Shape.sphere(purple);
+const workingSphere: WorkingGeometry = Shape.sphere(
+    Material.create({ color: purple, shininess: 256 })
+);
 const sphere: BakedGeometry = workingSphere.bake();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

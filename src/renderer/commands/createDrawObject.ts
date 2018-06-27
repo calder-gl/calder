@@ -15,13 +15,14 @@ interface Uniforms {
     numLights: number;
     ambientLight: vec3;
     isShadeless: boolean;
+    materialColor: vec3;
+    materialShininess: number;
 }
 
 // Attributes are per vertex.
 interface Attributes {
     position: Float32Array;
     normal: Float32Array;
-    color: Float32Array;
 }
 
 /**
@@ -34,10 +35,11 @@ export interface DrawObjectProps {
     projectionMatrix: mat4;
     positions: REGL.Buffer;
     normals: REGL.Buffer;
-    colors: REGL.Buffer;
     indices: REGL.Elements;
     numLights: number;
     ambientLight: vec3;
+    materialColor: vec3;
+    materialShininess: number;
     isShadeless: boolean;
     lights: BakedLight[];
 }
@@ -57,7 +59,6 @@ export function createDrawObject(
 
             attribute vec3 position;
             attribute vec3 normal;
-            attribute vec3 color;
 
             uniform mat4 projection;
             uniform mat4 view;
@@ -66,12 +67,11 @@ export function createDrawObject(
 
             varying vec3 vertexPosition;
             varying vec3 vertexNormal;
-            varying vec3 vertexColor;
 
             void main() {
                 vertexPosition = (view * model * vec4(position, 1.0)).xyz;
                 vertexNormal = mat3(view) * mat3(normalTransform) * normal;
-                vertexColor = color;
+
                 gl_Position = projection * vec4(vertexPosition, 1.0);
             }
         `,
@@ -82,41 +82,47 @@ export function createDrawObject(
 
             varying vec3 vertexPosition;
             varying vec3 vertexNormal;
-            varying vec3 vertexColor;
 
             uniform mat4 view;
             uniform int numLights;
             uniform vec3 lightPositions[MAX_LIGHTS];
             uniform vec3 lightColors[MAX_LIGHTS];
             uniform vec3 ambientLight;
-            uniform float lightIntensities[MAX_LIGHTS];
+            uniform float lightStrengths[MAX_LIGHTS];
             uniform bool isShadeless;
+            uniform vec3 materialColor;
+            uniform float materialShininess;
 
             void main() {
                 vec3 normal = normalize(vertexNormal);
                 vec3 color = vec3(0.0, 0.0, 0.0);
 
                 if (isShadeless) {
-                    color = vertexColor;
+                    color = materialColor;
                 } else {
                     // Use the renderer lights in the shader
                     for (int i = 0; i < MAX_LIGHTS; i++) {
                         if (i >= numLights) break;
 
                         vec3 lightPosition = (view * vec4(lightPositions[i], 1.0)).xyz;
+                        float distanceSquared = dot(
+                            lightPosition - vertexPosition,
+                            lightPosition - vertexPosition);
                         vec3 lightDir = normalize(lightPosition - vertexPosition);
                         float lambertian = max(dot(lightDir, normal), 0.0);
 
-                        color += lambertian * vertexColor;
+                        color += lambertian * materialColor * lightColors[i] *
+                            lightStrengths[i] / (1.0 + distanceSquared);
 
                         vec3 viewDir = normalize(-vertexPosition);
                         float spec = pow(
                             max(dot(viewDir, reflect(-lightDir, normal)), 0.0),
-                            lightIntensities[i]);
+                            materialShininess);
 
-                        color += spec * lightColors[i];
+                        color += spec * materialColor * lightStrengths[i] * lightColors[i] /
+                            (1.0 + distanceSquared);
                     }
-                    color += ambientLight * vertexColor;
+                    color += ambientLight * materialColor;
                 }
 
                 gl_FragColor = vec4(color, 1.0);
@@ -124,8 +130,7 @@ export function createDrawObject(
         `,
         attributes: {
             position: regl.prop<DrawObjectProps, keyof DrawObjectProps>('positions'),
-            normal: regl.prop<DrawObjectProps, keyof DrawObjectProps>('normals'),
-            color: regl.prop<DrawObjectProps, keyof DrawObjectProps>('colors')
+            normal: regl.prop<DrawObjectProps, keyof DrawObjectProps>('normals')
         },
         uniforms: {
             projection: regl.prop<DrawObjectProps, keyof DrawObjectProps>('projectionMatrix'),
@@ -135,6 +140,10 @@ export function createDrawObject(
             numLights: regl.prop<DrawObjectProps, keyof DrawObjectProps>('numLights'),
             ambientLight: regl.prop<DrawObjectProps, keyof DrawObjectProps>('ambientLight'),
             isShadeless: regl.prop<DrawObjectProps, keyof DrawObjectProps>('isShadeless'),
+            materialColor: regl.prop<DrawObjectProps, keyof DrawObjectProps>('materialColor'),
+            materialShininess: regl.prop<DrawObjectProps, keyof DrawObjectProps>(
+                'materialShininess'
+            ),
             ...buildLightMetadata(maxLights)
         },
         elements: regl.prop<DrawObjectProps, keyof DrawObjectProps>('indices')
@@ -162,9 +171,9 @@ function buildLightMetadata(maxLights: number): {} {
                 const light: Light | undefined = props.lights[index];
                 return light !== undefined ? light.lightPosition : blankLight.lightPosition;
             },
-            [`lightIntensities[${index}]`]: (_context, props, _batch_id) => {
+            [`lightStrengths[${index}]`]: (_context, props, _batch_id) => {
                 const light: Light | undefined = props.lights[index];
-                return light !== undefined ? light.lightIntensity : blankLight.lightIntensity;
+                return light !== undefined ? light.lightStrength : blankLight.lightStrength;
             },
             [`lightColors[${index}]`]: (_context, props, _batch_id) => {
                 const light: Light = props.lights[index];

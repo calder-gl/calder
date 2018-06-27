@@ -8,7 +8,7 @@ import { Mapper } from '../utils/mapper';
 export type LightParams = {
     position: coord;
     color: Color;
-    intensity: number;
+    strength: number;
 };
 
 /**
@@ -17,7 +17,7 @@ export type LightParams = {
 export type BakedLight = {
     lightPosition: vec3;
     lightColor: vec3;
-    lightIntensity: number;
+    lightStrength: number;
 };
 
 /**
@@ -28,7 +28,7 @@ export type BakedLight = {
 export class Light implements Bakeable {
     public readonly lightPosition: vec3;
     public readonly lightColor: vec3;
-    public readonly lightIntensity: number;
+    public readonly lightStrength: number;
 
     /**
      * Instantiate a new Light object.
@@ -37,10 +37,20 @@ export class Light implements Bakeable {
      * @constructor
      * @param {LightParams} params The named parameters for the light source.
      */
-    constructor(params: LightParams) {
+    private constructor(params: LightParams) {
         this.lightPosition = Mapper.coordToVector(params.position);
         this.lightColor = params.color.asVec();
-        this.lightIntensity = params.intensity;
+        this.lightStrength = params.strength;
+    }
+
+    /**
+     * Instantiate a new Light object.
+     *
+     * @param {LightParams} params The named parameters for the light source.
+     * @returns {Light} A new light.
+     */
+    public static create(params: LightParams): Light {
+        return new Light(params);
     }
 
     /**
@@ -53,16 +63,16 @@ export class Light implements Bakeable {
         return {
             lightPosition: this.lightPosition,
             lightColor: this.lightColor,
-            lightIntensity: this.lightIntensity
+            lightStrength: this.lightStrength
         };
     }
 }
 
 /**
- * A blank light with 0 intensity.
+ * A blank light that does no illumination.
  */
-export const blankLight: Light = new Light({
+export const blankLight: Light = Light.create({
     position: { x: 0, y: 0, z: 0 },
     color: RGBColor.fromRGB(0, 0, 0),
-    intensity: 0
+    strength: 1
 });

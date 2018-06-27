@@ -1,6 +1,7 @@
 import {
     Armature,
     Light,
+    Material,
     Matrix,
     Node,
     Point,
@@ -15,14 +16,14 @@ const renderer: Renderer = new Renderer({
     width: 800,
     height: 600,
     maxLights: 2,
-    ambientLightColor: RGBColor.fromRGB(51, 51, 51)
+    ambientLightColor: RGBColor.fromRGB(90, 90, 90)
 });
 
 // Create light sources for the renderer
-const light1: Light = new Light({
+const light1: Light = Light.create({
     position: { x: 10, y: 10, z: 10 },
     color: RGBColor.fromHex('#FFFFFF'),
-    intensity: 256
+    strength: 200
 });
 
 // Add lights to the renderer
@@ -34,12 +35,12 @@ renderer.addLight(light1);
 
 // Setup leaf
 const leafColor = RGBColor.fromRGB(204, 255, 204);
-const workingLeafSphere = Shape.sphere(leafColor);
+const workingLeafSphere = Shape.sphere(Material.create({ color: leafColor, shininess: 100 }));
 const leafSphere = workingLeafSphere.bake();
 
 // Setup branch
 const branchColor = RGBColor.fromRGB(102, 76.5, 76.5);
-const workingBranchShape = Shape.cylinder(branchColor);
+const workingBranchShape = Shape.cylinder(Material.create({ color: branchColor, shininess: 1 }));
 const branchShape = workingBranchShape.bake();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

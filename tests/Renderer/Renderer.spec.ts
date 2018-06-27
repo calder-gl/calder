@@ -2,10 +2,10 @@ import { Light, Renderer, RGBColor } from '../../src/calder';
 
 describe('Renderer', () => {
     const maxLights: number = 3;
-    const light: Light = new Light({
+    const light: Light = Light.create({
         position: { x: 1, y: 1, z: 1 },
         color: RGBColor.fromHex('#000000'),
-        intensity: 256
+        strength: 3
     });
 
     xdescribe('addLight', () => {

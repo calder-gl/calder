@@ -1,4 +1,4 @@
-import { BakedGeometry, BakedLight } from '../calder';
+import { BakedGeometry, BakedLight, BakedMaterial } from '../calder';
 
 /**
  * Classes implementing this interface must implement the method `bake`, which
@@ -6,5 +6,5 @@ import { BakedGeometry, BakedLight } from '../calder';
  * shader.
  */
 export interface Bakeable {
-    bake(): BakedGeometry | BakedLight;
+    bake(): BakedGeometry | BakedLight | BakedMaterial;
 }

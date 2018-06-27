@@ -5,7 +5,7 @@ describe('Renderer', () => {
     const light: Light = new Light({
         position: { x: 1, y: 1, z: 1 },
         color: RGBColor.fromHex('#000000'),
-        intensity: 256
+        strength: 3
     });
 
     xdescribe('addLight', () => {

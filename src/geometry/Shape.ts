@@ -1,13 +1,12 @@
 import { vec3 } from 'gl-matrix';
 import { range } from 'lodash';
 
-import { Face, RGBColor, WorkingGeometry } from '../calder';
-import { Color } from '../colors/Color';
+import { defaultMaterial, Face, Material, WorkingGeometry } from '../calder';
 import { genIsoSurface } from './MarchingCubes';
 import { ScalarField } from './ScalarField';
 
 export namespace Shape {
-    export function sphere(fillColor: Color = RGBColor.fromHex('#EEEEEE')): WorkingGeometry {
+    export function sphere(material: Material = defaultMaterial): WorkingGeometry {
         const RADIUS = 1;
         const DIM = 25;
         const LENGTH = 2.5;
@@ -24,10 +23,10 @@ export namespace Shape {
             (i: number) => new Face(range(i * 3, (i + 1) * 3))
         );
 
-        return new WorkingGeometry(vertices, vertices, faces, [], fillColor);
+        return new WorkingGeometry(vertices, vertices, faces, [], material);
     }
 
-    export function cylinder(fillColor: Color = RGBColor.fromHex('#EEEEEE')): WorkingGeometry {
+    export function cylinder(material: Material = defaultMaterial): WorkingGeometry {
         const LENGTH = 1;
         const PRECISION = 20;
 
@@ -124,6 +123,6 @@ export namespace Shape {
             );
         });
 
-        return new WorkingGeometry(vertices, normals, faces, [], fillColor);
+        return new WorkingGeometry(vertices, normals, faces, [], material);
     }
 }

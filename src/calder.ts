@@ -69,6 +69,7 @@ export * from './math/utils';
 export * from './renderer/Camera';
 export * from './renderer/Renderer';
 export * from './renderer/Light';
+export * from './renderer/Material';
 export * from './renderer/commands/createDrawAxes';
 export * from './renderer/commands/createDrawObject';
 

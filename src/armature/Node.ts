@@ -1,7 +1,8 @@
 import { glMatrix, mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
-import { flatten, flatMap, isNumber } from 'lodash';
+import { flatten, isNumber } from 'lodash';
 import { closestPointOnLine, coord, coordFunc, BakedGeometry, RenderObject } from '../calder';
 import { vec3From4, vec3ToPoint } from '../math/utils';
+import { defaultMaterial } from '../renderer/Material';
 import { matrix4, vector3 } from '../types/InternalVectorTypes';
 import { Mapper } from '../utils/mapper';
 import { NodeRenderObject } from './NodeRenderObject';
@@ -38,10 +39,7 @@ export class Node {
             ])
         ),
 
-        // Map x, y, z to r, g, b to give a sense of bone orientation
-        colors: Float32Array.from(
-            flatMap(Node.boneVertices, (v: number[]) => [v[0], v[1] / 0.1 + 0.1, v[2] / 0.1 + 0.1])
-        )
+        material: defaultMaterial.bake()
     };
 
     public readonly children: Node[];
@@ -87,7 +85,6 @@ export class Node {
         Node.bone.verticesBuffer = undefined;
         Node.bone.normalsBuffer = undefined;
         Node.bone.indicesBuffer = undefined;
-        Node.bone.colorsBuffer = undefined;
     }
 
     public createPoint(name: string, positionCoord: coord) {

@@ -1,5 +1,12 @@
 import { mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
-import { Armature, BakedGeometry, GeometryNode, Node, RenderObject } from '../../src/calder';
+import {
+    Armature,
+    BakedGeometry,
+    GeometryNode,
+    Node,
+    RenderObject,
+    defaultMaterial
+} from '../../src/calder';
 import '../glMatrix';
 
 const bone = Armature.define((root: Node) => {
@@ -146,7 +153,7 @@ describe('Node', () => {
                 vertices: Float32Array.from([]),
                 normals: Float32Array.from([]),
                 indices: Int16Array.from([]),
-                colors: Float32Array.from([])
+                material: defaultMaterial
             };
 
             parent.point('tip').attach(geometry);
@@ -512,7 +519,7 @@ describe('Node', () => {
                 vertices: Float32Array.from([]),
                 normals: Float32Array.from([]),
                 indices: Int16Array.from([]),
-                colors: Float32Array.from([])
+                material: defaultMaterial
             };
             const geometryChild = new GeometryNode(geometry);
             const nodeChild = new Node([geometryChild]);
@@ -552,7 +559,7 @@ describe('Node', () => {
                 vertices: Float32Array.from([]),
                 normals: Float32Array.from([]),
                 indices: Int16Array.from([]),
-                colors: Float32Array.from([])
+                material: defaultMaterial
             };
             const geometryChild = new GeometryNode(geometry);
             const nodeChild = new Node([geometryChild]);

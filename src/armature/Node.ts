@@ -471,24 +471,6 @@ export class Node {
     }
 
     /**
-     * Returns an array of `RenderObject`s denoting `GeometryNode`s
-     * transformations multiplied by the `coordinateSpace` parameter.
-     *
-     * @param {mat4} coordinateSpace The coordinate space this node resides in.
-     * @param {mat3} coordinateSpace The coordinate space this node resides in.
-     * @param {boolean} makeBones Whether or not the armature heirarchy should be visualized.
-     * @returns {NodeRenderObject} The geometry for this armature subtree, and possibly geometry
-     * representing the armature itself.
-     */
-    //public traverse(
-        //coordinateSpace: mat4,
-        //normalTransform: mat3,
-        //makeBones: boolean
-    //): NodeRenderObject {
-        //return this.traverseSelf(coordinateSpace, normalTransform, makeBones).objects;
-    //}
-
-    /**
      * Generates `RenderObject`s for this node's children, plus a bone for this node, if specified.
      * The current node's transformation matrix is also returned so that additional `RenderObject`s
      * can be added to the result if needed without recomputing this matrix.
@@ -504,24 +486,6 @@ export class Node {
         mat3.multiply(currentNormalMatrix, parentNormalMatrix, currentNormalMatrix);
 
         const objects: NodeRenderObject = { geometry: [], bones: [] };
-
-        //const objects: NodeRenderObject = this.children.reduce(
-            //(accum: NodeRenderObject, child: Node) => {
-                //const childRenderObject: NodeRenderObject = child.traverse(
-                    //currentMatrix,
-                    //currentNormalMatrix,
-                    //makeBones
-                //);
-
-                //// Merge the geometry and bones from each child into one long list of geometry and
-                //// one long list of bones for all children
-                //accum.geometry.push(...childRenderObject.geometry);
-                //accum.bones.push(...childRenderObject.bones);
-
-                //return accum;
-            //},
-            //{ geometry: [], bones: [] }
-        //);
 
         if (makeBones) {
             objects.bones.push(
@@ -884,9 +848,13 @@ export class GeometryNode extends Node {
      * @param {BakedGeometry} geometry
      * @param {Node[]} children
      */
-    constructor(geometry: BakedGeometry, parent: Node | null = null, position: vector3 = vec3.fromValues(0, 0, 0),
+    constructor(
+        geometry: BakedGeometry,
+        parent: Node | null = null,
+        position: vector3 = vec3.fromValues(0, 0, 0),
         rotation: matrix4 = mat4.create(),
-        scale: matrix4 = mat4.create()) {
+        scale: matrix4 = mat4.create()
+    ) {
         super(parent, position, rotation, scale);
         this.geometry = geometry;
     }
@@ -916,7 +884,7 @@ export class GeometryNode extends Node {
             normalTransform: currentNormalMatrix
         });
 
-        return {currentMatrix, currentNormalMatrix, objects};
+        return { currentMatrix, currentNormalMatrix, objects };
     }
 }
 

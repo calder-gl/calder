@@ -67,7 +67,10 @@ export class GeneratorInstance {
         let addedShape = false;
 
         while (!addedShape && this.spawnPoints.length > 0) {
-            const spawnPoint = this.spawnPoints.splice(Math.floor(this.random() * this.spawnPoints.length), 1)[0];
+            const spawnPoint = this.spawnPoints.splice(
+                Math.floor(this.random() * this.spawnPoints.length),
+                1
+            )[0];
             const onAddCallback = (node: Node) => {
                 addedShape = true;
                 incrementalCost += this.costFn(node);
@@ -172,11 +175,7 @@ export class Generator {
      * geometry at that point. Call `addDetail` in the function to spawn more.
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
-    public defineWeighted(
-        name: string,
-        weight: number,
-        generator: GeneratorFn
-    ): Generator {
+    public defineWeighted(name: string, weight: number, generator: GeneratorFn): Generator {
         // Make a component for the given name if one doesn't already exist
         if (this.rules[name] === undefined) {
             this.rules[name] = { totalWeight: 0, definitions: [] };
@@ -197,7 +196,12 @@ export class Generator {
         return instance.getModel();
     }
 
-    public generateSOMC(params: { start: string; depth?: number; samples?: number; costFn: CostFn }): Model {
+    public generateSOMC(params: {
+        start: string;
+        depth?: number;
+        samples?: number;
+        costFn: CostFn;
+    }): Model {
         const { start, depth = 10, samples = 50, costFn } = params;
         let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
 
@@ -211,7 +215,7 @@ export class Generator {
             // Step 2: if there will be more iterations, do a weighted resample
             if (iteration + 1 !== depth) {
                 const total = instances.reduce((accum: number, instance: GeneratorInstance) => {
-                    return accum + 1/instance.getCost();
+                    return accum + 1 / instance.getCost();
                 }, 0);
                 instances = instances.map(() => {
                     let sample = this.random() * total;
@@ -219,7 +223,7 @@ export class Generator {
                     let i = 0;
                     do {
                         picked = instances[i];
-                        sample -= 1/picked.getCost();
+                        sample -= 1 / picked.getCost();
                         i += 1;
                     } while (sample > 0);
 
@@ -228,7 +232,9 @@ export class Generator {
             }
         });
 
-        return (<GeneratorInstance> minBy(instances, (instance: GeneratorInstance) => instance.getCost())).getModel();
+        return (<GeneratorInstance>minBy(instances, (instance: GeneratorInstance) =>
+            instance.getCost()
+        )).getModel();
     }
 
     /**

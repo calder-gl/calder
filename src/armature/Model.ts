@@ -34,10 +34,10 @@ export class Model {
         const renderCache: Map<Node, RenderInfo> = new Map<Node, RenderInfo>();
         const renderQueue = [...this.nodes];
 
-        const result: NodeRenderObject = {geometry: [], bones: []};
+        const result: NodeRenderObject = { geometry: [], bones: [] };
 
         while (renderQueue.length > 0) {
-            const node = <Node> renderQueue.pop();
+            const node = <Node>renderQueue.pop();
 
             if (renderCache.has(node)) {
                 continue;
@@ -49,14 +49,15 @@ export class Model {
                 result.geometry.push(...info.objects.geometry);
                 result.bones.push(...info.objects.bones);
             } else if (renderCache.has(node.parent)) {
-                const { currentMatrix, currentNormalMatrix } = <RenderInfo> renderCache.get(node.parent);
+                const { currentMatrix, currentNormalMatrix } = <RenderInfo>renderCache.get(
+                    node.parent
+                );
                 const info = node.traverse(currentMatrix, currentNormalMatrix, makeBones);
                 renderCache.set(node, info);
                 result.geometry.push(...info.objects.geometry);
                 result.bones.push(...info.objects.bones);
             } else {
-                renderQueue.push(node.parent);
-                renderQueue.unshift(node);
+                renderQueue.push(node, node.parent);
             }
         }
 

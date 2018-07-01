@@ -4,7 +4,6 @@ import {
     Light,
     Material,
     Matrix,
-    Model,
     Node,
     Point,
     Quaternion,
@@ -91,9 +90,13 @@ treeGen
     .maybe('maybeBranch', (root: Point, instance: GeneratorInstance) => {
         instance.addDetail({ component: 'branch', at: root });
     });
-const tree = treeGen.generateSOMC({ start: 'branch', depth: 150, costFn: (_: Node) => {
-    return 0;
-} });
+const tree = treeGen.generateSOMC({
+    start: 'branch',
+    depth: 150,
+    costFn: (_: Node) => {
+        return 0;
+    }
+});
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer

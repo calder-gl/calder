@@ -39,12 +39,11 @@
     "@types/jest": "~22.2.2",
     "@types/lodash": "^4.14.107",
     "@types/node": "~8.10.0",
-    "babel-polyfill": "^6.26.0",
+    "typescript": "~2.8.1",
     "gl-matrix": "^2.5.1",
     "lodash": "^4.17.10",
     "regl": "regl-project/regl",
     "ts-sinon": "^1.0.12",
-    "tslib": "~1.9.0",
-    "typescript": "~2.8.1"
+    "tslib": "~1.9.0"
   }
 }

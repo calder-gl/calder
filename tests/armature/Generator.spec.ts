@@ -12,7 +12,7 @@ describe('Generator', () => {
         const towerGen = Armature.generator();
         const tower = towerGen
             .define('block', (root: Point, instance: GeneratorInstance) => {
-                const node = bone();
+                const node = instance.add(bone());
                 node.point('base').stickTo(root);
 
                 instance.addDetail({ component: 'block', at: node.point('tip') });
@@ -25,8 +25,8 @@ describe('Generator', () => {
     it('handles terminal nodes', () => {
         const towerGen = Armature.generator();
         const tower = towerGen
-            .define('block', (root: Point) => {
-                const node = bone();
+            .define('block', (root: Point, instance: GeneratorInstance) => {
+                const node = instance.add(bone());
                 node.point('base').stickTo(root);
 
                 // This definition does not add any more detail

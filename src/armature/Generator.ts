@@ -83,7 +83,7 @@ export class GeneratorInstance {
         this.model.nodes.slice(originalLength).forEach((node: Node) => node.geometryCallback((g: GeometryNode) => {
             addedGeometry.push(g);
         }));
-        this.cost += this.costFn(this, addedGeometry);
+        this.cost = this.costFn(this, addedGeometry);
     }
 
     /**
@@ -105,6 +105,8 @@ export class GeneratorInstance {
     }
 
     public initialize(start: string) {
+        this.cost = 0;
+
         // Clear spawn points
         this.spawnPoints.length = 0;
 
@@ -214,16 +216,17 @@ export class Generator {
 
             // Step 2: if there will be more iterations, do a weighted resample
             if (iteration + 1 !== depth) {
-                const total = instances.reduce((accum: number, instance: GeneratorInstance) => {
-                    return accum + 1 / instance.getCost();
+                const totalWeight = instances.reduce((accum: number, instance: GeneratorInstance) => {
+                    // 1 / e^x means that lower (even negative) costs get a higher weight
+                    return accum + 1 / Math.exp(instance.getCost());
                 }, 0);
                 instances = instances.map(() => {
-                    let sample = this.random() * total;
+                    let sample = this.random() * totalWeight;
                     let picked: GeneratorInstance | null = null;
                     let i = 0;
                     do {
                         picked = instances[i];
-                        sample -= 1 / picked.getCost();
+                        sample -= 1 / Math.exp(picked.getCost());
                         i += 1;
                     } while (sample > 0);
 

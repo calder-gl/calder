@@ -1,7 +1,7 @@
 import {
     Armature,
+    CostFunction,
     GeneratorInstance,
-    GeometryNode,
     Light,
     Material,
     Matrix,
@@ -94,23 +94,14 @@ treeGen
         instance.addDetail({ component: 'branch', at: root });
     });
 
-const target = vec4.fromValues(0, 100, 0, 1);
 const tree = treeGen.generateSOMC({
     start: 'branch',
     depth: 150,
     samples: 100,
-    costFn: (instance: GeneratorInstance, nodes: GeometryNode[]) => {
-        const distanceCost = nodes.reduce((sum: number, node: Node) => {
-            const localToGlobalTransform = node.localToGlobalTransform();
-            const globalPosition = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), localToGlobalTransform);
-
-            return sum + vec4.length(vec4.sub(vec4.create(), target, globalPosition));
-        }, 0);
-        
-        const growthCost = 400 / instance.activeSpawnPoints();
-
-        return distanceCost * distanceCost + growthCost;
-    }
+    costFn: CostFunction.forces([
+        {point: {x: -50, y: 100, z: 0}, influence: -200},
+        {point: {x: 0, y: -100, z: 0}, influence: 100}
+    ])
 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

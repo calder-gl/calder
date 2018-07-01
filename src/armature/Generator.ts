@@ -1,4 +1,5 @@
 import { RandomGenerator } from '../utils/random';
+import { Model } from './Model';
 import { Node, Point } from './Node';
 
 import { minBy, range } from 'lodash';
@@ -18,7 +19,7 @@ type SpawnPoint = {
 export type CostFn = (node: Node) => number;
 
 export class GeneratorInstance {
-    private root: Node = new Node();
+    private model: Model = new Model();
     private generator: Generator;
     private costFn: CostFn;
     private cost: number = 0;
@@ -30,23 +31,21 @@ export class GeneratorInstance {
         this.costFn = costFn;
     }
 
-    public cloneDeep(): GeneratorInstance {
+    public add(node: Node): Node {
+        return this.model.add(node);
+    }
+
+    public clone(): GeneratorInstance {
         const cloned = new GeneratorInstance(this.generator, this.costFn);
-        const points = this.spawnPoints.map((point: SpawnPoint) => point.at);
-        cloned.root = this.root.cloneDeepReplacingPoints(points);
+        cloned.model = this.model.clone();
         cloned.cost = this.cost;
-        cloned.spawnPoints = this.spawnPoints.map((point: SpawnPoint, i: number) => {
-            return {
-                component: point.component,
-                at: points[i]
-            };
-        });
+        cloned.spawnPoints = [...this.spawnPoints];
 
         return cloned;
     }
 
-    public getNode(): Node {
-        return this.root;
+    public getModel(): Model {
+        return this.model;
     }
 
     public getCost(): number {
@@ -107,8 +106,9 @@ export class GeneratorInstance {
         this.spawnPoints.length = 0;
 
         // Create initial spawn point
-        this.root.createPoint('spawn', { x: 0, y: 0, z: 0 });
-        this.addDetail({ component: start, at: this.root.point('spawn') });
+        this.model = new Model([new Node()]);
+        this.model.root().createPoint('spawn', { x: 0, y: 0, z: 0 });
+        this.addDetail({ component: start, at: this.model.root().point('spawn') });
     }
 }
 
@@ -190,14 +190,14 @@ export class Generator {
         return this;
     }
 
-    public generate(params: { start: string; depth?: number }): Node {
+    public generate(params: { start: string; depth?: number }): Model {
         const instance = new GeneratorInstance(this, () => 0);
         instance.generate(params);
 
-        return instance.getNode();
+        return instance.getModel();
     }
 
-    public generateSOMC(params: { start: string; depth?: number; samples?: number; costFn: CostFn }): Node {
+    public generateSOMC(params: { start: string; depth?: number; samples?: number; costFn: CostFn }): Model {
         const { start, depth = 10, samples = 50, costFn } = params;
         let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
 
@@ -223,12 +223,12 @@ export class Generator {
                         i += 1;
                     } while (sample > 0);
 
-                    return picked.cloneDeep();
+                    return picked.clone();
                 });
             }
         });
 
-        return (<GeneratorInstance> minBy(instances, (instance: GeneratorInstance) => instance.getCost())).getNode();
+        return (<GeneratorInstance> minBy(instances, (instance: GeneratorInstance) => instance.getCost())).getModel();
     }
 
     /**

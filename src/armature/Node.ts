@@ -1,5 +1,5 @@
 import { glMatrix, mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
-import { flatten, isNumber, range } from 'lodash';
+import { flatten, isNumber } from 'lodash';
 import { closestPointOnLine, coord, coordFunc, BakedGeometry, RenderObject } from '../calder';
 import { vec3From4, vec3ToPoint } from '../math/utils';
 import { defaultMaterial } from '../renderer/Material';
@@ -42,8 +42,7 @@ export class Node {
         material: defaultMaterial.bake()
     };
 
-    public readonly children: Node[];
-    protected parent: Node | null = null;
+    public parent: Node | null = null;
     protected transformation: Transformation = new Transformation();
     protected points: { [key: string]: Point } = {};
     protected anchor: vec3 | null = null;
@@ -56,12 +55,12 @@ export class Node {
      * @param {Node[]} children
      */
     constructor(
-        children: Node[] = [],
+        parent: Node | null = null,
         position: vector3 = vec3.fromValues(0, 0, 0),
         rotation: matrix4 = mat4.create(),
         scale: matrix4 = mat4.create()
     ) {
-        this.children = children;
+        this.parent = parent;
         this.transformation = new Transformation(position, rotation, scale);
     }
 
@@ -73,54 +72,15 @@ export class Node {
 
     public clone(): Node {
         const cloned = new Node(
-            this.children,
+            this.parent,
             this.getPosition(),
             this.getRotation(),
             this.getScale()
         );
-        cloned.parent = this.parent;
         Object.keys(this.points).forEach((key: string) => {
             cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
         });
         cloned.anchor = this.anchor;
-
-        return cloned;
-    }
-
-    public cloneDeep(): Node {
-        const cloned = new Node(
-            this.children.map((child: this) => child.cloneDeep()),
-            this.getPosition(),
-            this.getRotation(),
-            this.getScale()
-        );
-        cloned.parent = this.parent;
-        Object.keys(this.points).forEach((key: string) => {
-            cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
-        });
-        cloned.anchor = this.anchor;
-
-        return cloned;
-    }
-
-    public cloneDeepReplacingPoints(points: Point[]): Node {
-        const cloned = new Node(
-            this.children.map((child: this) => child.cloneDeepReplacingPoints(points)),
-            this.getPosition(),
-            this.getRotation(),
-            this.getScale()
-        );
-        cloned.parent = this.parent;
-        Object.keys(this.points).forEach((key: string) => {
-            cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
-        });
-        cloned.anchor = this.anchor;
-
-        range(points.length).forEach((i: number) => {
-            if (points[i].node === this) {
-                points[i] = cloned.point(points[i].name);
-            }
-        });
 
         return cloned;
     }
@@ -389,7 +349,6 @@ export class Node {
     }
 
     public addChild(child: Node) {
-        this.children.push(child);
         child.parent = this;
     }
 
@@ -521,20 +480,20 @@ export class Node {
      * @returns {NodeRenderObject} The geometry for this armature subtree, and possibly geometry
      * representing the armature itself.
      */
-    public traverse(
-        coordinateSpace: mat4,
-        normalTransform: mat3,
-        makeBones: boolean
-    ): NodeRenderObject {
-        return this.traverseChildren(coordinateSpace, normalTransform, makeBones).objects;
-    }
+    //public traverse(
+        //coordinateSpace: mat4,
+        //normalTransform: mat3,
+        //makeBones: boolean
+    //): NodeRenderObject {
+        //return this.traverseSelf(coordinateSpace, normalTransform, makeBones).objects;
+    //}
 
     /**
      * Generates `RenderObject`s for this node's children, plus a bone for this node, if specified.
      * The current node's transformation matrix is also returned so that additional `RenderObject`s
      * can be added to the result if needed without recomputing this matrix.
      */
-    protected traverseChildren(
+    public traverse(
         parentMatrix: mat4,
         parentNormalMatrix: mat3,
         makeBones: boolean
@@ -544,23 +503,25 @@ export class Node {
         mat4.multiply(currentMatrix, parentMatrix, currentMatrix);
         mat3.multiply(currentNormalMatrix, parentNormalMatrix, currentNormalMatrix);
 
-        const objects: NodeRenderObject = this.children.reduce(
-            (accum: NodeRenderObject, child: Node) => {
-                const childRenderObject: NodeRenderObject = child.traverse(
-                    currentMatrix,
-                    currentNormalMatrix,
-                    makeBones
-                );
+        const objects: NodeRenderObject = { geometry: [], bones: [] };
 
-                // Merge the geometry and bones from each child into one long list of geometry and
-                // one long list of bones for all children
-                accum.geometry.push(...childRenderObject.geometry);
-                accum.bones.push(...childRenderObject.bones);
+        //const objects: NodeRenderObject = this.children.reduce(
+            //(accum: NodeRenderObject, child: Node) => {
+                //const childRenderObject: NodeRenderObject = child.traverse(
+                    //currentMatrix,
+                    //currentNormalMatrix,
+                    //makeBones
+                //);
 
-                return accum;
-            },
-            { geometry: [], bones: [] }
-        );
+                //// Merge the geometry and bones from each child into one long list of geometry and
+                //// one long list of bones for all children
+                //accum.geometry.push(...childRenderObject.geometry);
+                //accum.bones.push(...childRenderObject.bones);
+
+                //return accum;
+            //},
+            //{ geometry: [], bones: [] }
+        //);
 
         if (makeBones) {
             objects.bones.push(
@@ -923,51 +884,11 @@ export class GeometryNode extends Node {
      * @param {BakedGeometry} geometry
      * @param {Node[]} children
      */
-    constructor(geometry: BakedGeometry, children: Node[] = [], position: vector3 = vec3.fromValues(0, 0, 0),
+    constructor(geometry: BakedGeometry, parent: Node | null = null, position: vector3 = vec3.fromValues(0, 0, 0),
         rotation: matrix4 = mat4.create(),
         scale: matrix4 = mat4.create()) {
-        super(children, position, rotation, scale);
+        super(parent, position, rotation, scale);
         this.geometry = geometry;
-    }
-
-    public cloneDeep(): GeometryNode {
-        const cloned = new GeometryNode(
-            this.geometry,
-            this.children.map((child: this) => child.cloneDeep()),
-            this.getPosition(),
-            this.getRotation(),
-            this.getScale()
-        );
-        cloned.parent = this.parent;
-        Object.keys(this.points).forEach((key: string) => {
-            cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
-        });
-        cloned.anchor = this.anchor;
-
-        return cloned;
-    }
-
-    public cloneDeepReplacingPoints(points: Point[]): GeometryNode {
-        const cloned = new GeometryNode(
-            this.geometry,
-            this.children.map((child: this) => child.cloneDeepReplacingPoints(points)),
-            this.getPosition(),
-            this.getRotation(),
-            this.getScale()
-        );
-        cloned.parent = this.parent;
-        Object.keys(this.points).forEach((key: string) => {
-            cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
-        });
-        cloned.anchor = this.anchor;
-
-        range(points.length).forEach((i: number) => {
-            if (points[i].node === this) {
-                points[i] = cloned.point(points[i].name);
-            }
-        });
-
-        return cloned;
     }
 
     /**
@@ -983,8 +904,8 @@ export class GeometryNode extends Node {
         coordinateSpace: mat4,
         normalTransform: mat3,
         makeBones: boolean
-    ): NodeRenderObject {
-        const { currentMatrix, currentNormalMatrix, objects } = this.traverseChildren(
+    ): { currentMatrix: mat4; currentNormalMatrix: mat3; objects: NodeRenderObject } {
+        const { currentMatrix, currentNormalMatrix, objects } = super.traverse(
             coordinateSpace,
             normalTransform,
             makeBones
@@ -995,7 +916,7 @@ export class GeometryNode extends Node {
             normalTransform: currentNormalMatrix
         });
 
-        return objects;
+        return {currentMatrix, currentNormalMatrix, objects};
     }
 }
 

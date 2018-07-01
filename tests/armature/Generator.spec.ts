@@ -19,14 +19,7 @@ describe('Generator', () => {
             })
             .generate({ start: 'block', depth: 5 });
 
-        let depth = 0;
-        let block = tower;
-        while (block.children.length > 0) {
-            depth += 1;
-            block = block.children[0];
-        }
-
-        expect(depth).toBe(5);
+        expect(tower.nodes.length).toBe(6); // Root plus five blocks
     });
 
     it('handles terminal nodes', () => {
@@ -40,13 +33,6 @@ describe('Generator', () => {
             })
             .generate({ start: 'block', depth: 5 });
 
-        let depth = 0;
-        let block = tower;
-        while (block.children.length > 0) {
-            depth += 1;
-            block = block.children[0];
-        }
-
-        expect(depth).toBe(1);
+        expect(tower.nodes.length).toBe(2); // Root plus one block
     });
 });

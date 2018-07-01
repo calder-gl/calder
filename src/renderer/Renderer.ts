@@ -13,6 +13,7 @@ import {
     DrawAxesProps,
     DrawObjectProps,
     Light,
+    Model,
     Node,
     RenderObject,
     RenderParams,
@@ -124,16 +125,14 @@ export class Renderer {
     }
 
     public draw(
-        objects: Node[],
+        objects: Model[],
         debug: DebugParams = { drawAxes: false, drawArmatureBones: false }
     ) {
         this.clearAll();
 
         const renderObjects = objects.reduce(
-            (accum: NodeRenderObject, node: Node) => {
-                const childObjects = node.traverse(
-                    mat4.create(),
-                    mat3.create(),
+            (accum: NodeRenderObject, model: Model) => {
+                const childObjects = model.traverse(
                     debug.drawArmatureBones === true
                 );
 

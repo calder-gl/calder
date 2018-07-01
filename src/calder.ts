@@ -32,6 +32,7 @@ export * from './armature/Animation';
 export * from './armature/Armature';
 export * from './armature/Constraints';
 export * from './armature/Generator';
+export * from './armature/Model';
 export * from './armature/Node';
 
 /*****************************

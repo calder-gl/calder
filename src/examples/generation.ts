@@ -4,6 +4,7 @@ import {
     Light,
     Material,
     Matrix,
+    Model,
     Node,
     Point,
     Quaternion,
@@ -58,7 +59,7 @@ const bone = Armature.define((root: Node) => {
 const treeGen = Armature.generator();
 treeGen
     .define('branch', (root: Point, instance: GeneratorInstance) => {
-        const node = bone();
+        const node = instance.add(bone());
         node.point('base').stickTo(root);
         node
             .hold(node.point('tip'))
@@ -70,7 +71,7 @@ treeGen
             .release();
         node.scale(0.8); // Shrink a bit
 
-        const trunk = node.point('mid').attach(branchShape);
+        const trunk = instance.add(node.point('mid').attach(branchShape));
         trunk.scale({ x: 0.2, y: 1, z: 0.2 });
 
         instance.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
@@ -83,8 +84,8 @@ treeGen
         instance.addDetail({ component: 'maybeBranch', at: root });
         instance.addDetail({ component: 'maybeBranch', at: root });
     })
-    .define('leaf', (root: Point, _: GeneratorInstance) => {
-        const leaf = root.attach(leafSphere);
+    .define('leaf', (root: Point, instance: GeneratorInstance) => {
+        const leaf = instance.add(root.attach(leafSphere));
         leaf.scale(Math.random() * 0.5 + 0.5);
     })
     .maybe('maybeBranch', (root: Point, instance: GeneratorInstance) => {
@@ -107,7 +108,7 @@ renderer.camera.lookAt({ x: 2, y: 2, z: -4 });
 let angle = 0;
 const draw = () => {
     angle += 0.5;
-    tree.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
+    tree.root().setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 
     return {
         objects: [tree],

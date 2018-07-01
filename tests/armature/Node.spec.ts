@@ -4,6 +4,7 @@ import {
     Armature,
     BakedGeometry,
     GeometryNode,
+    Model,
     Node,
     RenderObject
 } from '../../src/calder';
@@ -141,7 +142,7 @@ describe('Node', () => {
             const child = bone();
 
             child.point('base').stickTo(parent.point('tip'));
-            expect(parent.children.length).toBe(1);
+            expect(child.parent).toBe(parent);
             expect(child.getPosition()).toEqualVec3(vec3.fromValues(0, 1, 0));
         });
     });
@@ -156,9 +157,9 @@ describe('Node', () => {
                 material: defaultMaterial
             };
 
-            parent.point('tip').attach(geometry);
-            expect(parent.children.length).toBe(1);
-            expect(parent.children[0].getPosition()).toEqualVec3(vec3.fromValues(0, 1, 0));
+            const geometryNode = parent.point('tip').attach(geometry);
+            expect(geometryNode.parent).toBe(parent);
+            expect(geometryNode.getPosition()).toEqualVec3(vec3.fromValues(0, 1, 0));
         });
     });
 
@@ -521,9 +522,10 @@ describe('Node', () => {
                 indices: Int16Array.from([]),
                 material: defaultMaterial
             };
-            const geometryChild = new GeometryNode(geometry);
-            const nodeChild = new Node([geometryChild]);
-            const root = new Node([nodeChild]);
+            const root = new Node();
+            const nodeChild = new Node(root);
+            const geometryChild = new GeometryNode(geometry, nodeChild);
+            const model = Model.create(root, nodeChild, geometryChild);
 
             // Translate the root node 1 unit in the x-direction.
             root.setPosition({ x: 1, y: 0, z: 0 });
@@ -544,8 +546,7 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(1, 0, 1, 1);
 
-            const renderObjects: RenderObject[] = root.traverse(mat4.create(), mat3.create(), false)
-                .geometry;
+            const renderObjects: RenderObject[] = model.traverse(false).geometry;
 
             expect(renderObjects.length).toBe(1);
 
@@ -561,9 +562,10 @@ describe('Node', () => {
                 indices: Int16Array.from([]),
                 material: defaultMaterial
             };
-            const geometryChild = new GeometryNode(geometry);
-            const nodeChild = new Node([geometryChild]);
-            const root = new Node([nodeChild]);
+            const root = new Node();
+            const nodeChild = new Node(root);
+            const geometryChild = new GeometryNode(geometry, nodeChild);
+            const model = Model.create(root, nodeChild, geometryChild);
 
             /**
              * Here we're defining a test point and what we expect the result of
@@ -577,8 +579,7 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(0, 1, 0, 1);
 
-            const renderObjects: RenderObject[] = root.traverse(mat4.create(), mat3.create(), false)
-                .geometry;
+            const renderObjects: RenderObject[] = model.traverse(false).geometry;
 
             expect(renderObjects.length).toBe(1);
 
@@ -604,7 +605,7 @@ describe('Node', () => {
             const expectedWorldSpaceBase = vec4.fromValues(0, 0, 0, 1);
             const expectedWorldSpaceTip = vec4.fromValues(0, 2, 0, 1);
 
-            const bones: RenderObject[] = root.traverse(mat4.create(), mat3.create(), true).bones;
+            const bones: RenderObject[] = Model.create(root).traverse(true).bones;
             expect(bones.length).toBe(2);
 
             // Check base and tip of bone 1

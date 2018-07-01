@@ -1,7 +1,8 @@
-import { DebugParams, Node } from '../calder';
+import { Model } from '../armature/Model';
+import { DebugParams } from '../calder';
 
 export type RenderParams = {
-    objects: Node[];
+    objects: Model[];
 
     debugParams?: DebugParams;
 };

@@ -2,9 +2,11 @@ import {
     Armature,
     CostFunction,
     GeneratorInstance,
+    GeometryNode,
     Light,
     Material,
     Matrix,
+    Model,
     Node,
     Point,
     Quaternion,
@@ -12,8 +14,6 @@ import {
     RGBColor,
     Shape
 } from '../calder';
-
-import { vec4 } from 'gl-matrix';
 
 // Create the renderer
 const renderer: Renderer = new Renderer({
@@ -94,7 +94,7 @@ treeGen
         instance.addDetail({ component: 'branch', at: root });
     });
 
-const tree = treeGen.generateSOMC({
+/*const tree = treeGen.generateSOMC({
     start: 'branch',
     depth: 150,
     samples: 100,
@@ -102,6 +102,18 @@ const tree = treeGen.generateSOMC({
         {point: {x: -50, y: 100, z: 0}, influence: -200},
         {point: {x: 0, y: -100, z: 0}, influence: 100}
     ])
+});*/
+
+const treeTarget = Model.create();
+const sphere = treeTarget.add(new GeometryNode(leafSphere));
+sphere.scale(4);
+sphere.moveTo({x: 5, y: 7, z: 0});
+
+const tree = treeGen.generateSOMC({
+    start: 'branch',
+    depth: 150,
+    samples: 100,
+    costFn: CostFunction.fillVolume(treeTarget, 0.2)
 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

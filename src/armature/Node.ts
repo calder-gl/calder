@@ -1,5 +1,5 @@
 import { glMatrix, mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
-import { flatten, isNumber } from 'lodash';
+import { flatten, isNumber, range } from 'lodash';
 import { closestPointOnLine, coord, coordFunc, BakedGeometry, RenderObject } from '../calder';
 import { vec3From4, vec3ToPoint } from '../math/utils';
 import { defaultMaterial } from '../renderer/Material';
@@ -45,8 +45,8 @@ export class Node {
     public readonly children: Node[];
     protected parent: Node | null = null;
     protected transformation: Transformation = new Transformation();
-    private points: { [key: string]: Point } = {};
-    private anchor: vec3 | null = null;
+    protected points: { [key: string]: Point } = {};
+    protected anchor: vec3 | null = null;
     private held: vec3[] = [];
     private grabbed: vec3 | null = null;
 
@@ -65,33 +65,71 @@ export class Node {
         this.transformation = new Transformation(position, rotation, scale);
     }
 
-    public static clone(node: Node): Node {
-        const cloned = new Node(
-            node.children,
-            node.getPosition(),
-            node.getRotation(),
-            node.getScale()
-        );
-        cloned.parent = node.parent;
-        Object.keys(node.points).forEach((key: string) => {
-            cloned.createPoint(key, Mapper.vectorToCoord(node.points[key].position));
-        });
-        cloned.anchor = node.anchor;
-
-        return cloned;
-    }
-
     public static invalidateBuffers() {
         Node.bone.verticesBuffer = undefined;
         Node.bone.normalsBuffer = undefined;
         Node.bone.indicesBuffer = undefined;
     }
 
+    public clone(): Node {
+        const cloned = new Node(
+            this.children,
+            this.getPosition(),
+            this.getRotation(),
+            this.getScale()
+        );
+        cloned.parent = this.parent;
+        Object.keys(this.points).forEach((key: string) => {
+            cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
+        });
+        cloned.anchor = this.anchor;
+
+        return cloned;
+    }
+
+    public cloneDeep(): Node {
+        const cloned = new Node(
+            this.children.map((child: this) => child.cloneDeep()),
+            this.getPosition(),
+            this.getRotation(),
+            this.getScale()
+        );
+        cloned.parent = this.parent;
+        Object.keys(this.points).forEach((key: string) => {
+            cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
+        });
+        cloned.anchor = this.anchor;
+
+        return cloned;
+    }
+
+    public cloneDeepReplacingPoints(points: Point[]): Node {
+        const cloned = new Node(
+            this.children.map((child: this) => child.cloneDeepReplacingPoints(points)),
+            this.getPosition(),
+            this.getRotation(),
+            this.getScale()
+        );
+        cloned.parent = this.parent;
+        Object.keys(this.points).forEach((key: string) => {
+            cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
+        });
+        cloned.anchor = this.anchor;
+
+        range(points.length).forEach((i: number) => {
+            if (points[i].node === this) {
+                points[i] = cloned.point(points[i].name);
+            }
+        });
+
+        return cloned;
+    }
+
     public createPoint(name: string, positionCoord: coord) {
         const position = Mapper.coordToVector(positionCoord);
 
         // tslint:disable-next-line:no-use-before-declare
-        this.points[name] = new Point(this, position);
+        this.points[name] = new Point(this, position, name);
     }
 
     public point(name: string): Point {
@@ -885,9 +923,51 @@ export class GeometryNode extends Node {
      * @param {BakedGeometry} geometry
      * @param {Node[]} children
      */
-    constructor(geometry: BakedGeometry, children: Node[] = []) {
-        super(children);
+    constructor(geometry: BakedGeometry, children: Node[] = [], position: vector3 = vec3.fromValues(0, 0, 0),
+        rotation: matrix4 = mat4.create(),
+        scale: matrix4 = mat4.create()) {
+        super(children, position, rotation, scale);
         this.geometry = geometry;
+    }
+
+    public cloneDeep(): GeometryNode {
+        const cloned = new GeometryNode(
+            this.geometry,
+            this.children.map((child: this) => child.cloneDeep()),
+            this.getPosition(),
+            this.getRotation(),
+            this.getScale()
+        );
+        cloned.parent = this.parent;
+        Object.keys(this.points).forEach((key: string) => {
+            cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
+        });
+        cloned.anchor = this.anchor;
+
+        return cloned;
+    }
+
+    public cloneDeepReplacingPoints(points: Point[]): GeometryNode {
+        const cloned = new GeometryNode(
+            this.geometry,
+            this.children.map((child: this) => child.cloneDeepReplacingPoints(points)),
+            this.getPosition(),
+            this.getRotation(),
+            this.getScale()
+        );
+        cloned.parent = this.parent;
+        Object.keys(this.points).forEach((key: string) => {
+            cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
+        });
+        cloned.anchor = this.anchor;
+
+        range(points.length).forEach((i: number) => {
+            if (points[i].node === this) {
+                points[i] = cloned.point(points[i].name);
+            }
+        });
+
+        return cloned;
     }
 
     /**
@@ -925,14 +1005,28 @@ export class GeometryNode extends Node {
 export class Point {
     public readonly node: Node;
     public readonly position: vec3;
+    public readonly name: string;
+    private onAddCallbacks: ((node: Node) => void)[] = [];
 
     /**
      * @param {Node} node The node that this point is in the coordinate space of.
      * @param {vec3} position The position of this point relative to its node's origin.
+     * @param {string} name The name of this point.
      */
-    constructor(node: Node, position: vec3) {
+    constructor(node: Node, position: vec3, name: string) {
         this.node = node;
         this.position = position;
+        this.name = name;
+    }
+
+    public onAdd(callback: (node: Node) => void) {
+        this.onAddCallbacks.push(callback);
+    }
+
+    public removeOnAdd(callback: (node: Node) => void) {
+        this.onAddCallbacks = this.onAddCallbacks.filter((c: (node: Node) => void) => {
+            return c !== callback;
+        });
     }
 
     /**
@@ -945,6 +1039,7 @@ export class Point {
             throw new Error('Cannot attach a point to another point on the same node');
         }
         target.node.addChild(this.node);
+        target.runOnAddCallbacks(this.node);
         this.node.setAnchor(this.position);
         const vecSub = vec3.subtract(vec3.create(), target.position, this.position);
         this.node.setPosition(Mapper.vectorToCoord(vecSub));
@@ -961,7 +1056,14 @@ export class Point {
         geometryNode.setAnchor(vec3.fromValues(0, 0, 0));
         geometryNode.setPosition(Mapper.vectorToCoord(this.position));
         this.node.addChild(geometryNode);
+        this.runOnAddCallbacks(geometryNode);
 
         return geometryNode;
+    }
+
+    protected runOnAddCallbacks(added: Node) {
+        this.onAddCallbacks.forEach((callback: (node: Node) => void) => {
+            callback(added);
+        });
     }
 }

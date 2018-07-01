@@ -1,4 +1,5 @@
 import { Armature } from '../../src/armature/Armature';
+import { GeneratorInstance } from '../../src/armature/Generator';
 import { Node, Point } from '../../src/armature/Node';
 
 const bone = Armature.define((root: Node) => {
@@ -10,11 +11,11 @@ describe('Generator', () => {
     it('generates to the required depth', () => {
         const towerGen = Armature.generator();
         const tower = towerGen
-            .define('block', (root: Point) => {
+            .define('block', (root: Point, instance: GeneratorInstance) => {
                 const node = bone();
                 node.point('base').stickTo(root);
 
-                towerGen.addDetail({ component: 'block', at: node.point('tip') });
+                instance.addDetail({ component: 'block', at: node.point('tip') });
             })
             .generate({ start: 'block', depth: 5 });
 

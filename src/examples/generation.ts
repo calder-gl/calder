@@ -1,5 +1,6 @@
 import {
     Armature,
+    GeneratorInstance,
     Light,
     Material,
     Matrix,
@@ -56,7 +57,7 @@ const bone = Armature.define((root: Node) => {
 
 const treeGen = Armature.generator();
 treeGen
-    .define('branch', (root: Point) => {
+    .define('branch', (root: Point, instance: GeneratorInstance) => {
         const node = bone();
         node.point('base').stickTo(root);
         node
@@ -72,24 +73,26 @@ treeGen
         const trunk = node.point('mid').attach(branchShape);
         trunk.scale({ x: 0.2, y: 1, z: 0.2 });
 
-        treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
+        instance.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
     })
-    .defineWeighted('branchOrLeaf', 1, (root: Point) => {
-        treeGen.addDetail({ component: 'leaf', at: root });
+    .defineWeighted('branchOrLeaf', 1, (root: Point, instance: GeneratorInstance) => {
+        instance.addDetail({ component: 'leaf', at: root });
     })
-    .defineWeighted('branchOrLeaf', 4, (root: Point) => {
-        treeGen.addDetail({ component: 'branch', at: root });
-        treeGen.addDetail({ component: 'maybeBranch', at: root });
-        treeGen.addDetail({ component: 'maybeBranch', at: root });
+    .defineWeighted('branchOrLeaf', 4, (root: Point, instance: GeneratorInstance) => {
+        instance.addDetail({ component: 'branch', at: root });
+        instance.addDetail({ component: 'maybeBranch', at: root });
+        instance.addDetail({ component: 'maybeBranch', at: root });
     })
-    .define('leaf', (root: Point) => {
+    .define('leaf', (root: Point, _: GeneratorInstance) => {
         const leaf = root.attach(leafSphere);
         leaf.scale(Math.random() * 0.5 + 0.5);
     })
-    .maybe('maybeBranch', (root: Point) => {
-        treeGen.addDetail({ component: 'branch', at: root });
+    .maybe('maybeBranch', (root: Point, instance: GeneratorInstance) => {
+        instance.addDetail({ component: 'branch', at: root });
     });
-const tree = treeGen.generate({ start: 'branch', depth: 25 });
+const tree = treeGen.generateSOMC({ start: 'branch', depth: 150, costFn: (_: Node) => {
+    return 0;
+} });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer

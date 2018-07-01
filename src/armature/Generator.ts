@@ -1,11 +1,13 @@
 import { RandomGenerator } from '../utils/random';
 import { Node, Point } from './Node';
 
-import { range } from 'lodash';
+import { minBy, range } from 'lodash';
+
+type GeneratorFn = (root: Point, instance: GeneratorInstance) => void;
 
 type Definition = {
     weight: number;
-    generator(root: Point);
+    generator: GeneratorFn;
 };
 
 type SpawnPoint = {
@@ -13,14 +15,109 @@ type SpawnPoint = {
     at: Point;
 };
 
+export type CostFn = (node: Node) => number;
+
+export class GeneratorInstance {
+    private root: Node = new Node();
+    private generator: Generator;
+    private costFn: CostFn;
+    private cost: number = 0;
+    private spawnPoints: SpawnPoint[] = [];
+    private random: RandomGenerator = Math.random;
+
+    constructor(generator: Generator, costFn: CostFn) {
+        this.generator = generator;
+        this.costFn = costFn;
+    }
+
+    public cloneDeep(): GeneratorInstance {
+        const cloned = new GeneratorInstance(this.generator, this.costFn);
+        const points = this.spawnPoints.map((point: SpawnPoint) => point.at);
+        cloned.root = this.root.cloneDeepReplacingPoints(points);
+        cloned.cost = this.cost;
+        cloned.spawnPoints = this.spawnPoints.map((point: SpawnPoint, i: number) => {
+            return {
+                component: point.component,
+                at: points[i]
+            };
+        });
+
+        return cloned;
+    }
+
+    public getNode(): Node {
+        return this.root;
+    }
+
+    public getCost(): number {
+        return this.cost;
+    }
+
+    /**
+     * Tells the generator that more components can be generated somewhere.
+     *
+     * @param {SpawnPoint} spawnPoint The name of the component to spawn and the point at which to
+     * spawn it.
+     */
+    public addDetail(spawnPoint: SpawnPoint) {
+        this.spawnPoints.push(spawnPoint);
+    }
+
+    public advance() {
+        let incrementalCost = 0;
+        let addedShape = false;
+
+        while (!addedShape && this.spawnPoints.length > 0) {
+            const spawnPoint = this.spawnPoints.splice(Math.floor(this.random() * this.spawnPoints.length), 1)[0];
+            const onAddCallback = (node: Node) => {
+                addedShape = true;
+                incrementalCost += this.costFn(node);
+            };
+            spawnPoint.at.onAdd(onAddCallback);
+
+            const generator = this.generator.getGenerator(spawnPoint.component);
+            generator(spawnPoint.at, this);
+
+            spawnPoint.at.removeOnAdd(onAddCallback);
+        }
+
+        this.cost += incrementalCost;
+    }
+
+    /**
+     * Randomly generate an armature from the current component definitions.
+     *
+     * @param {string} start The name of the component to use as a base.
+     * @param {number?} depth How many iterations of generation should be used.
+     * @returns {Node} The root node of the generated armature.
+     */
+    public generate(params: { start: string; depth?: number }) {
+        const { start, depth = 10 } = params;
+
+        this.initialize(start);
+
+        // Run `depth` rounds of generation
+        range(depth).forEach(() => {
+            this.advance();
+        });
+    }
+
+    public initialize(start: string) {
+        // Clear spawn points
+        this.spawnPoints.length = 0;
+
+        // Create initial spawn point
+        this.root.createPoint('spawn', { x: 0, y: 0, z: 0 });
+        this.addDetail({ component: start, at: this.root.point('spawn') });
+    }
+}
+
 /**
  * A way of representing a structure made of connected components, facilitating procedural
  * generation of instances of these structures.
  */
 export class Generator {
     private rules: { [name: string]: { totalWeight: number; definitions: Definition[] } } = {};
-    private spawnPoints: SpawnPoint[] = [];
-    private nextSpawnPoints: SpawnPoint[] = [];
     private random: RandomGenerator = Math.random;
 
     /**
@@ -28,11 +125,11 @@ export class Generator {
      * in this way have equal weight.
      *
      * @param {string} name The name of the component being generated.
-     * @param {(root: Point) => void} generator A function that takes in a spawn point and generates
-     * geometry at that point. Call `addDetail` in the function to spawn more.
+     * @param {GeneratorFn} generator A function that takes in a spawn point and generates geometry
+     * at that point. Call `addDetail` in the function to spawn more.
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
-    public define(name: string, generator: (root: Point) => void): Generator {
+    public define(name: string, generator: GeneratorFn): Generator {
         return this.defineWeighted(name, 1, generator);
     }
 
@@ -41,11 +138,11 @@ export class Generator {
      * that is gets created, and a 50% chance that it does not.
      *
      * @param {string} name The name of the component being generated.
-     * @param {(root: Point) => void} generator A function that takes in a spawn point and generates
+     * @param {GeneratorFn} generator A function that takes in a spawn point and generates
      * geometry at that point. Call `addDetail` in the function to spawn more.
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
-    public maybe(name: string, generator: (root: Point) => void): Generator {
+    public maybe(name: string, generator: GeneratorFn): Generator {
         return this.define(name, generator).define(name, () => {});
     }
 
@@ -54,12 +151,12 @@ export class Generator {
      * of being selected.
      *
      * @param {string} name The name of the component being generated.
-     * @param {((root: Point) => void)[]} generators Functions that takes in a spawn point and
+     * @param {GeneratorFn[]} generators Functions that takes in a spawn point and
      * generates geometry at that point. Call `addDetail` in functions to spawn more.
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
-    public choice(name: string, generators: ((root: Point) => void)[]): Generator {
-        generators.forEach((generator: (root: Point) => void) => this.define(name, generator));
+    public choice(name: string, generators: GeneratorFn[]): Generator {
+        generators.forEach((generator: GeneratorFn) => this.define(name, generator));
 
         return this;
     }
@@ -71,14 +168,14 @@ export class Generator {
      * @param {number} weight How much likely it is that this definition of should be used,
      * relative to other definititions of the same component. E.g. if one definition has a weight
      * of 2 and another has a weight of 1, there is a 2:1 chance that the first one will be used.
-     * @param {(root: Point) => void} generator A function that takes in a spawn point and generates
+     * @param {GeneratorFn} generator A function that takes in a spawn point and generates
      * geometry at that point. Call `addDetail` in the function to spawn more.
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
     public defineWeighted(
         name: string,
         weight: number,
-        generator: (root: Point) => void
+        generator: GeneratorFn
     ): Generator {
         // Make a component for the given name if one doesn't already exist
         if (this.rules[name] === undefined) {
@@ -93,52 +190,45 @@ export class Generator {
         return this;
     }
 
-    /**
-     * Tells the generator that more components can be generated somewhere.
-     *
-     * @param {SpawnPoint} spawnPoint The name of the component to spawn and the point at which to
-     * spawn it.
-     */
-    public addDetail(spawnPoint: SpawnPoint) {
-        this.nextSpawnPoints.push(spawnPoint);
+    public generate(params: { start: string; depth?: number }): Node {
+        const instance = new GeneratorInstance(this, () => 0);
+        instance.generate(params);
+
+        return instance.getNode();
     }
 
-    /**
-     * Randomly generate an armature from the current component definitions.
-     *
-     * @param {string} start The name of the component to use as a base.
-     * @param {number?} depth How many iterations of generation should be used.
-     * @returns {Node} The root node of the generated armature.
-     */
-    public generate(params: { start: string; depth?: number }): Node {
-        const { start, depth = 10 } = params;
+    public generateSOMC(params: { start: string; depth?: number; samples?: number; costFn: CostFn }): Node {
+        const { start, depth = 10, samples = 50, costFn } = params;
+        let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
 
-        // Clear spawn points
-        this.nextSpawnPoints.length = 0;
+        // Seed instances with starting state
+        instances.forEach((instance: GeneratorInstance) => instance.initialize(start));
 
-        // Create root node and initial spawn point
-        const root = new Node();
-        root.createPoint('spawn', { x: 0, y: 0, z: 0 });
-        this.addDetail({ component: start, at: root.point('spawn') });
+        range(depth).forEach((iteration: number) => {
+            // Step 1: grow samples
+            instances.forEach((instance: GeneratorInstance) => instance.advance());
 
-        // Run `depth` rounds of generation
-        range(depth).forEach(() => {
-            this.cycleSpawnPoints();
-            this.spawnPoints.forEach((spawnPoint: SpawnPoint) => {
-                const generator = this.getGenerator(spawnPoint.component);
-                generator(spawnPoint.at);
-            });
+            // Step 2: if there will be more iterations, do a weighted resample
+            if (iteration + 1 !== depth) {
+                const total = instances.reduce((accum: number, instance: GeneratorInstance) => {
+                    return accum + 1/instance.getCost();
+                }, 0);
+                instances = instances.map(() => {
+                    let sample = this.random() * total;
+                    let picked: GeneratorInstance | null = null;
+                    let i = 0;
+                    do {
+                        picked = instances[i];
+                        sample -= 1/picked.getCost();
+                        i += 1;
+                    } while (sample > 0);
+
+                    return picked.cloneDeep();
+                });
+            }
         });
 
-        return root;
-    }
-
-    /**
-     * Clears spawnPoints, and moves everything from nextSpawnPoints into spawnPoints.
-     */
-    private cycleSpawnPoints() {
-        this.spawnPoints.length = 0;
-        this.spawnPoints.push(...this.nextSpawnPoints.splice(0, this.nextSpawnPoints.length));
+        return (<GeneratorInstance> minBy(instances, (instance: GeneratorInstance) => instance.getCost())).getNode();
     }
 
     /**
@@ -147,9 +237,9 @@ export class Generator {
      * randomly pick one of those ways, according to the weights assigned to each way.
      *
      * @param {string} component The name of a component that we want to get a generator for.
-     * @returns {(root: Point) => void} A function to generate an instance of the component.
+     * @returns {GeneratorFn} A function to generate an instance of the component.
      */
-    private getGenerator(component: string): (root: Point) => void {
+    public getGenerator(component: string): GeneratorFn {
         if (this.rules[component] === undefined) {
             throw new Error(`Cannot find definition for component "${component}"`);
         }

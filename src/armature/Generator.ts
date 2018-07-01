@@ -1,6 +1,6 @@
 import { RandomGenerator } from '../utils/random';
 import { Model } from './Model';
-import { Node, Point } from './Node';
+import { GeometryNode, Node, Point } from './Node';
 
 import { minBy, range } from 'lodash';
 
@@ -16,7 +16,7 @@ type SpawnPoint = {
     at: Point;
 };
 
-export type CostFn = (node: Node) => number;
+export type CostFn = (instance: GeneratorInstance, nodes: GeometryNode[]) => number;
 
 export class GeneratorInstance {
     private model: Model = new Model();
@@ -52,6 +52,10 @@ export class GeneratorInstance {
         return this.cost;
     }
 
+    public activeSpawnPoints(): number {
+        return this.spawnPoints.length;
+    }
+
     /**
      * Tells the generator that more components can be generated somewhere.
      *
@@ -63,27 +67,23 @@ export class GeneratorInstance {
     }
 
     public advance() {
-        let incrementalCost = 0;
-        let addedShape = false;
+        const originalLength = this.model.nodes.length;
 
-        while (!addedShape && this.spawnPoints.length > 0) {
+        while (this.model.nodes.length === originalLength && this.spawnPoints.length > 0) {
             const spawnPoint = this.spawnPoints.splice(
                 Math.floor(this.random() * this.spawnPoints.length),
                 1
             )[0];
-            const onAddCallback = (node: Node) => {
-                addedShape = true;
-                incrementalCost += this.costFn(node);
-            };
-            spawnPoint.at.onAdd(onAddCallback);
 
             const generator = this.generator.getGenerator(spawnPoint.component);
             generator(spawnPoint.at, this);
-
-            spawnPoint.at.removeOnAdd(onAddCallback);
         }
 
-        this.cost += incrementalCost;
+        const addedGeometry: GeometryNode[] = [];
+        this.model.nodes.slice(originalLength).forEach((node: Node) => node.geometryCallback((g: GeometryNode) => {
+            addedGeometry.push(g);
+        }));
+        this.cost += this.costFn(this, addedGeometry);
     }
 
     /**

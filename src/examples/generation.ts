@@ -1,6 +1,7 @@
 import {
     Armature,
     GeneratorInstance,
+    GeometryNode,
     Light,
     Material,
     Matrix,
@@ -11,6 +12,8 @@ import {
     RGBColor,
     Shape
 } from '../calder';
+
+import { vec4 } from 'gl-matrix';
 
 // Create the renderer
 const renderer: Renderer = new Renderer({
@@ -66,7 +69,7 @@ treeGen
             .release();
         node
             .hold(node.point('handle'))
-            .rotate(Math.random() * 45)
+            .rotate(Math.random() * 70)
             .release();
         node.scale(0.8); // Shrink a bit
 
@@ -90,11 +93,23 @@ treeGen
     .maybe('maybeBranch', (root: Point, instance: GeneratorInstance) => {
         instance.addDetail({ component: 'branch', at: root });
     });
+
+const target = vec4.fromValues(0, 100, 0, 1);
 const tree = treeGen.generateSOMC({
     start: 'branch',
     depth: 150,
-    costFn: (_: Node) => {
-        return 0;
+    samples: 100,
+    costFn: (instance: GeneratorInstance, nodes: GeometryNode[]) => {
+        const distanceCost = nodes.reduce((sum: number, node: Node) => {
+            const localToGlobalTransform = node.localToGlobalTransform();
+            const globalPosition = vec4.transformMat4(vec4.create(), vec4.fromValues(0, 0, 0, 1), localToGlobalTransform);
+
+            return sum + vec4.length(vec4.sub(vec4.create(), target, globalPosition));
+        }, 0);
+        
+        const growthCost = 400 / instance.activeSpawnPoints();
+
+        return distanceCost * distanceCost + growthCost;
     }
 });
 

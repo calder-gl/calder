@@ -85,6 +85,8 @@ export class Node {
         return cloned;
     }
 
+    public geometryCallback(_: (node: GeometryNode) => void) {}
+
     public createPoint(name: string, positionCoord: coord) {
         const position = Mapper.coordToVector(positionCoord);
 
@@ -886,6 +888,10 @@ export class GeometryNode extends Node {
 
         return { currentMatrix, currentNormalMatrix, objects };
     }
+
+    public geometryCallback(callback: (node: GeometryNode) => void) {
+        callback(this);
+    }
 }
 
 /**
@@ -895,7 +901,6 @@ export class Point {
     public readonly node: Node;
     public readonly position: vec3;
     public readonly name: string;
-    private onAddCallbacks: ((node: Node) => void)[] = [];
 
     /**
      * @param {Node} node The node that this point is in the coordinate space of.
@@ -908,16 +913,6 @@ export class Point {
         this.name = name;
     }
 
-    public onAdd(callback: (node: Node) => void) {
-        this.onAddCallbacks.push(callback);
-    }
-
-    public removeOnAdd(callback: (node: Node) => void) {
-        this.onAddCallbacks = this.onAddCallbacks.filter((c: (node: Node) => void) => {
-            return c !== callback;
-        });
-    }
-
     /**
      * Attaches the current node to the specified target node at the given point.
      *
@@ -928,7 +923,6 @@ export class Point {
             throw new Error('Cannot attach a point to another point on the same node');
         }
         target.node.addChild(this.node);
-        target.runOnAddCallbacks(this.node);
         this.node.setAnchor(this.position);
         const vecSub = vec3.subtract(vec3.create(), target.position, this.position);
         this.node.setPosition(Mapper.vectorToCoord(vecSub));
@@ -945,14 +939,7 @@ export class Point {
         geometryNode.setAnchor(vec3.fromValues(0, 0, 0));
         geometryNode.setPosition(Mapper.vectorToCoord(this.position));
         this.node.addChild(geometryNode);
-        this.runOnAddCallbacks(geometryNode);
 
         return geometryNode;
-    }
-
-    protected runOnAddCallbacks(added: Node) {
-        this.onAddCallbacks.forEach((callback: (node: Node) => void) => {
-            callback(added);
-        });
     }
 }

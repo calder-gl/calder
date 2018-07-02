@@ -21,7 +21,8 @@ const renderer: Renderer = new Renderer({
     width: 800,
     height: 600,
     maxLights: 2,
-    ambientLightColor: RGBColor.fromRGB(0, 25, 25)
+    ambientLightColor: RGBColor.fromRGB(0, 25, 25),
+    backgroundColor: RGBColor.fromHex('#0066FF')
 });
 
 // Create light sources for the renderer

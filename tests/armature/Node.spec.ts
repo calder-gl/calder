@@ -2,11 +2,12 @@ import { mat4, quat, vec3, vec4 } from 'gl-matrix';
 import {
     defaultMaterial,
     Armature,
-    BakedGeometry,
+    Face,
     GeometryNode,
     Model,
     Node,
-    RenderObject
+    RenderObject,
+    WorkingGeometry
 } from '../../src/calder';
 import '../glMatrix';
 
@@ -150,12 +151,13 @@ describe('Node', () => {
     describe('attach', () => {
         it('creates a GeometryNode for the attached geometry', () => {
             const parent = bone();
-            const geometry: BakedGeometry = {
-                vertices: Float32Array.from([]),
-                normals: Float32Array.from([]),
-                indices: Int16Array.from([]),
+            const geometry: WorkingGeometry = new WorkingGeometry({
+                vertices: [vec3.create()],
+                normals: [vec3.create()],
+                faces: [new Face([])],
+                controlPoints: [vec3.create()],
                 material: defaultMaterial
-            };
+            });
 
             const geometryNode = parent.point('tip').attach(geometry);
             expect(geometryNode.parent).toBe(parent);
@@ -516,12 +518,13 @@ describe('Node', () => {
 
     describe('traverse', () => {
         it("flattens the parent's coordinate space and returns an array of `RenderObject`s", () => {
-            const geometry: BakedGeometry = {
-                vertices: Float32Array.from([]),
-                normals: Float32Array.from([]),
-                indices: Int16Array.from([]),
+            const geometry: WorkingGeometry = new WorkingGeometry({
+                vertices: [vec3.create()],
+                normals: [vec3.create()],
+                faces: [new Face([])],
+                controlPoints: [vec3.create()],
                 material: defaultMaterial
-            };
+            });
             const root = new Node();
             const nodeChild = new Node(root);
             const geometryChild = new GeometryNode(geometry, nodeChild);
@@ -556,12 +559,13 @@ describe('Node', () => {
         });
 
         it('defaults to no transformation', () => {
-            const geometry: BakedGeometry = {
-                vertices: Float32Array.from([]),
-                normals: Float32Array.from([]),
-                indices: Int16Array.from([]),
+            const geometry: WorkingGeometry = new WorkingGeometry({
+                vertices: [vec3.create()],
+                normals: [vec3.create()],
+                faces: [new Face([])],
+                controlPoints: [vec3.create()],
                 material: defaultMaterial
-            };
+            });
             const root = new Node();
             const nodeChild = new Node(root);
             const geometryChild = new GeometryNode(geometry, nodeChild);

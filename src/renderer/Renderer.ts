@@ -28,6 +28,7 @@ export type RendererParams = {
     height: number;
     maxLights: number;
     ambientLightColor: Color;
+    backgroundColor: Color;
 };
 
 /**
@@ -50,6 +51,9 @@ export class Renderer {
     private lights: Light[];
     private ambientLight: vec3;
 
+    // Length four array representing an RGBA color
+    private backgroundColorArray: [number, number, number, number];
+
     private projectionMatrix: mat4 = mat4.create();
     private ctx2D: CanvasRenderingContext2D;
 
@@ -58,7 +62,8 @@ export class Renderer {
             width: 0,
             height: 0,
             maxLights: 0,
-            ambientLightColor: RGBColor.fromHex('#000000')
+            ambientLightColor: RGBColor.fromHex('#000000'),
+            backgroundColor: RGBColor.fromHex('#000000')
         }
     ) {
         this.width = params.width;
@@ -66,6 +71,15 @@ export class Renderer {
         this.maxLights = params.maxLights;
         this.lights = [];
         this.ambientLight = params.ambientLightColor.asVec();
+
+        // Yeah, this is kinda sketchy, but REGL requires a [number, number, number, number] array instead of a number[] array
+        const backgroundColorArray = params.backgroundColor.asArray();
+        this.backgroundColorArray = [
+            backgroundColorArray[0],
+            backgroundColorArray[1],
+            backgroundColorArray[2],
+            1
+        ];
 
         // Create a single element to contain the renderer view
         this.stage = document.createElement('div');
@@ -105,7 +119,7 @@ export class Renderer {
         this.clearAll = () => {
             this.ctx2D.clearRect(0, 0, this.width, this.height);
             this.regl.clear({
-                color: [0, 0, 0, 1],
+                color: this.backgroundColorArray,
                 depth: 1
             });
         };

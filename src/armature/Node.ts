@@ -1,6 +1,13 @@
 import { glMatrix, mat3, mat4, quat, vec3, vec4 } from 'gl-matrix';
 import { flatten, isNumber } from 'lodash';
-import { closestPointOnLine, coord, coordFunc, BakedGeometry, RenderObject } from '../calder';
+import {
+    closestPointOnLine,
+    coord,
+    coordFunc,
+    BakedGeometry,
+    RenderObject,
+    WorkingGeometry
+} from '../calder';
 import { vec3From4, vec3ToPoint } from '../math/utils';
 import { defaultMaterial } from '../renderer/Material';
 import { matrix4, vector3 } from '../types/InternalVectorTypes';
@@ -847,18 +854,21 @@ export class GeometryNode extends Node {
     /**
      * Instantiates a new `GeometryNode`.
      *
-     * @param {BakedGeometry} geometry
-     * @param {Node[]} children
+     * @param {WorkingGeometry} geometry
+     * @param {Node} parent
+     * @param {vector3} position
+     * @param {matrix4} rotation
+     * @param {matrix4} scale
      */
     constructor(
-        geometry: BakedGeometry,
+        geometry: WorkingGeometry,
         parent: Node | null = null,
         position: vector3 = vec3.fromValues(0, 0, 0),
         rotation: matrix4 = mat4.create(),
         scale: matrix4 = mat4.create()
     ) {
         super(parent, position, rotation, scale);
-        this.geometry = geometry;
+        this.geometry = geometry.bake();
     }
 
     /**
@@ -931,10 +941,10 @@ export class Point {
     /**
      * Attaches the specified geometry to the current point on a node.
      *
-     * @param {BakedGeometry} geometry The geometry to attach to the current point.
+     * @param {WorkingGeometry} geometry The geometry to attach to the current point.
      * @returns {GeometryNode} The node created to hold the geometry.
      */
-    public attach(geometry: BakedGeometry): GeometryNode {
+    public attach(geometry: WorkingGeometry): GeometryNode {
         const geometryNode = new GeometryNode(geometry);
         geometryNode.setAnchor(vec3.fromValues(0, 0, 0));
         geometryNode.setPosition(Mapper.vectorToCoord(this.position));

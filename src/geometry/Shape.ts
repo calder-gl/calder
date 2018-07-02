@@ -23,9 +23,16 @@ export namespace Shape {
             (i: number) => new Face(range(i * 3, (i + 1) * 3))
         );
 
-        return new WorkingGeometry(vertices, vertices, faces, [], material);
+        return new WorkingGeometry({
+            vertices: vertices,
+            normals: vertices,
+            faces: faces,
+            controlPoints: [],
+            material: material
+        });
     }
 
+    // tslint:disable:max-func-body-length
     export function cylinder(material: Material = defaultMaterial): WorkingGeometry {
         const LENGTH = 1;
         const PRECISION = 20;
@@ -123,6 +130,12 @@ export namespace Shape {
             );
         });
 
-        return new WorkingGeometry(vertices, normals, faces, [], material);
+        return new WorkingGeometry({
+            vertices: vertices,
+            normals: normals,
+            faces: faces,
+            controlPoints: [],
+            material: material
+        });
     }
 }

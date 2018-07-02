@@ -106,7 +106,7 @@ treeGen
 const treeTarget = Model.create();
 const sphere = treeTarget.add(new GeometryNode(leafSphere));
 sphere.scale(4);
-sphere.moveTo({x: 5, y: 7, z: 0});
+sphere.moveTo({ x: 5, y: 7, z: 0 });
 
 const tree = treeGen.generateSOSMC({
     start: 'branch',

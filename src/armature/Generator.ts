@@ -125,9 +125,11 @@ export class GeneratorInstance {
 
         // Out of the `Node`s that were generated, get the ones that were `GeometryNode`s
         const addedGeometry: GeometryNode[] = [];
-        this.model.nodes.slice(originalLength).forEach((node: Node) => node.geometryCallback((g: GeometryNode) => {
-            addedGeometry.push(g);
-        }));
+        this.model.nodes.slice(originalLength).forEach((node: Node) =>
+            node.geometryCallback((g: GeometryNode) => {
+                addedGeometry.push(g);
+            })
+        );
 
         // Recompute the cost
         this.cost = this.costFn(this, addedGeometry);
@@ -289,10 +291,13 @@ export class Generator {
                 // picked for the next generation. A low cost should give a high weight, and a high
                 // cost should give a low weight.
 
-                const totalWeight = instances.reduce((accum: number, instance: GeneratorInstance) => {
-                    // 1 / e^x means that lower (even negative) costs get a higher weight
-                    return accum + 1 / Math.exp(instance.getCost());
-                }, 0);
+                const totalWeight = instances.reduce(
+                    (accum: number, instance: GeneratorInstance) => {
+                        // 1 / e^x means that lower (even negative) costs get a higher weight
+                        return accum + 1 / Math.exp(instance.getCost());
+                    },
+                    0
+                );
 
                 // Re-pick instances from the previous set, according to their weights
                 instances = instances.map(() => {

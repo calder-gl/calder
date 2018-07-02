@@ -12,7 +12,6 @@ type RenderInfo = { currentMatrix: mat4; currentNormalMatrix: mat3; objects: Nod
  * needing to be modified.
  */
 export class Model {
-
     /**
      * The collection of connected nodes.
      */
@@ -98,7 +97,6 @@ export class Model {
                 // Add to the result
                 result.geometry.push(...info.objects.geometry);
                 result.bones.push(...info.objects.bones);
-
             } else if (renderCache.has(node.parent)) {
                 // If the node's parent has already been rendered, we can read its transformation
                 // information from the cache
@@ -113,7 +111,6 @@ export class Model {
                 // Add to the result
                 result.geometry.push(...info.objects.geometry);
                 result.bones.push(...info.objects.bones);
-
             } else {
                 // Otherwise, we need to render the parent before the current node. Add both back
                 // to the list, but with the parent closer to the top, so that it gets rendered

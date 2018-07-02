@@ -17,7 +17,7 @@ export namespace TestHelper {
         start: vec3 = vec3.fromValues(0, 0, 0),
         size: number = 1
     ): WorkingGeometry {
-        /*
+        /**
          *   1----2     y
          *   |    |     | z
          *   |    |     |/
@@ -68,15 +68,15 @@ export namespace TestHelper {
     ): WorkingGeometry {
         // TODO(pbardea): This is currently just used by tests, but this should be exposed as
         // basic geometrical structures for the user.
-        /*
-     *      5-------6
-     *     /|      /|
-     *    1-+-----2 |
-     *    | |     | |   y
-     *    | 4-----+-7   | z
-     *    |/      |/    |/
-     *    0-------3     +--x
-     */
+        /**
+         *      5-------6
+         *     /|      /|
+         *    1-+-----2 |
+         *    | |     | |   y
+         *    | 4-----+-7   | z
+         *    |/      |/    |/
+         *    0-------3     +--x
+         */
         const cubeVertices = [
             // Front side of cube.
             vec3.fromValues(0, 0, 0),

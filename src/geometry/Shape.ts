@@ -32,6 +32,7 @@ export namespace Shape {
         });
     }
 
+    // tslint:disable:max-func-body-length
     export function cylinder(material: Material = defaultMaterial): WorkingGeometry {
         const LENGTH = 1;
         const PRECISION = 20;

@@ -81,6 +81,16 @@ export class WorkingGeometry implements Bakeable {
     private material: Material;
 
     /**
+     * If the instance is mutated, perform work to compute the new baked representation.
+     */
+    private updateCache: boolean;
+
+    /**
+     * A memoized `BakedGeometry` representation of the instance.
+     */
+    private bakedRepresentation: BakedGeometry;
+
+    /**
      * Creates a working geometry from a given set of vertices, faces, and control points.
      *
      * @param {WorkingGeometryParams} params: Parameters for creating a `WorkingGeometry`.
@@ -102,6 +112,7 @@ export class WorkingGeometry implements Bakeable {
         this.controlPoints = params.controlPoints.map(Affine.createPoint);
         this.mergedObjects = [];
         this.material = params.material;
+        this.updateCache = true;
     }
 
     /**
@@ -119,28 +130,34 @@ export class WorkingGeometry implements Bakeable {
      * @returns {BakedGeometry}
      */
     public bake(): BakedGeometry {
-        this.combine();
+        if (this.updateCache) {
+            this.combine();
 
-        const bakedVertices = flatMap(this.vertices, (workingVec: vec4) => [
-            workingVec[0],
-            workingVec[1],
-            workingVec[2]
-        ]);
-        const bakedIndices = this.faces.reduce((accum: number[], face: Face) => {
-            return accum.concat(face.indices);
-        }, []);
-        const bakedNormals = flatMap(this.normals, (workingVec: vec4) => [
-            workingVec[0],
-            workingVec[1],
-            workingVec[2]
-        ]);
+            const bakedVertices = flatMap(this.vertices, (workingVec: vec4) => [
+                workingVec[0],
+                workingVec[1],
+                workingVec[2]
+            ]);
+            const bakedIndices = this.faces.reduce((accum: number[], face: Face) => {
+                return accum.concat(face.indices);
+            }, []);
+            const bakedNormals = flatMap(this.normals, (workingVec: vec4) => [
+                workingVec[0],
+                workingVec[1],
+                workingVec[2]
+            ]);
 
-        return {
-            vertices: Float32Array.from(bakedVertices),
-            normals: Float32Array.from(bakedNormals),
-            indices: Int16Array.from(bakedIndices),
-            material: this.material.bake()
-        };
+            this.bakedRepresentation = {
+                vertices: Float32Array.from(bakedVertices),
+                normals: Float32Array.from(bakedNormals),
+                indices: Int16Array.from(bakedIndices),
+                material: this.material.bake()
+            };
+
+            this.updateCache = false;
+        }
+
+        return this.bakedRepresentation;
     }
 
     /**
@@ -258,6 +275,7 @@ export class WorkingGeometry implements Bakeable {
      * @param {Material} material The new material for the geometry.
      */
     public setFill(material: Material) {
+        this.updateCache = true;
         this.material = material;
     }
 
@@ -266,6 +284,8 @@ export class WorkingGeometry implements Bakeable {
      * control points.
      */
     protected combine() {
+        this.updateCache = true;
+
         this.mergedObjects.forEach((child: WorkingGeometry) => {
             child.combine();
         });
@@ -289,6 +309,8 @@ export class WorkingGeometry implements Bakeable {
      * @param {mat4} matrix: Transformation matrix.
      */
     private transform(matrix: mat4) {
+        this.updateCache = true;
+
         this.vertices = this.vertices.map((workingVec: vec4) =>
             vec4.transformMat4(vec4.create(), workingVec, matrix)
         );

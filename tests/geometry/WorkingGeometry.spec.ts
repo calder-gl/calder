@@ -4,6 +4,7 @@ import { TestHelper } from '../utils/helper';
 import { vec3, vec4 } from 'gl-matrix';
 import { flatten, flatMap } from 'lodash';
 
+import { defaultMaterial } from '../../src/calder';
 import '../glMatrix';
 
 function compareFloatArrays(actual: Float32Array, expected: Float32Array) {
@@ -49,7 +50,13 @@ describe('WorkingGeometry', () => {
             ];
             const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
-            const geo = new WorkingGeometry(vertices, normals, faces, controlPoints);
+            const geo = new WorkingGeometry({
+                vertices: vertices,
+                normals: normals,
+                faces: faces,
+                controlPoints: controlPoints,
+                material: defaultMaterial
+            });
 
             expect(geo.vertices).toEqual([
                 vec4.fromValues(0, 0, 0, 1),
@@ -77,7 +84,13 @@ describe('WorkingGeometry', () => {
             ];
             const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
-            const square = new WorkingGeometry(vertices, normals, faces, controlPoints);
+            const square = new WorkingGeometry({
+                vertices: vertices,
+                normals: normals,
+                faces: faces,
+                controlPoints: controlPoints,
+                material: defaultMaterial
+            });
             const bakedSquare = square.bake();
 
             // Not testing the colors yet since they don't do anything useful
@@ -91,6 +104,7 @@ describe('WorkingGeometry', () => {
                 Float32Array.from(flatMap(normals, (n: vec3) => [n[0], n[1], n[2]]))
             );
         });
+
         it('can bake a WorkingGeometry that has many merged objects', () => {
             const rootSquare = TestHelper.square();
             const childSquare1 = TestHelper.square(vec3.fromValues(1, 0, 0));

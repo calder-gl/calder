@@ -2,7 +2,6 @@ import {
     identityMatrix4,
     Animation,
     Armature,
-    BakedGeometry,
     Constraints,
     CMYKColor,
     Light,
@@ -51,10 +50,7 @@ const red: CMYKColor = CMYKColor.fromCMYK(0, 1, 1, 0);
 const purple: CMYKColor = red.mix(blue);
 
 // Setup sphere
-const workingSphere: WorkingGeometry = Shape.sphere(
-    Material.create({ color: purple, shininess: 256 })
-);
-const sphere: BakedGeometry = workingSphere.bake();
+const sphere: WorkingGeometry = Shape.sphere(Material.create({ color: purple, shininess: 256 }));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 2: create armature

@@ -4,6 +4,9 @@ import { GeometryNode, Node, Point } from './Node';
 
 import { minBy, range } from 'lodash';
 
+/**
+ * A function to generate a component from a spawn point. These are the body of rule definitions.
+ */
 type GeneratorFn = (root: Point, instance: GeneratorInstance) => void;
 
 type Definition = {
@@ -16,8 +19,16 @@ type SpawnPoint = {
     at: Point;
 };
 
+/**
+ * A cost function returns the cost of an entire model. The new geometry nodes that were added
+ * since the last iteration of generation are passed to the cost function so that, if you can,
+ * you can just compute the incremental cost and add it to the previous cost, `instance.getCost()`.
+ */
 export type CostFn = (instance: GeneratorInstance, nodes: GeometryNode[]) => number;
 
+/**
+ * An instance of a generated model, possibly in the middle of generation.
+ */
 export class GeneratorInstance {
     private model: Model = new Model();
     private generator: Generator;
@@ -26,15 +37,31 @@ export class GeneratorInstance {
     private spawnPoints: SpawnPoint[] = [];
     private random: RandomGenerator = Math.random;
 
+    /**
+     * Creates an instance of a generator, with a function specifying how to evaluate how "good"
+     * it is.
+     *
+     * @param {Generator} generator The generator this is an instance of.
+     * @param {CostFn} costFn A function to evaluate this instance.
+     */
     constructor(generator: Generator, costFn: CostFn) {
         this.generator = generator;
         this.costFn = costFn;
     }
 
+    /**
+     * A wrapper for `mode.add`, for convenience when defining rules.
+     *
+     * @param {Node} node The node to add to the model.
+     * @returns {Node} The node that was added.
+     */
     public add(node: Node): Node {
         return this.model.add(node);
     }
 
+    /**
+     * @returns {GeneratorInstance} A flat copy of this generator instance.
+     */
     public clone(): GeneratorInstance {
         const cloned = new GeneratorInstance(this.generator, this.costFn);
         cloned.model = this.model.clone();
@@ -44,14 +71,24 @@ export class GeneratorInstance {
         return cloned;
     }
 
+    /**
+     * @returns {Model} The model this instance has generated so far.
+     */
     public getModel(): Model {
         return this.model;
     }
 
+    /**
+     * @returns {number} The current cost of the model the instance has generated so far.
+     */
     public getCost(): number {
         return this.cost;
     }
 
+    /**
+     * @returns {number} How many spawn points the generator can choose from when growing the
+     * next generation.
+     */
     public activeSpawnPoints(): number {
         return this.spawnPoints.length;
     }
@@ -66,23 +103,33 @@ export class GeneratorInstance {
         this.spawnPoints.push(spawnPoint);
     }
 
+    /**
+     * Grows this instance, if possible, until a new shape is added.
+     */
     public advance() {
         const originalLength = this.model.nodes.length;
 
         while (this.model.nodes.length === originalLength && this.spawnPoints.length > 0) {
+            // Remove a random spawn point from the list of active points
             const spawnPoint = this.spawnPoints.splice(
                 Math.floor(this.random() * this.spawnPoints.length),
                 1
             )[0];
 
+            // Get a definition for the rule at the picked spawn point
             const generator = this.generator.getGenerator(spawnPoint.component);
+
+            // Add things to the model using the rule definition
             generator(spawnPoint.at, this);
         }
 
+        // Out of the `Node`s that were generated, get the ones that were `GeometryNode`s
         const addedGeometry: GeometryNode[] = [];
         this.model.nodes.slice(originalLength).forEach((node: Node) => node.geometryCallback((g: GeometryNode) => {
             addedGeometry.push(g);
         }));
+
+        // Recompute the cost
         this.cost = this.costFn(this, addedGeometry);
     }
 
@@ -104,6 +151,11 @@ export class GeneratorInstance {
         });
     }
 
+    /**
+     * Prepares this instance for generation.
+     *
+     * @param {string} start The name of the rule to start generating from.
+     */
     public initialize(start: string) {
         this.cost = 0;
 
@@ -191,6 +243,13 @@ export class Generator {
         return this;
     }
 
+    /**
+     * Generates a single model.
+     *
+     * @param {string} start The name of the rule to start generating from.
+     * @param {number} depth How many iterations to run before stopping.
+     * @returns {Model} The model that was generated.
+     */
     public generate(params: { start: string; depth?: number }): Model {
         const instance = new GeneratorInstance(this, () => 0);
         instance.generate(params);
@@ -198,7 +257,17 @@ export class Generator {
         return instance.getModel();
     }
 
-    public generateSOMC(params: {
+    /**
+     * Generates a model using the SOSMC algorithm, which samples multiple instances of this
+     * generator, favoring ones with a lower cost.
+     *
+     * @param {string} start The name of the rule to start generating from.
+     * @param {number} depth How many iterations to run before stopping.
+     * @param {number} samples How many samples to look at in parallel.
+     * @param {CostFn} costFn A function used to measure the cost of each sample.
+     * @returns {Model} The model that was generated.
+     */
+    public generateSOSMC(params: {
         start: string;
         depth?: number;
         samples?: number;
@@ -216,12 +285,23 @@ export class Generator {
 
             // Step 2: if there will be more iterations, do a weighted resample
             if (iteration + 1 !== depth) {
+                // We use "weight" here instead of cost to define how likely an instance is to be
+                // picked for the next generation. A low cost should give a high weight, and a high
+                // cost should give a low weight.
+
                 const totalWeight = instances.reduce((accum: number, instance: GeneratorInstance) => {
                     // 1 / e^x means that lower (even negative) costs get a higher weight
                     return accum + 1 / Math.exp(instance.getCost());
                 }, 0);
+
+                // Re-pick instances from the previous set, according to their weights
                 instances = instances.map(() => {
+                    // Generate a random number in [0, totalWeight)
                     let sample = this.random() * totalWeight;
+
+                    // Subtract each instance's weight from the generated number until it reaches
+                    // zero. The instance to make it reach zero is the instance corresponding to
+                    // the random number we generated.
                     let picked: GeneratorInstance | null = null;
                     let i = 0;
                     do {
@@ -230,11 +310,14 @@ export class Generator {
                         i += 1;
                     } while (sample > 0);
 
+                    // Make a new copy of the picked instance that can be grown independently from
+                    // the original version.
                     return picked.clone();
                 });
             }
         });
 
+        // From the last generation, pick the one with the lowest cost.
         return (<GeneratorInstance>minBy(instances, (instance: GeneratorInstance) =>
             instance.getCost()
         )).getModel();

@@ -94,7 +94,7 @@ treeGen
         instance.addDetail({ component: 'branch', at: root });
     });
 
-/*const tree = treeGen.generateSOMC({
+/*const tree = treeGen.generateSOSMC({
     start: 'branch',
     depth: 150,
     samples: 100,
@@ -109,7 +109,7 @@ const sphere = treeTarget.add(new GeometryNode(leafSphere));
 sphere.scale(4);
 sphere.moveTo({x: 5, y: 7, z: 0});
 
-const tree = treeGen.generateSOMC({
+const tree = treeGen.generateSOSMC({
     start: 'branch',
     depth: 150,
     samples: 100,

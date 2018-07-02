@@ -2,6 +2,7 @@ import { vec3 } from 'gl-matrix';
 import { Face, WorkingGeometry } from '../../src/geometry/WorkingGeometry';
 
 import { flatMap } from 'lodash';
+import { defaultMaterial } from '../../src/calder';
 
 export namespace TestHelper {
     /**
@@ -17,10 +18,10 @@ export namespace TestHelper {
         size: number = 1
     ): WorkingGeometry {
         /*
-         *   1----2     y    
-         *   |    |     | z     
-         *   |    |     |/     
-         *   0----3     +--x     
+         *   1----2     y
+         *   |    |     | z
+         *   |    |     |/
+         *   0----3     +--x
          */
         const unitVertices = [
             vec3.fromValues(0, 0, 0),
@@ -44,7 +45,13 @@ export namespace TestHelper {
             return out;
         });
 
-        return new WorkingGeometry(vertices, normals, faces, controlPoints);
+        return new WorkingGeometry({
+            vertices: vertices,
+            normals: normals,
+            faces: faces,
+            controlPoints: controlPoints,
+            material: defaultMaterial
+        });
     }
 
     /**
@@ -62,14 +69,14 @@ export namespace TestHelper {
         // TODO(pbardea): This is currently just used by tests, but this should be exposed as
         // basic geometrical structures for the user.
         /*
-		 *      5-------6
-		 *     /|      /|
-		 *    1-+-----2 | 
-		 *    | |     | |   y
-		 *    | 4-----+-7   | z
-		 *    |/      |/    |/
-		 *    0-------3     +--x
-		 */
+     *      5-------6
+     *     /|      /|
+     *    1-+-----2 |
+     *    | |     | |   y
+     *    | 4-----+-7   | z
+     *    |/      |/    |/
+     *    0-------3     +--x
+     */
         const cubeVertices = [
             // Front side of cube.
             vec3.fromValues(0, 0, 0),
@@ -144,6 +151,12 @@ export namespace TestHelper {
             return out;
         });
 
-        return new WorkingGeometry(vertices, normals, faces, controlPoints);
+        return new WorkingGeometry({
+            vertices: vertices,
+            normals: normals,
+            faces: faces,
+            controlPoints: controlPoints,
+            material: defaultMaterial
+        });
     }
 }

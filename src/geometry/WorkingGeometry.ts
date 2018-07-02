@@ -22,6 +22,23 @@ export class Face {
     }
 }
 
+export type WorkingGeometryParams = {
+    // The points that make up the geometry.
+    vertices: vec3[];
+
+    // The normals corresponding to the vertices.
+    normals: vec3[];
+
+    // The surfaces of the object, relating the vertices to each other.
+    faces: Face[];
+
+    // A set of points to snap to or reference.
+    controlPoints: vec3[];
+
+    // The material for this WorkingGeometry.
+    material: Material;
+};
+
 /**
  * A representation of geometry while modelling is happening.
  */
@@ -66,27 +83,25 @@ export class WorkingGeometry implements Bakeable {
     /**
      * Creates a working geometry from a given set of vertices, faces, and control points.
      *
-     * @param {vec3[]} vertices: The points that make up the geometry.
-     * @param {vec3[]} normals: The normals corresponding to the vertices.
-     * @param {Face[]} faces: The surfaces of the object, relating the vertices to each other.
-     * @param {vec3[]} controlPoints: A set of points to snap to or reference.
-     * @param {Material} material: The material for this WorkingGeometry.
+     * @param {WorkingGeometryParams} params: Parameters for creating a `WorkingGeometry`.
      * @return {WorkingGeometry}
      */
     constructor(
-        vertices: vec3[] = [],
-        normals: vec3[] = [],
-        faces: Face[] = [],
-        controlPoints: vec3[] = [],
-        material: Material = defaultMaterial
+        params: WorkingGeometryParams = {
+            vertices: [],
+            normals: [],
+            faces: [],
+            controlPoints: [],
+            material: defaultMaterial
+        }
     ) {
         // TODO(pbardea): Check if max(indices) of all faces is <= the len(vertices)
-        this.vertices = vertices.map(Affine.createPoint);
-        this.normals = normals.map(Affine.createVector);
-        this.faces = faces;
-        this.controlPoints = controlPoints.map(Affine.createPoint);
+        this.vertices = params.vertices.map(Affine.createPoint);
+        this.normals = params.normals.map(Affine.createVector);
+        this.faces = params.faces;
+        this.controlPoints = params.controlPoints.map(Affine.createPoint);
         this.mergedObjects = [];
-        this.material = material;
+        this.material = params.material;
     }
 
     /**

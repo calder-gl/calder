@@ -36,13 +36,11 @@ renderer.addLight(light1);
 
 // Setup leaf
 const leafColor = RGBColor.fromRGB(204, 255, 204);
-const workingLeafSphere = Shape.sphere(Material.create({ color: leafColor, shininess: 100 }));
-const leafSphere = workingLeafSphere.bake();
+const leafSphere = Shape.sphere(Material.create({ color: leafColor, shininess: 100 }));
 
 // Setup branch
 const branchColor = RGBColor.fromRGB(102, 76.5, 76.5);
-const workingBranchShape = Shape.cylinder(Material.create({ color: branchColor, shininess: 1 }));
-const branchShape = workingBranchShape.bake();
+const branchShape = Shape.cylinder(Material.create({ color: branchColor, shininess: 1 }));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 2: create armature

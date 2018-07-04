@@ -69,6 +69,24 @@ export namespace CostFunction {
         };
     }
 
+    // Given a GeometryNode, make an axis-aligned bounding box, which consists of a min corner
+    // and a max corner.
+    const worldSpaceAABB = (node: GeometryNode) => {
+        const localToGlobalTransform = node.localToGlobalTransform();
+        const min = vec4.transformMat4(
+            vec4.create(),
+            node.geometry.aabb.min,
+            localToGlobalTransform
+        );
+        const max = vec4.transformMat4(
+            vec4.create(),
+            node.geometry.aabb.max,
+            localToGlobalTransform
+        );
+
+        return { min, max };
+    };
+
     /**
      * Creates a cost function based on how much of a target volume a shape fills.
      *
@@ -89,24 +107,7 @@ export namespace CostFunction {
             return `${keyX},${keyY},${keyZ}`;
         };
 
-        // Given a GeometryNode, make an axis-aligned bounding box, which consists of a min corner
-        // and a max corner.
-        const worldSpaceAABB = (node: GeometryNode) => {
-            const localToGlobalTransform = node.localToGlobalTransform();
-            const min = vec4.transformMat4(
-                vec4.create(),
-                node.geometry.aabb.min,
-                localToGlobalTransform
-            );
-            const max = vec4.transformMat4(
-                vec4.create(),
-                node.geometry.aabb.max,
-                localToGlobalTransform
-            );
-
-            return { min, max };
-        };
-
+        // Returns the points that are in a world-space AABB.
         const pointsInAABB = (aabb: AABB) => {
             const points: string[] = [];
             const point = vec4.fromValues(0, 0, 0, 1);

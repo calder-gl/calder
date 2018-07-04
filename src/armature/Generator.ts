@@ -307,13 +307,13 @@ export class Generator {
                     // Subtract each instance's weight from the generated number until it reaches
                     // zero. The instance to make it reach zero is the instance corresponding to
                     // the random number we generated.
-                    let picked: GeneratorInstance | null = null;
+                    let picked: GeneratorInstance = instances[0];
                     let i = 0;
-                    do {
+                    while (sample > 0) {
                         picked = instances[i];
                         sample -= 1 / Math.exp(picked.getCost());
                         i += 1;
-                    } while (sample > 0);
+                    }
 
                     // Make a new copy of the picked instance that can be grown independently from
                     // the original version.

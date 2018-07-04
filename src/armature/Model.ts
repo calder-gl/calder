@@ -3,7 +3,22 @@ import { mat3, mat4 } from 'gl-matrix';
 import { Node } from './Node';
 import { NodeRenderObject } from './NodeRenderObject';
 
-type RenderInfo = { currentMatrix: mat4; currentNormalMatrix: mat3; objects: NodeRenderObject };
+type RenderInfo = {
+    /**
+     * The position transformation matrix for a node's coordinate space.
+     */
+    currentMatrix: mat4;
+
+    /**
+     * The normal transformation matrix for a node's coordinate space.
+     */
+    currentNormalMatrix: mat3;
+
+    /**
+     * The geometry and bones to be rendered from a node.
+     */
+    objects: NodeRenderObject;
+};
 
 /**
  * A set of connected armature nodes, enabling efficient creation of a copy that one can add to

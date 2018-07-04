@@ -35,9 +35,11 @@ export namespace CostFunction {
         return (instance: GeneratorInstance, added: Node[]) => {
             // Out of the added nodes, just get the geometry nodes
             const addedGeometry: GeometryNode[] = [];
-            added.forEach((n: Node) => n.geometryCallback((node: GeometryNode) => {
-                addedGeometry.push(node);
-            }));
+            added.forEach((n: Node) =>
+                n.geometryCallback((node: GeometryNode) => {
+                    addedGeometry.push(node);
+                })
+            );
 
             // For each added shape and each influence point, add the resulting cost to the
             // instance's existing cost.
@@ -91,8 +93,16 @@ export namespace CostFunction {
         // and a max corner.
         const worldSpaceAABB = (node: GeometryNode) => {
             const localToGlobalTransform = node.localToGlobalTransform();
-            const min = vec4.transformMat4(vec4.create(), node.geometry.aabb.min, localToGlobalTransform);
-            const max = vec4.transformMat4(vec4.create(), node.geometry.aabb.max, localToGlobalTransform);
+            const min = vec4.transformMat4(
+                vec4.create(),
+                node.geometry.aabb.min,
+                localToGlobalTransform
+            );
+            const max = vec4.transformMat4(
+                vec4.create(),
+                node.geometry.aabb.max,
+                localToGlobalTransform
+            );
 
             return { min, max };
         };
@@ -100,16 +110,24 @@ export namespace CostFunction {
         const pointsInAABB = (aabb: AABB) => {
             const points: string[] = [];
             const point = vec4.fromValues(0, 0, 0, 1);
-            range(Math.floor(aabb.min[0]), Math.ceil(aabb.max[0]), cellSize).forEach((x: number) => {
-                range(Math.floor(aabb.min[1]), Math.ceil(aabb.max[1]), cellSize).forEach((y: number) => {
-                    range(Math.floor(aabb.min[2]), Math.ceil(aabb.max[2]), cellSize).forEach((z: number) => {
-                        point[0] = x;
-                        point[1] = y;
-                        point[2] = z;
-                        points.push(makeKey(point));
-                    });
-                });
-            });
+            range(Math.floor(aabb.min[0]), Math.ceil(aabb.max[0]), cellSize).forEach(
+                (x: number) => {
+                    range(Math.floor(aabb.min[1]), Math.ceil(aabb.max[1]), cellSize).forEach(
+                        (y: number) => {
+                            range(
+                                Math.floor(aabb.min[2]),
+                                Math.ceil(aabb.max[2]),
+                                cellSize
+                            ).forEach((z: number) => {
+                                point[0] = x;
+                                point[1] = y;
+                                point[2] = z;
+                                points.push(makeKey(point));
+                            });
+                        }
+                    );
+                }
+            );
 
             return points;
         };
@@ -118,7 +136,9 @@ export namespace CostFunction {
         const targetCoords: Grid = {};
         targetModel.nodes.forEach((n: Node) =>
             n.geometryCallback((node: GeometryNode) => {
-                pointsInAABB(worldSpaceAABB(node)).forEach((point: string) => targetCoords[point] = true);
+                pointsInAABB(worldSpaceAABB(node)).forEach(
+                    (point: string) => (targetCoords[point] = true)
+                );
             })
         );
 
@@ -127,11 +147,13 @@ export namespace CostFunction {
             // added to the end of a model's node list, if n nodes are new in the current model
             // compared to its parent, then the parent grid will be indexed by the nth-from-last
             // node in the current model's node list.
-            const parentGrid = gridCache.get(instance.getModel().nodes[instance.getModel().nodes.length - 1 - added.length]);
+            const parentGrid = gridCache.get(
+                instance.getModel().nodes[instance.getModel().nodes.length - 1 - added.length]
+            );
 
             // If the parent grid does exist, we want to start from the same grid as the
             // parent, and then add to it
-            const grid = parentGrid === undefined ? {} : {...parentGrid};
+            const grid = parentGrid === undefined ? {} : { ...parentGrid };
 
             let incrementalCost = 0;
 
@@ -144,8 +166,8 @@ export namespace CostFunction {
                             grid[point] = true;
 
                             // If this point was in the target region, reduce the cost
-                            incrementalCost += cellSize * cellSize * cellSize *
-                                (targetCoords[point] ? -1 : 1);
+                            incrementalCost +=
+                                cellSize * cellSize * cellSize * (targetCoords[point] ? -1 : 1);
                         }
                     });
                 })

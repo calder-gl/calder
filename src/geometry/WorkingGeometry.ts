@@ -164,7 +164,7 @@ export class WorkingGeometry implements Bakeable {
                 normals: Float32Array.from(bakedNormals),
                 indices: Int16Array.from(bakedIndices),
                 material: this.material.bake(),
-                aabb: {min, max}
+                aabb: { min, max }
             };
 
             this.updateCache = false;

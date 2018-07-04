@@ -1,4 +1,5 @@
 import { coord } from '../calder';
+import { AABB } from '../geometry/BakedGeometry';
 import { vec3From4 } from '../math/utils';
 import { Mapper } from '../utils/mapper';
 import { CostFn, GeneratorInstance } from './Generator';
@@ -14,7 +15,6 @@ export type ForcePoint = {
 };
 
 type Grid = { [key: string]: true };
-type AABB = { min: coord; max: coord };
 
 export namespace CostFunction {
     /**
@@ -32,10 +32,16 @@ export namespace CostFunction {
             };
         });
 
-        return (instance: GeneratorInstance, added: GeometryNode[]) => {
+        return (instance: GeneratorInstance, added: Node[]) => {
+            // Out of the added nodes, just get the geometry nodes
+            const addedGeometry: GeometryNode[] = [];
+            added.forEach((n: Node) => n.geometryCallback((node: GeometryNode) => {
+                addedGeometry.push(node);
+            }));
+
             // For each added shape and each influence point, add the resulting cost to the
             // instance's existing cost.
-            return added.reduce((sum: number, node: GeometryNode) => {
+            return addedGeometry.reduce((sum: number, node: GeometryNode) => {
                 const localToGlobalTransform = node.localToGlobalTransform();
                 const globalPosition = vec3From4(
                     vec4.transformMat4(
@@ -69,99 +75,82 @@ export namespace CostFunction {
      * @returns {CostFn} The resulting cost function.
      */
     export function fillVolume(targetModel: Model, cellSize: number): CostFn {
+        const gridCache = new Map<Node, Grid>();
+
         // A grid uses a string as a key because otherwise it would use object equality on points,
         // which we don't want. This function makes a string key from a point.
-        const makeKey = (point: coord) => {
-            const keyX = Math.round(point.x / cellSize);
-            const keyY = Math.round(point.y / cellSize);
-            const keyZ = Math.round(point.z / cellSize);
+        const makeKey = (point: vec4) => {
+            const keyX = Math.round(point[0] / cellSize);
+            const keyY = Math.round(point[1] / cellSize);
+            const keyZ = Math.round(point[2] / cellSize);
 
             return `${keyX},${keyY},${keyZ}`;
         };
 
         // Given a GeometryNode, make an axis-aligned bounding box, which consists of a min corner
         // and a max corner.
-        const makeAABB = (node: GeometryNode) => {
+        const worldSpaceAABB = (node: GeometryNode) => {
             const localToGlobalTransform = node.localToGlobalTransform();
-            const min = { x: Infinity, y: Infinity, z: Infinity };
-            const max = { x: -Infinity, y: -Infinity, z: -Infinity };
-            range(0, node.geometry.vertices.length, 3).forEach((i: number) => {
-                const globalPosition = vec3From4(
-                    vec4.transformMat4(
-                        vec4.create(),
-                        vec4.fromValues(
-                            node.geometry.vertices[i],
-                            node.geometry.vertices[i + 1],
-                            node.geometry.vertices[i + 2],
-                            1
-                        ),
-                        localToGlobalTransform
-                    )
-                );
-
-                min.x = Math.min(min.x, globalPosition[0]);
-                min.y = Math.min(min.x, globalPosition[1]);
-                min.z = Math.min(min.x, globalPosition[2]);
-
-                max.x = Math.max(max.x, globalPosition[0]);
-                max.y = Math.max(max.x, globalPosition[1]);
-                max.z = Math.max(max.x, globalPosition[2]);
-            });
+            const min = vec4.transformMat4(vec4.create(), node.geometry.aabb.min, localToGlobalTransform);
+            const max = vec4.transformMat4(vec4.create(), node.geometry.aabb.max, localToGlobalTransform);
 
             return { min, max };
         };
 
-        // Check whether a point is inside an axis-aligned bounding box
-        const pointInAABB = (point: coord, aabb: AABB) => {
-            return (
-                point.x >= aabb.min.x &&
-                point.x <= aabb.max.x &&
-                point.y >= aabb.min.y &&
-                point.y <= aabb.max.y &&
-                point.z >= aabb.min.z &&
-                point.z <= aabb.max.z
-            );
+        const pointsInAABB = (aabb: AABB) => {
+            const points: string[] = [];
+            const point = vec4.fromValues(0, 0, 0, 1);
+            range(Math.floor(aabb.min[0]), Math.ceil(aabb.max[0]), cellSize).forEach((x: number) => {
+                range(Math.floor(aabb.min[1]), Math.ceil(aabb.max[1]), cellSize).forEach((y: number) => {
+                    range(Math.floor(aabb.min[2]), Math.ceil(aabb.max[2]), cellSize).forEach((z: number) => {
+                        point[0] = x;
+                        point[1] = y;
+                        point[2] = z;
+                        points.push(makeKey(point));
+                    });
+                });
+            });
+
+            return points;
         };
 
         // For each node in the target model, find its bounding box
-        const targetAABBs: AABB[] = [];
+        const targetCoords: Grid = {};
         targetModel.nodes.forEach((n: Node) =>
             n.geometryCallback((node: GeometryNode) => {
-                targetAABBs.push(makeAABB(node));
+                pointsInAABB(worldSpaceAABB(node)).forEach((point: string) => targetCoords[point] = true);
             })
         );
 
-        return (instance: GeneratorInstance, _: GeometryNode[]) => {
-            // TODO: Cache the grid for each instance so that we don't need to recompute the
-            // whole thing each time. This is difficult in the same way that having a model
-            // supporting efficient copy-and-add is difficult.
-            const grid: Grid = {};
+        return (instance: GeneratorInstance, added: Node[]) => {
+            // We will cache grids based on the last node that was added to a model. Since nodes are
+            // added to the end of a model's node list, if n nodes are new in the current model
+            // compared to its parent, then the parent grid will be indexed by the nth-from-last
+            // node in the current model's node list.
+            const parentGrid = gridCache.get(instance.getModel().nodes[instance.getModel().nodes.length - 1 - added.length]);
+
+            // If the parent grid does exist, we want to start from the same grid as the
+            // parent, and then add to it
+            const grid = parentGrid === undefined ? {} : {...parentGrid};
 
             let incrementalCost = 0;
 
-            instance.getModel().nodes.forEach((n: Node) =>
+            // For each point in the new added geometry, see if it fills a point in the target shape
+            // that wasn't previously filled, and make the current model cost less accordingly
+            added.forEach((n: Node) =>
                 n.geometryCallback((node: GeometryNode) => {
-                    // 1. Find axis-aligned bounding box in world coordinate
-                    const addedAABB = makeAABB(node);
+                    pointsInAABB(worldSpaceAABB(node)).forEach((point: string) => {
+                        if (!grid[point]) {
+                            grid[point] = true;
 
-                    // 2. Fill bounding box cells in grid
-                    targetAABBs.forEach((target: AABB) => {
-                        range(target.min.x, target.max.x, cellSize).forEach((x: number) => {
-                            range(target.min.y, target.max.y, cellSize).forEach((y: number) => {
-                                range(target.min.z, target.max.z, cellSize).forEach((z: number) => {
-                                    const key = makeKey({ x, y, z });
-
-                                    // Update grid and incremental cost
-                                    if (!grid[key] && pointInAABB({ x, y, z }, addedAABB)) {
-                                        grid[key] = true;
-                                        incrementalCost -= 1;
-                                    }
-                                });
-                            });
-                        });
+                            // If this point was in the target region, reduce the cost
+                            incrementalCost += targetCoords[point] ? -1 : 0;
+                        }
                     });
                 })
             );
+
+            gridCache.set(instance.getModel().latest(), grid);
 
             return instance.getCost() + incrementalCost;
         };

@@ -105,14 +105,22 @@ treeGen
 
 const treeTarget = Model.create();
 const sphere = treeTarget.add(new GeometryNode(leafSphere));
-sphere.scale(4);
-sphere.moveTo({ x: 5, y: 7, z: 0 });
+sphere.scale(5);
+sphere.moveTo({ x: 0, y: 10, z: 0 });
 
 const tree = treeGen.generateSOSMC({
     start: 'branch',
-    depth: 150,
+    depth: 300,
     samples: 100,
-    costFn: CostFunction.fillVolume(treeTarget, 0.2)
+    costFn: CostFunction.fillVolume(treeTarget, 0.2),
+    onLastGeneration: (instances: GeneratorInstance[]) => {
+        const result = <HTMLParagraphElement>document.createElement('p');
+        result.innerText = instances
+            .map((instance: GeneratorInstance) => instance.getCost())
+            .sort((a: number, b: number) => a - b)
+            .join(', ');
+        document.body.appendChild(result);
+    }
 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

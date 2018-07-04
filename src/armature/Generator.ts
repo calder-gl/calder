@@ -1,6 +1,6 @@
 import { RandomGenerator } from '../utils/random';
 import { Model } from './Model';
-import { GeometryNode, Node, Point } from './Node';
+import { Node, Point } from './Node';
 
 import { minBy, range } from 'lodash';
 
@@ -20,11 +20,11 @@ type SpawnPoint = {
 };
 
 /**
- * A cost function returns the cost of an entire model. The new geometry nodes that were added
+ * A cost function returns the cost of an entire model. The new nodes that were added
  * since the last iteration of generation are passed to the cost function so that, if you can,
  * you can just compute the incremental cost and add it to the previous cost, `instance.getCost()`.
  */
-export type CostFn = (instance: GeneratorInstance, nodes: GeometryNode[]) => number;
+export type CostFn = (instance: GeneratorInstance, nodes: Node[]) => number;
 
 /**
  * An instance of a generated model, possibly in the middle of generation.
@@ -123,16 +123,11 @@ export class GeneratorInstance {
             generator(spawnPoint.at, this);
         }
 
-        // Out of the `Node`s that were generated, get the ones that were `GeometryNode`s
-        const addedGeometry: GeometryNode[] = [];
-        this.model.nodes.slice(originalLength).forEach((node: Node) =>
-            node.geometryCallback((g: GeometryNode) => {
-                addedGeometry.push(g);
-            })
-        );
+        // Get the new nodes that were added
+        const added = this.model.nodes.slice(originalLength);
 
         // Recompute the cost
-        this.cost = this.costFn(this, addedGeometry);
+        this.cost = this.costFn(this, added);
     }
 
     /**
@@ -274,8 +269,9 @@ export class Generator {
         depth?: number;
         samples?: number;
         costFn: CostFn;
+        onLastGeneration?: (instances: GeneratorInstance[]) => void;
     }): Model {
-        const { start, depth = 10, samples = 50, costFn } = params;
+        const { start, depth = 10, samples = 50, costFn, onLastGeneration } = params;
         let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
 
         // Seed instances with starting state
@@ -321,6 +317,10 @@ export class Generator {
                 });
             }
         });
+
+        if (onLastGeneration !== undefined) {
+            onLastGeneration(instances);
+        }
 
         // From the last generation, pick the one with the lowest cost.
         return (<GeneratorInstance>minBy(instances, (instance: GeneratorInstance) =>

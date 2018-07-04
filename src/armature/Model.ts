@@ -78,6 +78,13 @@ export class Model {
     }
 
     /**
+     * @returns {Node} The most recently added node to the model.
+     */
+    public latest(): Node {
+        return this.nodes[this.nodes.length - 1];
+    }
+
+    /**
      * Walks through all the nodes in the model, generating buffers to send to the renderer.
      *
      * @param {boolean} makeBones Whether or not to generate buffers for bones in addition to

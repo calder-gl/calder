@@ -45,8 +45,11 @@ export class Node {
                 [5, 1, 4]
             ])
         ),
-
-        material: defaultMaterial.bake()
+        material: defaultMaterial.bake(),
+        aabb: {
+            min: vec4.fromValues(0, -0.1, -0.1, 1),
+            max: vec4.fromValues(1, 0.1, 0.1, 1)
+        }
     };
 
     public parent: Node | null = null;

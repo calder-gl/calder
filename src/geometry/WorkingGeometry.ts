@@ -133,6 +133,18 @@ export class WorkingGeometry implements Bakeable {
         if (this.updateCache) {
             this.combine();
 
+            const min = vec4.fromValues(Infinity, Infinity, Infinity, 1);
+            const max = vec4.fromValues(-Infinity, -Infinity, -Infinity, 1);
+            this.vertices.forEach((vertex: vec4) => {
+                min[0] = Math.min(min[0], vertex[0]);
+                min[1] = Math.min(min[1], vertex[1]);
+                min[2] = Math.min(min[2], vertex[2]);
+
+                max[0] = Math.max(max[0], vertex[0]);
+                max[1] = Math.max(max[1], vertex[1]);
+                max[2] = Math.max(max[2], vertex[2]);
+            });
+
             const bakedVertices = flatMap(this.vertices, (workingVec: vec4) => [
                 workingVec[0],
                 workingVec[1],
@@ -151,7 +163,8 @@ export class WorkingGeometry implements Bakeable {
                 vertices: Float32Array.from(bakedVertices),
                 normals: Float32Array.from(bakedNormals),
                 indices: Int16Array.from(bakedIndices),
-                material: this.material.bake()
+                material: this.material.bake(),
+                aabb: {min, max}
             };
 
             this.updateCache = false;

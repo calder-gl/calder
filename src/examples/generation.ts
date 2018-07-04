@@ -106,7 +106,6 @@ treeGen
 
 const treeTarget = Model.create();
 const sphere = treeTarget.add(new GeometryNode(leafSphere));
-//sphere.scale(4);
 sphere.moveTo({ x: 0, y: 3, z: 0 });
 const branch = treeTarget.add(new GeometryNode(branchShape));
 branch.scale({ x: 0.2, y: 2, z: 0.2 });

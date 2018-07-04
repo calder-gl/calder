@@ -516,7 +516,7 @@ describe('Node', () => {
         });
     });
 
-    describe('traverse', () => {
+    describe('computeRenderInfo', () => {
         it("flattens the parent's coordinate space and returns an array of `RenderObject`s", () => {
             const geometry: WorkingGeometry = new WorkingGeometry({
                 vertices: [vec3.create()],
@@ -549,7 +549,7 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(1, 0, 1, 1);
 
-            const renderObjects: RenderObject[] = model.traverse(false).geometry;
+            const renderObjects: RenderObject[] = model.computeRenderInfo(false).geometry;
 
             expect(renderObjects.length).toBe(1);
 
@@ -583,7 +583,7 @@ describe('Node', () => {
             const inputPoint = vec4.fromValues(0, 1, 0, 1);
             const expectedPoint = vec4.fromValues(0, 1, 0, 1);
 
-            const renderObjects: RenderObject[] = model.traverse(false).geometry;
+            const renderObjects: RenderObject[] = model.computeRenderInfo(false).geometry;
 
             expect(renderObjects.length).toBe(1);
 
@@ -609,7 +609,7 @@ describe('Node', () => {
             const expectedWorldSpaceBase = vec4.fromValues(0, 0, 0, 1);
             const expectedWorldSpaceTip = vec4.fromValues(0, 2, 0, 1);
 
-            const bones: RenderObject[] = Model.create(root).traverse(true).bones;
+            const bones: RenderObject[] = Model.create(root).computeRenderInfo(true).bones;
             expect(bones.length).toBe(2);
 
             // Check base and tip of bone 1

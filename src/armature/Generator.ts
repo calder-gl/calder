@@ -106,7 +106,7 @@ export class GeneratorInstance {
     /**
      * Grows this instance, if possible, until a new shape is added.
      */
-    public advance() {
+    public growIfPossible() {
         const originalLength = this.model.nodes.length;
 
         while (this.model.nodes.length === originalLength && this.spawnPoints.length > 0) {
@@ -144,7 +144,7 @@ export class GeneratorInstance {
 
         // Run `depth` rounds of generation
         range(depth).forEach(() => {
-            this.advance();
+            this.growIfPossible();
         });
     }
 
@@ -279,7 +279,7 @@ export class Generator {
 
         range(depth).forEach((iteration: number) => {
             // Step 1: grow samples
-            instances.forEach((instance: GeneratorInstance) => instance.advance());
+            instances.forEach((instance: GeneratorInstance) => instance.growIfPossible());
 
             // Step 2: if there will be more iterations, do a weighted resample
             if (iteration + 1 !== depth) {

@@ -41,9 +41,11 @@ export namespace CostFunction {
                 })
             );
 
+            let totalCost = instance.getCost();
+
             // For each added shape and each influence point, add the resulting cost to the
             // instance's existing cost.
-            return addedGeometry.reduce((sum: number, node: GeometryNode) => {
+            addedGeometry.forEach((node: GeometryNode) => {
                 const localToGlobalTransform = node.localToGlobalTransform();
                 const globalPosition = vec3From4(
                     vec4.transformMat4(
@@ -53,19 +55,16 @@ export namespace CostFunction {
                     )
                 );
 
-                return vectors.reduce(
-                    (total: number, point: { vector: vec3; influence: number }) => {
-                        // Add cost relative to the point's influence, and inversely proportional
-                        // to the distance to the point
-                        return (
-                            total +
-                            point.influence /
-                                vec3.length(vec3.sub(vec3.create(), point.vector, globalPosition))
-                        );
-                    },
-                    sum
-                );
-            }, instance.getCost());
+                vectors.forEach((point: { vector: vec3; influence: number }) => {
+                    // Add cost relative to the point's influence, and inversely proportional
+                    // to the distance to the point
+                    totalCost +=
+                        point.influence /
+                        vec3.length(vec3.sub(vec3.create(), point.vector, globalPosition));
+                });
+            });
+
+            return totalCost;
         };
     }
 
@@ -111,6 +110,9 @@ export namespace CostFunction {
         const pointsInAABB = (aabb: AABB) => {
             const points: string[] = [];
             const point = vec4.fromValues(0, 0, 0, 1);
+
+            // Step through x, y, and z from min to max, adding each step to the
+            // `points` array
             range(Math.floor(aabb.min[0]), Math.ceil(aabb.max[0]), cellSize).forEach(
                 (x: number) => {
                     range(Math.floor(aabb.min[1]), Math.ceil(aabb.max[1]), cellSize).forEach(

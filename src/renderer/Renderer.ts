@@ -146,7 +146,7 @@ export class Renderer {
 
         const renderObjects = objects.reduce(
             (accum: NodeRenderObject, model: Model) => {
-                const childObjects = model.traverse(debug.drawArmatureBones === true);
+                const childObjects = model.computeRenderInfo(debug.drawArmatureBones === true);
 
                 [...childObjects.geometry, ...childObjects.bones].forEach((o: RenderObject) => {
                     if (o.geometry.verticesBuffer === undefined) {

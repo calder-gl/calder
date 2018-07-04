@@ -91,7 +91,7 @@ export class Model {
      * geometry.
      * @returns NodeRenderObject The info needed by the renderer to visualize this model.
      */
-    public traverse(makeBones: boolean): NodeRenderObject {
+    public computeRenderInfo(makeBones: boolean): NodeRenderObject {
         // In order to render a child, we have to know its parent's transformation. We don't want
         // to recompute this any more times than we have to, so we keep a cache of this information
         // for each node in the form of a `RenderInfo`
@@ -111,7 +111,7 @@ export class Model {
 
             if (node.parent === null) {
                 // If the node has no parent, its parent transforms are identity matrices
-                const info = node.traverse(mat4.create(), mat3.create(), makeBones);
+                const info = node.computeRenderInfo(mat4.create(), mat3.create(), makeBones);
 
                 // Cache this info so it can be used for the node's children
                 renderCache.set(node, info);
@@ -125,7 +125,7 @@ export class Model {
                 const { currentMatrix, currentNormalMatrix } = <RenderInfo>renderCache.get(
                     node.parent
                 );
-                const info = node.traverse(currentMatrix, currentNormalMatrix, makeBones);
+                const info = node.computeRenderInfo(currentMatrix, currentNormalMatrix, makeBones);
 
                 // Cache this info so it can be used for the node's children
                 renderCache.set(node, info);

@@ -487,7 +487,7 @@ export class Node {
      * The current node's transformation matrix is also returned so that additional `RenderObject`s
      * can be added to the result if needed without recomputing this matrix.
      */
-    public traverse(
+    public computeRenderInfo(
         parentMatrix: mat4,
         parentNormalMatrix: mat3,
         makeBones: boolean
@@ -883,12 +883,12 @@ export class GeometryNode extends Node {
      * @returns {NodeRenderObject} The geometry for this armature subtree, and possibly geometry
      * representing the armature itself.
      */
-    public traverse(
+    public computeRenderInfo(
         coordinateSpace: mat4,
         normalTransform: mat3,
         makeBones: boolean
     ): { currentMatrix: mat4; currentNormalMatrix: mat3; objects: NodeRenderObject } {
-        const { currentMatrix, currentNormalMatrix, objects } = super.traverse(
+        const { currentMatrix, currentNormalMatrix, objects } = super.computeRenderInfo(
             coordinateSpace,
             normalTransform,
             makeBones

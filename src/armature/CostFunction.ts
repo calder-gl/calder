@@ -80,9 +80,9 @@ export namespace CostFunction {
         // A grid uses a string as a key because otherwise it would use object equality on points,
         // which we don't want. This function makes a string key from a point.
         const makeKey = (point: vec4) => {
-            const keyX = Math.round(point[0] / cellSize);
-            const keyY = Math.round(point[1] / cellSize);
-            const keyZ = Math.round(point[2] / cellSize);
+            const keyX = Math.floor(point[0] / cellSize);
+            const keyY = Math.floor(point[1] / cellSize);
+            const keyZ = Math.floor(point[2] / cellSize);
 
             return `${keyX},${keyY},${keyZ}`;
         };
@@ -144,7 +144,8 @@ export namespace CostFunction {
                             grid[point] = true;
 
                             // If this point was in the target region, reduce the cost
-                            incrementalCost += targetCoords[point] ? -1 : 0;
+                            incrementalCost += cellSize * cellSize * cellSize *
+                                (targetCoords[point] ? -1 : 1);
                         }
                     });
                 })

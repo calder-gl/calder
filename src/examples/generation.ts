@@ -21,7 +21,7 @@ const renderer: Renderer = new Renderer({
     height: 600,
     maxLights: 2,
     ambientLightColor: RGBColor.fromRGB(90, 90, 90),
-    backgroundColor: RGBColor.fromHex('#FF00FF')
+    backgroundColor: RGBColor.fromHex('#FFDDFF')
 });
 
 // Create light sources for the renderer
@@ -62,6 +62,7 @@ treeGen
     .define('branch', (root: Point, instance: GeneratorInstance) => {
         const node = instance.add(bone());
         node.point('base').stickTo(root);
+        node.scale(Math.random() * 0.4 + 0.9);
         node
             .hold(node.point('tip'))
             .rotate(Math.random() * 360)
@@ -105,19 +106,24 @@ treeGen
 
 const treeTarget = Model.create();
 const sphere = treeTarget.add(new GeometryNode(leafSphere));
-sphere.scale(5);
-sphere.moveTo({ x: 0, y: 10, z: 0 });
+//sphere.scale(4);
+sphere.moveTo({ x: 0, y: 3, z: 0 });
+const branch = treeTarget.add(new GeometryNode(branchShape));
+branch.scale({x: 0.2, y: 2, z: 0.2});
+branch.moveTo({ x: 0, y: 1, z: 0 });
 
 const tree = treeGen.generateSOSMC({
     start: 'branch',
-    depth: 300,
+    depth: 200,
     samples: 100,
     costFn: CostFunction.fillVolume(treeTarget, 0.2),
     onLastGeneration: (instances: GeneratorInstance[]) => {
         const result = <HTMLParagraphElement>document.createElement('p');
-        result.innerText = instances
+        result.innerText = "Costs in final generation: ";
+        result.innerText += instances
             .map((instance: GeneratorInstance) => instance.getCost())
             .sort((a: number, b: number) => a - b)
+            .map((cost: number) => Math.round(cost * 100) / 100)
             .join(', ');
         document.body.appendChild(result);
     }

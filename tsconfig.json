@@ -15,14 +15,12 @@
     "noUnusedParameters": true,
     "noImplicitAny": false,
     "noImplicitThis": false,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "rootDir": ".",
+    "outDir": "build"
   },
   "include": [
     "src/**/*",
     "tests/**/*"
-  ],
-  "compilerOptions": {
-    "rootDir": ".",
-    "outDir": "build"
-  }
+  ]
 }

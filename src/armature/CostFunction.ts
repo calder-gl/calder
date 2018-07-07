@@ -24,8 +24,8 @@ export namespace CostFunction {
      * point reduces the overall cost when nodes get close.
      * @returns {CostFn} The resulting cost function.
      */
-    export function forces(points: ForcePoint[]): CostFn {
-        const vectors = points.map((forcePoint: ForcePoint) => {
+    export function forces(forcePoints: ForcePoint[]): CostFn {
+        const vectors = forcePoints.map((forcePoint: ForcePoint) => {
             return {
                 vector: Mapper.coordToVector(forcePoint.point),
                 influence: forcePoint.influence

@@ -98,12 +98,12 @@ export class Model {
         const renderCache: Map<Node, RenderInfo> = new Map<Node, RenderInfo>();
 
         // Nodes yet to be added to the `NodeRenderObject` result.
-        const renderQueue = [...this.nodes];
+        const renderStack = [...this.nodes];
 
         const result: NodeRenderObject = { geometry: [], bones: [] };
 
-        while (renderQueue.length > 0) {
-            const node = <Node>renderQueue.pop();
+        while (renderStack.length > 0) {
+            const node = <Node>renderStack.pop();
 
             if (renderCache.has(node)) {
                 continue;
@@ -137,7 +137,7 @@ export class Model {
                 // Otherwise, we need to render the parent before the current node. Add both back
                 // to the list, but with the parent closer to the top, so that it gets rendered
                 // first.
-                renderQueue.push(node, node.parent);
+                renderStack.push(node, node.parent);
             }
         }
 

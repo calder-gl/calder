@@ -86,14 +86,6 @@ export class GeneratorInstance {
     }
 
     /**
-     * @returns {number} How many spawn points the generator can choose from when growing the
-     * next generation.
-     */
-    public activeSpawnPoints(): number {
-        return this.spawnPoints.length;
-    }
-
-    /**
      * Tells the generator that more components can be generated somewhere.
      *
      * @param {SpawnPoint} spawnPoint The name of the component to spawn and the point at which to
@@ -197,7 +189,7 @@ export class Generator {
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
     public maybe(name: string, generator: GeneratorFn): Generator {
-        return this.define(name, generator).define(name, () => {});
+        return this.define(name, generator).defineWeighted(name, 0.5, () => {});
     }
 
     /**
@@ -210,7 +202,9 @@ export class Generator {
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
     public choice(name: string, generators: GeneratorFn[]): Generator {
-        generators.forEach((generator: GeneratorFn) => this.define(name, generator));
+        generators.forEach((generator: GeneratorFn) =>
+            this.defineWeighted(name, 1 / generators.length, generator)
+        );
 
         return this;
     }
@@ -269,6 +263,10 @@ export class Generator {
         depth?: number;
         samples?: number;
         costFn: CostFn;
+        /**
+         * For debugging, a callback can be passed in so that every sample in the final
+         * generation can be examined.
+         */
         onLastGeneration?: (instances: GeneratorInstance[]) => void;
     }): Model {
         const { start, depth = 10, samples = 50, costFn, onLastGeneration } = params;
@@ -289,7 +287,8 @@ export class Generator {
 
                 const totalWeight = instances.reduce(
                     (accum: number, instance: GeneratorInstance) => {
-                        // 1 / e^x means that lower (even negative) costs get a higher weight
+                        // 1 / e^x means that lower (even negative) costs get a higher weight.
+                        // Using 1/ e^x instead of e^(-x) for numerical stability.
                         return accum + 1 / Math.exp(instance.getCost());
                     },
                     0

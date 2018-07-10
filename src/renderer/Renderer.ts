@@ -1,4 +1,4 @@
-import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
+import { mat4, vec3, vec4 } from 'gl-matrix';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 import { NodeRenderObject } from '../armature/NodeRenderObject';
@@ -13,6 +13,7 @@ import {
     DrawAxesProps,
     DrawObjectProps,
     Light,
+    Model,
     Node,
     RenderObject,
     RenderParams,
@@ -138,18 +139,14 @@ export class Renderer {
     }
 
     public draw(
-        objects: Node[],
+        objects: Model[],
         debug: DebugParams = { drawAxes: false, drawArmatureBones: false }
     ) {
         this.clearAll();
 
         const renderObjects = objects.reduce(
-            (accum: NodeRenderObject, node: Node) => {
-                const childObjects = node.traverse(
-                    mat4.create(),
-                    mat3.create(),
-                    debug.drawArmatureBones === true
-                );
+            (accum: NodeRenderObject, model: Model) => {
+                const childObjects = model.computeRenderInfo(debug.drawArmatureBones === true);
 
                 [...childObjects.geometry, ...childObjects.bones].forEach((o: RenderObject) => {
                     if (o.geometry.verticesBuffer === undefined) {

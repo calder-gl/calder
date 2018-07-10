@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "lib": ["ES2016", "DOM"],
+    "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
     "allowJs": true,
@@ -14,14 +15,12 @@
     "noUnusedParameters": true,
     "noImplicitAny": false,
     "noImplicitThis": false,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "rootDir": ".",
+    "outDir": "build"
   },
   "include": [
     "src/**/*",
     "tests/**/*"
-  ],
-  "compilerOptions": {
-    "rootDir": ".",
-    "outDir": "build"
-  }
+  ]
 }

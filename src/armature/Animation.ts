@@ -191,7 +191,7 @@ export namespace Animation {
                 animation.lastTimeInCycle = 0;
 
                 // Clone the current node and apply the callback to generate the target state
-                const finalNode = Node.clone(animation.node);
+                const finalNode = animation.node.clone();
                 animation.to(finalNode);
 
                 // Extract the transformation from the modified node

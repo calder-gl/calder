@@ -1,8 +1,12 @@
 import {
     Armature,
+    CostFunction,
+    GeneratorInstance,
+    GeometryNode,
     Light,
     Material,
     Matrix,
+    Model,
     Node,
     Point,
     Quaternion,
@@ -17,7 +21,7 @@ const renderer: Renderer = new Renderer({
     height: 600,
     maxLights: 2,
     ambientLightColor: RGBColor.fromRGB(90, 90, 90),
-    backgroundColor: RGBColor.fromHex('#FF00FF')
+    backgroundColor: RGBColor.fromHex('#FFDDFF')
 });
 
 // Create light sources for the renderer
@@ -55,40 +59,74 @@ const bone = Armature.define((root: Node) => {
 
 const treeGen = Armature.generator();
 treeGen
-    .define('branch', (root: Point) => {
-        const node = bone();
+    .define('branch', (root: Point, instance: GeneratorInstance) => {
+        const node = instance.add(bone());
         node.point('base').stickTo(root);
+        node.scale(Math.random() * 0.4 + 0.9);
         node
             .hold(node.point('tip'))
             .rotate(Math.random() * 360)
             .release();
         node
             .hold(node.point('handle'))
-            .rotate(Math.random() * 45)
+            .rotate(Math.random() * 70)
             .release();
         node.scale(0.8); // Shrink a bit
 
-        const trunk = node.point('mid').attach(branchShape);
+        const trunk = instance.add(node.point('mid').attach(branchShape));
         trunk.scale({ x: 0.2, y: 1, z: 0.2 });
 
-        treeGen.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
+        instance.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
     })
-    .defineWeighted('branchOrLeaf', 1, (root: Point) => {
-        treeGen.addDetail({ component: 'leaf', at: root });
+    .defineWeighted('branchOrLeaf', 1, (root: Point, instance: GeneratorInstance) => {
+        instance.addDetail({ component: 'leaf', at: root });
     })
-    .defineWeighted('branchOrLeaf', 4, (root: Point) => {
-        treeGen.addDetail({ component: 'branch', at: root });
-        treeGen.addDetail({ component: 'maybeBranch', at: root });
-        treeGen.addDetail({ component: 'maybeBranch', at: root });
+    .defineWeighted('branchOrLeaf', 4, (root: Point, instance: GeneratorInstance) => {
+        instance.addDetail({ component: 'branch', at: root });
+        instance.addDetail({ component: 'maybeBranch', at: root });
+        instance.addDetail({ component: 'maybeBranch', at: root });
     })
-    .define('leaf', (root: Point) => {
-        const leaf = root.attach(leafSphere);
+    .define('leaf', (root: Point, instance: GeneratorInstance) => {
+        const leaf = instance.add(root.attach(leafSphere));
         leaf.scale(Math.random() * 0.5 + 0.5);
     })
-    .maybe('maybeBranch', (root: Point) => {
-        treeGen.addDetail({ component: 'branch', at: root });
+    .maybe('maybeBranch', (root: Point, instance: GeneratorInstance) => {
+        instance.addDetail({ component: 'branch', at: root });
     });
-const tree = treeGen.generate({ start: 'branch', depth: 25 });
+
+/*const tree = treeGen.generateSOSMC({
+    start: 'branch',
+    depth: 150,
+    samples: 100,
+    costFn: CostFunction.forces([
+        {point: {x: -50, y: 100, z: 0}, influence: -200},
+        {point: {x: 0, y: -100, z: 0}, influence: 100}
+    ])
+});*/
+
+const treeTarget = Model.create();
+const sphere = treeTarget.add(new GeometryNode(leafSphere));
+sphere.moveTo({ x: 0, y: 3, z: 0 });
+const branch = treeTarget.add(new GeometryNode(branchShape));
+branch.scale({ x: 0.2, y: 2, z: 0.2 });
+branch.moveTo({ x: 0, y: 1, z: 0 });
+
+const tree = treeGen.generateSOSMC({
+    start: 'branch',
+    depth: 200,
+    samples: 100,
+    costFn: CostFunction.fillVolume(treeTarget, 0.2),
+    onLastGeneration: (instances: GeneratorInstance[]) => {
+        const result = document.createElement('p');
+        result.innerText = 'Costs in final generation: ';
+        result.innerText += instances
+            .map((instance: GeneratorInstance) => instance.getCost())
+            .sort((a: number, b: number) => a - b)
+            .map((cost: number) => Math.round(cost * 100) / 100)
+            .join(', ');
+        document.body.appendChild(result);
+    }
+});
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer
@@ -103,7 +141,7 @@ renderer.camera.lookAt({ x: 2, y: 2, z: -4 });
 let angle = 0;
 const draw = () => {
     angle += 0.5;
-    tree.setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
+    tree.root().setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 
     return {
         objects: [tree],

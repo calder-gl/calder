@@ -1,4 +1,5 @@
 import { Armature } from '../../src/armature/Armature';
+import { GeneratorInstance } from '../../src/armature/Generator';
 import { Node, Point } from '../../src/armature/Node';
 
 const bone = Armature.define((root: Node) => {
@@ -10,42 +11,28 @@ describe('Generator', () => {
     it('generates to the required depth', () => {
         const towerGen = Armature.generator();
         const tower = towerGen
-            .define('block', (root: Point) => {
-                const node = bone();
+            .define('block', (root: Point, instance: GeneratorInstance) => {
+                const node = instance.add(bone());
                 node.point('base').stickTo(root);
 
-                towerGen.addDetail({ component: 'block', at: node.point('tip') });
+                instance.addDetail({ component: 'block', at: node.point('tip') });
             })
             .generate({ start: 'block', depth: 5 });
 
-        let depth = 0;
-        let block = tower;
-        while (block.children.length > 0) {
-            depth += 1;
-            block = block.children[0];
-        }
-
-        expect(depth).toBe(5);
+        expect(tower.nodes.length).toBe(6); // Root plus five blocks
     });
 
     it('handles terminal nodes', () => {
         const towerGen = Armature.generator();
         const tower = towerGen
-            .define('block', (root: Point) => {
-                const node = bone();
+            .define('block', (root: Point, instance: GeneratorInstance) => {
+                const node = instance.add(bone());
                 node.point('base').stickTo(root);
 
                 // This definition does not add any more detail
             })
             .generate({ start: 'block', depth: 5 });
 
-        let depth = 0;
-        let block = tower;
-        while (block.children.length > 0) {
-            depth += 1;
-            block = block.children[0];
-        }
-
-        expect(depth).toBe(1);
+        expect(tower.nodes.length).toBe(2); // Root plus one block
     });
 });

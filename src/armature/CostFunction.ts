@@ -64,7 +64,7 @@ export namespace CostFunction {
                 });
             });
 
-            return {realCost: totalCost, heuristicCost: 0};
+            return { realCost: totalCost, heuristicCost: 0 };
         };
     }
 
@@ -178,7 +178,7 @@ export namespace CostFunction {
 
             gridCache.set(instance.getModel().latest(), grid);
 
-            return { realCost: instance.getCost().realCost + incrementalCost, heuristicCost: 0};
+            return { realCost: instance.getCost().realCost + incrementalCost, heuristicCost: 0 };
         };
     }
 }

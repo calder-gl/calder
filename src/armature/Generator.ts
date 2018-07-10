@@ -27,9 +27,9 @@ type SpawnPoint = {
 export type Cost = {
     realCost: number;
     heuristicCost: number;
-}
+};
 
-export const emptyCost: Cost = {realCost: 0, heuristicCost: 0};
+export const emptyCost: Cost = { realCost: 0, heuristicCost: 0 };
 
 /**
  * A cost function returns the cost of an entire model. The new nodes that were added

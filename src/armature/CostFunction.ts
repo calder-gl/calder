@@ -41,7 +41,7 @@ export namespace CostFunction {
                 })
             );
 
-            let totalCost = instance.getCost();
+            let totalCost = instance.getCost().realCost;
 
             // For each added shape and each influence point, add the resulting cost to the
             // instance's existing cost.
@@ -64,7 +64,7 @@ export namespace CostFunction {
                 });
             });
 
-            return totalCost;
+            return {realCost: totalCost, heuristicCost: 0};
         };
     }
 
@@ -178,7 +178,7 @@ export namespace CostFunction {
 
             gridCache.set(instance.getModel().latest(), grid);
 
-            return instance.getCost() + incrementalCost;
+            return { realCost: instance.getCost().realCost + incrementalCost, heuristicCost: 0};
         };
     }
 }

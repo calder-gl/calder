@@ -120,7 +120,7 @@ const tree = treeGen.generateSOSMC({
         const result = document.createElement('p');
         result.innerText = 'Costs in final generation: ';
         result.innerText += instances
-            .map((instance: GeneratorInstance) => instance.getCost())
+            .map((instance: GeneratorInstance) => instance.getCost().realCost)
             .sort((a: number, b: number) => a - b)
             .map((cost: number) => Math.round(cost * 100) / 100)
             .join(', ');

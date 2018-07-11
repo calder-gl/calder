@@ -183,6 +183,11 @@ export class GeneratorInstance {
 /**
  * A way of representing a structure made of connected components, facilitating procedural
  * generation of instances of these structures.
+ *
+ * Expected usage: A Generator is created, and then the user defined multiple rules on it. If
+ * you want to define your own multiple rule definitions, you should use `defineWeighted`. You
+ * should not be creating a `maybe` for one rule and then adding another definition for the same
+ * rule.
  */
 export class Generator {
     private rules: { [name: string]: { totalWeight: number; definitions: Definition[] } } = {};
@@ -211,7 +216,7 @@ export class Generator {
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
     public maybe(name: string, generator: GeneratorFn): Generator {
-        return this.define(name, generator).defineWeighted(name, 0.5, () => {});
+        return this.define(name, generator).define(name, () => {});
     }
 
     /**
@@ -224,9 +229,7 @@ export class Generator {
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
     public choice(name: string, generators: GeneratorFn[]): Generator {
-        generators.forEach((generator: GeneratorFn) =>
-            this.defineWeighted(name, 1 / generators.length, generator)
-        );
+        generators.forEach((generator: GeneratorFn) => this.define(name, generator));
 
         return this;
     }

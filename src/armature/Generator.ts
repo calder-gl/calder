@@ -184,10 +184,10 @@ export class GeneratorInstance {
  * A way of representing a structure made of connected components, facilitating procedural
  * generation of instances of these structures.
  *
- * Expected usage: A Generator is created, and then the user defined multiple rules on it. If
+ * Expected usage: A Generator is created, and then the user defines multiple rules on it. If
  * you want to define your own multiple rule definitions, you should use `defineWeighted`. You
- * should not be creating a `maybe` for one rule and then adding another definition for the same
- * rule.
+ * should not be creating a `maybe` or a `choice` for one rule and then adding another
+ * definition for the same rule.
  */
 export class Generator {
     private rules: { [name: string]: { totalWeight: number; definitions: Definition[] } } = {};

@@ -20,11 +20,23 @@ type SpawnPoint = {
 };
 
 /**
+ * A cost is split up into two components: the real part, known for sure based on existing data,
+ * and the heuristic, which is a guess of the remaining cost for the rest of the fully generated
+ * model.
+ */
+export type Cost = {
+    realCost: number;
+    heuristicCost: number;
+};
+
+export const emptyCost: Cost = { realCost: 0, heuristicCost: 0 };
+
+/**
  * A cost function returns the cost of an entire model. The new nodes that were added
  * since the last iteration of generation are passed to the cost function so that, if you can,
  * you can just compute the incremental cost and add it to the previous cost, `instance.getCost()`.
  */
-export type CostFn = (instance: GeneratorInstance, nodes: Node[]) => number;
+export type CostFn = (instance: GeneratorInstance, nodes: Node[]) => Cost;
 
 /**
  * An instance of a generated model, possibly in the middle of generation.
@@ -33,7 +45,7 @@ export class GeneratorInstance {
     private model: Model = new Model();
     private generator: Generator;
     private costFn: CostFn;
-    private cost: number = 0;
+    private cost: Cost = emptyCost;
     private spawnPoints: SpawnPoint[] = [];
     private random: RandomGenerator = Math.random;
 
@@ -79,10 +91,20 @@ export class GeneratorInstance {
     }
 
     /**
-     * @returns {number} The current cost of the model the instance has generated so far.
+     * @returns {Cost} The current cost of the model the instance has generated so far.
      */
-    public getCost(): number {
+    public getCost(): Cost {
         return this.cost;
+    }
+
+    /**
+     * @returns {number} The weight for this instance based on its cost, so that more weight is
+     * given to instances with lower cost.
+     */
+    public getCostWeight(): number {
+        // 1 / e^x means that lower (even negative) costs get a higher weight.
+        // Using 1/ e^x instead of e^(-x) for numerical stability.
+        return 1 / Math.exp(this.cost.realCost + this.cost.heuristicCost);
     }
 
     /**
@@ -146,7 +168,7 @@ export class GeneratorInstance {
      * @param {string} start The name of the rule to start generating from.
      */
     public initialize(start: string) {
-        this.cost = 0;
+        this.cost = emptyCost;
 
         // Clear spawn points
         this.spawnPoints.length = 0;
@@ -242,7 +264,7 @@ export class Generator {
      * @returns {Model} The model that was generated.
      */
     public generate(params: { start: string; depth?: number }): Model {
-        const instance = new GeneratorInstance(this, () => 0);
+        const instance = new GeneratorInstance(this, () => emptyCost);
         instance.generate(params);
 
         return instance.getModel();
@@ -287,9 +309,7 @@ export class Generator {
 
                 const totalWeight = instances.reduce(
                     (accum: number, instance: GeneratorInstance) => {
-                        // 1 / e^x means that lower (even negative) costs get a higher weight.
-                        // Using 1/ e^x instead of e^(-x) for numerical stability.
-                        return accum + 1 / Math.exp(instance.getCost());
+                        return accum + instance.getCostWeight();
                     },
                     0
                 );
@@ -306,7 +326,7 @@ export class Generator {
                     let i = 0;
                     while (sample > 0) {
                         picked = instances[i];
-                        sample -= 1 / Math.exp(picked.getCost());
+                        sample -= instances[i].getCostWeight();
                         i += 1;
                     }
 

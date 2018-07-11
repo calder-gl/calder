@@ -1,7 +1,13 @@
 import {
     Renderer,
     RGBColor,
-    Light
+    Light,
+    Shape,
+    Armature,
+    Model,
+    Node,
+    Material,
+    WorkingGeometry
 } from '../calder';
 
 // Render and Light creation
@@ -21,7 +27,22 @@ const light: Light = Light.create({
 
 renderer.addLight(light);
 
-// TODO: add armature and geometry here
+// Geometry
+const green: RGBColor = RGBColor.fromRGB(204, 255, 204);
+const sphere: WorkingGeometry = Shape.sphere(Material.create({ color: green, shininess: 100 }));
+
+// Armature
+const bone = Armature.define((root: Node) => {
+    root.createPoint('base', { x: 0, y: 0, z: 0});
+    root.createPoint('tip', { x: 0, y: 1, z: 0 });
+});
+
+const tower: Model = Model.create(bone());
+const top: Node = tower.root();
+
+const nextPiece: Node = tower.add(bone());
+nextPiece.point('base').stickTo(top.point('tip'));
+tower.add(nextPiece.point('base').attach(sphere));
 
 // Set up Renderer
 document.body.appendChild(renderer.stage);
@@ -31,7 +52,7 @@ renderer.camera.lookAt({ x: 2, y: 2, z: -4 });
 
 const draw = () => {
     return {
-        objects: [],
+        objects: [tower],
         debugParams: { drawAxes: true, drawArmatureBones: true }
     }
 }

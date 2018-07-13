@@ -1,5 +1,5 @@
 import { vec3 } from 'gl-matrix';
-import { range } from 'lodash';
+import { flatMap, range } from 'lodash';
 
 import { defaultMaterial, Face, Material, WorkingGeometry } from '../calder';
 import { genIsoSurface } from './MarchingCubes';
@@ -26,6 +26,86 @@ export namespace Shape {
         return new WorkingGeometry({
             vertices: vertices,
             normals: vertices,
+            faces: faces,
+            controlPoints: [],
+            material: material
+        });
+    }
+
+    export function cube(material: Material = defaultMaterial): WorkingGeometry {
+        const cubeVertices = [
+            // Front side of cube.
+            vec3.fromValues(0, 0, 0),
+            vec3.fromValues(0, 1, 0),
+            vec3.fromValues(1, 1, 0),
+            vec3.fromValues(1, 0, 0),
+            // Back side of cube.
+            vec3.fromValues(0, 0, 1),
+            vec3.fromValues(0, 1, 1),
+            vec3.fromValues(1, 1, 1),
+            vec3.fromValues(1, 0, 1)
+        ];
+
+        const vertices: vec3[] = [
+            // Front
+            cubeVertices[0],
+            cubeVertices[1],
+            cubeVertices[2],
+            cubeVertices[3],
+            // Left
+            cubeVertices[0],
+            cubeVertices[1],
+            cubeVertices[5],
+            cubeVertices[4],
+            // Back
+            cubeVertices[4],
+            cubeVertices[5],
+            cubeVertices[6],
+            cubeVertices[7],
+            // Right
+            cubeVertices[3],
+            cubeVertices[2],
+            cubeVertices[6],
+            cubeVertices[7],
+            // Top
+            cubeVertices[1],
+            cubeVertices[5],
+            cubeVertices[6],
+            cubeVertices[2],
+            // Bottom
+            cubeVertices[0],
+            cubeVertices[4],
+            cubeVertices[7],
+            cubeVertices[3]
+        ];
+
+        const normalDirections = [
+            // Front
+            vec3.fromValues(0, 0, -1),
+            // Left
+            vec3.fromValues(-1, 0, 0),
+            // Back
+            vec3.fromValues(0, 0, 1),
+            // Right
+            vec3.fromValues(1, 0, 0),
+            // Top
+            vec3.fromValues(0, 1, 0),
+            // Bottom
+            vec3.fromValues(0, -1, 0)
+        ];
+
+        const normals: vec3[] = flatMap(normalDirections, (v: vec3) => [v, v, v, v]);
+
+        const faces: Face[] = [];
+        for (let i = 0; i < 6; i += 1) {
+            const base = i * 4;
+            faces.push(new Face([base, base + 1, base + 2]));
+            faces.push(new Face([base, base + 2, base + 3]));
+        }
+
+        return new WorkingGeometry({
+            vertices: vertices,
+            normals: normals,
             faces: faces,
             controlPoints: [],
             material: material

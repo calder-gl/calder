@@ -115,7 +115,7 @@ const tree = treeGen.generateSOSMC({
     start: 'branch',
     depth: 200,
     samples: 100,
-    costFn: CostFunction.fillVolume(treeTarget, 0.2),
+    costFn: CostFunction.fillVolume(treeTarget, 0.4),
     onLastGeneration: (instances: GeneratorInstance[]) => {
         const result = document.createElement('p');
         result.innerText = 'Costs in final generation: ';

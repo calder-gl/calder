@@ -97,6 +97,9 @@ export class GeneratorInstance {
         return this.model;
     }
 
+    /**
+     * @returns {SpawnPoint[]} The currently open spawn points that have yet to be generated from.
+     */
     public getSpawnPoints(): SpawnPoint[] {
         return this.spawnPoints;
     }
@@ -126,10 +129,6 @@ export class GeneratorInstance {
      */
     public addDetail(spawnPoint: SpawnPoint) {
         this.spawnPoints.push(spawnPoint);
-    }
-
-    public openSpawnPoints(): SpawnPoint[] {
-        return this.spawnPoints;
     }
 
     /**
@@ -392,18 +391,32 @@ export class Generator {
         throw new Error('Error finding a weighted definition. Are all weights positive?');
     }
 
+    /**
+     * Picks a plausible bounding volume that a component, when generated, could occupy.
+     *
+     * @param {string} component The component being spawned.
+     * @returns {AABB} An axis-aligned bounding box that the component could occupy.
+     */
     public getExpectedRuleVolume(component: string): AABB {
         const volumes = this.rules[component].expectedVolumes;
 
-        return volumes[ Math.floor(Math.random() * volumes.length) ];
+        return volumes[Math.floor(Math.random() * volumes.length)];
     }
 
+    /**
+     * Generates each component multiple times to compute expected bounding volumes.
+     *
+     * @param {number} numVolumes The number of bounding volumes to generate per component.
+     * @param {number} depth How many rounds of generation should be used per generated instance
+     * of a component.
+     */
     private computeExpectedVolumes(numVolumes: number, depth: number) {
         Object.keys(this.rules).forEach((name: string) => {
             const rule = this.rules[name];
 
-            rule.expectedVolumes = range(numVolumes).map(() => 
-                this.generate({start: name, depth}).computeAABB());
+            rule.expectedVolumes = range(numVolumes).map(() =>
+                this.generate({ start: name, depth }).computeAABB()
+            );
         });
     }
 }

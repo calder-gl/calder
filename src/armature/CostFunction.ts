@@ -130,7 +130,7 @@ export namespace CostFunction {
                     onAdded(point);
                 }
             });
-        }
+        };
 
         // For each node in the target model, find its bounding box
         const targetCoords: Grid = {};
@@ -162,18 +162,29 @@ export namespace CostFunction {
             // that wasn't previously filled, and make the current model cost less accordingly
             added.forEach((n: Node) =>
                 n.geometryCallback((node: GeometryNode) =>
-                    addAABBToGrid(worldSpaceAABB(node, node.geometry.aabb), grid, (point: string) => 
-                        // If this point was in the target region, reduce the cost
-                        incrementalCost +=
-                        cellSize * cellSize * cellSize * (targetCoords[point] ? -1 : 1))));
+                    addAABBToGrid(
+                        worldSpaceAABB(node, node.geometry.aabb),
+                        grid,
+                        (point: string) =>
+                            // If this point was in the target region, reduce the cost
+                            (incrementalCost +=
+                                cellSize * cellSize * cellSize * (targetCoords[point] ? -1 : 1))
+                    )
+                )
+            );
 
             gridCache.set(instance.getModel().latest(), grid);
 
-            const heuristicGrid = {...grid};
+            const heuristicGrid = { ...grid };
             instance.getSpawnPoints().forEach((spawnPoint: SpawnPoint) => {
                 const aabb = instance.generator.getExpectedRuleVolume(spawnPoint.component);
-                addAABBToGrid(worldSpaceAABB(spawnPoint.at.node, aabb), heuristicGrid, (point: string) =>
-                    heuristicCost += cellSize * cellSize * cellSize * (targetCoords[point] ? -1 : 1));
+                addAABBToGrid(
+                    worldSpaceAABB(spawnPoint.at.node, aabb),
+                    heuristicGrid,
+                    (point: string) =>
+                        (heuristicCost +=
+                            cellSize * cellSize * cellSize * (targetCoords[point] ? -1 : 1))
+                );
             });
 
             return { realCost: instance.getCost().realCost + incrementalCost, heuristicCost };

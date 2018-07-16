@@ -146,21 +146,26 @@ export class Model {
         return result;
     }
 
+    /**
+     * @returns {AABB} A model-space axis-aligned bounding box that contains the whole model.
+     */
     public computeAABB(): AABB {
         const min = vec4.fromValues(Infinity, Infinity, Infinity, 1);
         const max = vec4.fromValues(-Infinity, -Infinity, -Infinity, 1);
 
-        this.nodes.forEach((n: Node) => n.geometryCallback((node: GeometryNode) => {
-            const aabb = worldSpaceAABB(node, node.geometry.aabb);
+        this.nodes.forEach((n: Node) =>
+            n.geometryCallback((node: GeometryNode) => {
+                const aabb = worldSpaceAABB(node, node.geometry.aabb);
 
-            min[0] = Math.min(Math.min(min[0], aabb.min[0]), aabb.max[0]);
-            min[1] = Math.min(Math.min(min[1], aabb.min[1]), aabb.max[1]);
-            min[2] = Math.min(Math.min(min[2], aabb.min[2]), aabb.max[2]);
+                min[0] = Math.min(Math.min(min[0], aabb.min[0]), aabb.max[0]);
+                min[1] = Math.min(Math.min(min[1], aabb.min[1]), aabb.max[1]);
+                min[2] = Math.min(Math.min(min[2], aabb.min[2]), aabb.max[2]);
 
-            max[0] = Math.max(Math.max(max[0], aabb.min[0]), aabb.max[0]);
-            max[1] = Math.max(Math.max(max[1], aabb.min[1]), aabb.max[1]);
-            max[2] = Math.max(Math.max(max[2], aabb.min[2]), aabb.max[2]);
-        }));
+                max[0] = Math.max(Math.max(max[0], aabb.min[0]), aabb.max[0]);
+                max[1] = Math.max(Math.max(max[1], aabb.min[1]), aabb.max[1]);
+                max[2] = Math.max(Math.max(max[2], aabb.min[2]), aabb.max[2]);
+            })
+        );
 
         return { min, max };
     }

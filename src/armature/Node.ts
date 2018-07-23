@@ -97,6 +97,10 @@ export class Node {
 
     public geometryCallback(_: (node: GeometryNode) => void) {}
 
+    public structureCallback(callback: (node: Node) => void) {
+        callback(this);
+    }
+
     public createPoint(name: string, positionCoord: coord) {
         const position = Mapper.coordToVector(positionCoord);
 
@@ -501,8 +505,9 @@ export class Node {
 
         if (makeBones) {
             objects.bones.push(
-                ...Object.keys(this.points).map((name: string): RenderObject =>
-                    this.boneRenderObject(this.points[name], currentMatrix, currentNormalMatrix)
+                ...Object.keys(this.points).map(
+                    (name: string): RenderObject =>
+                        this.boneRenderObject(this.points[name], currentMatrix, currentNormalMatrix)
                 )
             );
         }
@@ -905,6 +910,8 @@ export class GeometryNode extends Node {
     public geometryCallback(callback: (node: GeometryNode) => void) {
         callback(this);
     }
+
+    public structureCallback(_: (node: Node) => void) {}
 }
 
 /**

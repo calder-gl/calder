@@ -2,11 +2,9 @@ import {
     Armature,
     CostFunction,
     GeneratorInstance,
-    GeometryNode,
     Light,
     Material,
     Matrix,
-    Model,
     Node,
     Point,
     Quaternion,
@@ -63,12 +61,10 @@ treeGen
         const node = instance.add(bone());
         node.point('base').stickTo(root);
         node.scale(Math.random() * 0.4 + 0.9);
-        node
-            .hold(node.point('tip'))
+        node.hold(node.point('tip'))
             .rotate(Math.random() * 360)
             .release();
-        node
-            .hold(node.point('handle'))
+        node.hold(node.point('handle'))
             .rotate(Math.random() * 70)
             .release();
         node.scale(0.8); // Shrink a bit
@@ -94,17 +90,36 @@ treeGen
         instance.addDetail({ component: 'branch', at: root });
     });
 
-/*const tree = treeGen.generateSOSMC({
+const tree = treeGen.generateSOSMC({
     start: 'branch',
-    depth: 150,
+    sosmcDepth: 100,
+    finalDepth: 100,
     samples: 100,
-    costFn: CostFunction.forces([
-        {point: {x: -50, y: 100, z: 0}, influence: -200},
-        {point: {x: 0, y: -100, z: 0}, influence: 100}
-    ])
-});*/
+    costFn: CostFunction.guidingVectors(
+        [
+            { influence: 50, point: { x: 0, y: 0, z: 0 }, vector: { x: 0, y: 2, z: 0 } },
+            { influence: 50, point: { x: 0.5, y: 2, z: 0 }, vector: { x: 1, y: 0.2, z: 0 } },
+            { influence: 50, point: { x: -0.5, y: 2, z: 0 }, vector: { x: -1, y: 0.2, z: 0 } }
+        ],
+        [
+            { point: { x: -2, y: 2, z: 0 }, influence: -20 },
+            { point: { x: 2, y: 2, z: 0 }, influence: -20 },
+            { point: { x: 0, y: 3, z: 0 }, influence: -20 }
+        ]
+    ),
+    onLastGeneration: (instances: GeneratorInstance[]) => {
+        const result = document.createElement('p');
+        result.innerText = 'Costs in final generation: ';
+        result.innerText += instances
+            .map((instance: GeneratorInstance) => instance.getCost().realCost)
+            .sort((a: number, b: number) => a - b)
+            .map((cost: number) => Math.round(cost * 100) / 100)
+            .join(', ');
+        document.body.appendChild(result);
+    }
+});
 
-const treeTarget = Model.create();
+/*const treeTarget = Model.create();
 const sphere = treeTarget.add(new GeometryNode(leafSphere));
 sphere.moveTo({ x: 0, y: 3, z: 0 });
 const branch = treeTarget.add(new GeometryNode(branchShape));
@@ -127,7 +142,7 @@ const tree = treeGen.generateSOSMC({
             .join(', ');
         document.body.appendChild(result);
     }
-});
+});*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer

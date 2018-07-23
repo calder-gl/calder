@@ -171,38 +171,8 @@ export class Renderer {
         const bakedLights = this.lights.map((l: Light) => l.bake());
 
         this.drawObject(
-            renderObjects.geometry.map((o: RenderObject): DrawObjectProps => {
-                if (
-                    o.geometry.verticesBuffer === undefined ||
-                    o.geometry.normalsBuffer === undefined ||
-                    o.geometry.indicesBuffer === undefined
-                ) {
-                    throw new Error('Buffers were not created correctly');
-                }
-
-                return {
-                    model: o.transform,
-                    normalTransform: o.normalTransform,
-                    cameraTransform: this.camera.getTransform(),
-                    projectionMatrix: this.projectionMatrix,
-                    positions: o.geometry.verticesBuffer,
-                    normals: o.geometry.normalsBuffer,
-                    indices: o.geometry.indicesBuffer,
-                    materialColor: o.geometry.material.materialColor,
-                    materialShininess: o.geometry.material.materialShininess,
-                    isShadeless: o.isShadeless === true,
-                    numLights: this.lights.length,
-                    ambientLight: this.ambientLight,
-                    lights: bakedLights
-                };
-            })
-        );
-
-        if (debug.drawArmatureBones === true && renderObjects.bones.length > 0) {
-            this.clearDepth();
-
-            this.drawObject(
-                renderObjects.bones.map((o: RenderObject): DrawObjectProps => {
+            renderObjects.geometry.map(
+                (o: RenderObject): DrawObjectProps => {
                     if (
                         o.geometry.verticesBuffer === undefined ||
                         o.geometry.normalsBuffer === undefined ||
@@ -226,7 +196,41 @@ export class Renderer {
                         ambientLight: this.ambientLight,
                         lights: bakedLights
                     };
-                })
+                }
+            )
+        );
+
+        if (debug.drawArmatureBones === true && renderObjects.bones.length > 0) {
+            this.clearDepth();
+
+            this.drawObject(
+                renderObjects.bones.map(
+                    (o: RenderObject): DrawObjectProps => {
+                        if (
+                            o.geometry.verticesBuffer === undefined ||
+                            o.geometry.normalsBuffer === undefined ||
+                            o.geometry.indicesBuffer === undefined
+                        ) {
+                            throw new Error('Buffers were not created correctly');
+                        }
+
+                        return {
+                            model: o.transform,
+                            normalTransform: o.normalTransform,
+                            cameraTransform: this.camera.getTransform(),
+                            projectionMatrix: this.projectionMatrix,
+                            positions: o.geometry.verticesBuffer,
+                            normals: o.geometry.normalsBuffer,
+                            indices: o.geometry.indicesBuffer,
+                            materialColor: o.geometry.material.materialColor,
+                            materialShininess: o.geometry.material.materialShininess,
+                            isShadeless: o.isShadeless === true,
+                            numLights: this.lights.length,
+                            ambientLight: this.ambientLight,
+                            lights: bakedLights
+                        };
+                    }
+                )
             );
         }
 
@@ -345,20 +349,20 @@ export class Renderer {
         this.ctx2D.fillStyle = redHex;
         this.ctx2D.fillText(
             'x',
-            (x[0] / x[3] + 1) / 2 * this.width,
-            (-x[1] / x[3] + 1) / 2 * this.height
+            ((x[0] / x[3] + 1) / 2) * this.width,
+            ((-x[1] / x[3] + 1) / 2) * this.height
         );
         this.ctx2D.fillStyle = greenHex;
         this.ctx2D.fillText(
             'y',
-            (y[0] / y[3] + 1) / 2 * this.width,
-            (-y[1] / y[3] + 1) / 2 * this.height
+            ((y[0] / y[3] + 1) / 2) * this.width,
+            ((-y[1] / y[3] + 1) / 2) * this.height
         );
         this.ctx2D.fillStyle = blueHex;
         this.ctx2D.fillText(
             'z',
-            (z[0] / z[3] + 1) / 2 * this.width,
-            (-z[1] / z[3] + 1) / 2 * this.height
+            ((z[0] / z[3] + 1) / 2) * this.width,
+            ((-z[1] / z[3] + 1) / 2) * this.height
         );
     }
 }

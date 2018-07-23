@@ -181,8 +181,7 @@ describe('Node', () => {
             const other = bone();
             other.setPosition({ x: 2, y: 2, z: 2 });
 
-            node
-                .grab(node.point('tip'))
+            node.grab(node.point('tip'))
                 .moveTo(other.point('tip'))
                 .release();
 
@@ -194,13 +193,11 @@ describe('Node', () => {
             const other = bone();
             other.setPosition({ x: 2, y: 0, z: 0 });
 
-            node
-                .hold(node.point('base'))
+            node.hold(node.point('base'))
                 .grab(node.point('tip'))
                 .pointAt(other.point('base'))
                 .release();
-            node
-                .grab(node.point('tip'))
+            node.grab(node.point('tip'))
                 .moveTo(other.point('tip'))
                 .release();
 
@@ -212,13 +209,11 @@ describe('Node', () => {
             const other = bone();
             other.setPosition({ x: 2, y: 0, z: 0 });
 
-            node
-                .hold(node.point('base'))
+            node.hold(node.point('base'))
                 .grab(node.point('tip'))
                 .stretchTo(other.point('base'))
                 .release();
-            node
-                .grab(node.point('tip'))
+            node.grab(node.point('tip'))
                 .moveTo(other.point('tip'))
                 .release();
 
@@ -232,13 +227,11 @@ describe('Node', () => {
             const other = bone();
             other.setPosition({ x: 2, y: 0, z: 0 });
 
-            node
-                .hold(node.point('base'))
+            node.hold(node.point('base'))
                 .grab(node.point('tip'))
                 .stretchTo(other.point('base'))
                 .release();
-            node
-                .grab(node.point('tip'))
+            node.grab(node.point('tip'))
                 .moveTowards(other.point('tip'), 0.5)
                 .release();
 
@@ -252,8 +245,7 @@ describe('Node', () => {
             const other = bone();
             other.setPosition({ x: 2, y: 0, z: 0 });
 
-            node
-                .hold(node.point('base'))
+            node.hold(node.point('base'))
                 .grab(node.point('tip'))
                 .stretchTo(other.point('base'))
                 .release();
@@ -288,8 +280,7 @@ describe('Node', () => {
         it('rotates about an axis', () => {
             const node = bone();
 
-            node
-                .hold(node.point('base'))
+            node.hold(node.point('base'))
                 .hold(node.point('tip'))
                 .rotate(90)
                 .release();
@@ -316,8 +307,7 @@ describe('Node', () => {
              *
              */
 
-            node
-                .hold(node.point('base'))
+            node.hold(node.point('base'))
                 .hold(node.point('tip'))
                 .grab(node.point('handle'))
                 .pointAt({ x: 0, y: 0, z: 2 })
@@ -330,8 +320,7 @@ describe('Node', () => {
 
         it('rotates a node with two degrees of freedom', () => {
             const node = bone();
-            node
-                .hold(node.point('base'))
+            node.hold(node.point('base'))
                 .grab(node.point('tip'))
                 .pointAt({ x: 0, y: 0, z: 2 })
                 .release();
@@ -433,8 +422,7 @@ describe('Node', () => {
             // The transformation should be stable, so the rotation should not change
             // when we call `pointAt` multiple times in a row
             for (let i = 0; i < 2; i += 1) {
-                node
-                    .hold(node.point('base'))
+                node.hold(node.point('base'))
                     .grab(node.point('tip'))
                     .pointAt(target.point('tip'))
                     .release();
@@ -442,7 +430,7 @@ describe('Node', () => {
                 expect(node.getRotation()).toEqualMat4(
                     mat4.fromQuat(
                         mat4.create(),
-                        quat.fromEuler(quat.create(), 0, 0, Math.atan2(4, 1) / Math.PI * 180)
+                        quat.fromEuler(quat.create(), 0, 0, (Math.atan2(4, 1) / Math.PI) * 180)
                     )
                 );
             }
@@ -451,8 +439,7 @@ describe('Node', () => {
         it("can rotate about a point that isn't the origin", () => {
             const node = bone();
 
-            node
-                .hold(node.point('tip'))
+            node.hold(node.point('tip'))
                 .grab(node.point('base'))
                 .pointAt({ x: 1, y: 1, z: 0 })
                 .release();
@@ -470,8 +457,7 @@ describe('Node', () => {
     describe('stretchTo', () => {
         it('brings the grabbed point to the target when there are 2 degrees of freedom', () => {
             const node = bone();
-            node
-                .hold(node.point('base'))
+            node.hold(node.point('base'))
                 .grab(node.point('tip'))
                 .stretchTo({ x: 0, y: 0, z: 2 })
                 .release();
@@ -486,8 +472,7 @@ describe('Node', () => {
             const node = bone();
             node.setScale(mat4.fromScaling(mat4.create(), vec3.fromValues(2, 3, 5)));
 
-            node
-                .hold(node.point('base'))
+            node.hold(node.point('base'))
                 .grab(node.point('tip'))
                 .stretchTo({ x: 0, y: 0, z: 2 })
                 .release();
@@ -502,8 +487,7 @@ describe('Node', () => {
             const node = bone();
             node.createPoint('handle', { x: 1, y: 0.5, z: 0 });
 
-            node
-                .hold(node.point('base'))
+            node.hold(node.point('base'))
                 .hold(node.point('tip'))
                 .grab(node.point('handle'))
                 .stretchTo({ x: 0, y: 0, z: 2 })

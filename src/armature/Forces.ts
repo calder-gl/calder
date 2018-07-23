@@ -14,8 +14,8 @@ export type ForcePoint = {
 /**
  * Use points with positive and negative influence to control generation.
  */
-export class Forces{
-    private vectors: {vector: vec3; influence: number}[];
+export class Forces {
+    private vectors: { vector: vec3; influence: number }[];
 
     /**
      * @param {ForcePoint[]} points The points of influence, where negative influence means the

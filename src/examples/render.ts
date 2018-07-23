@@ -95,8 +95,7 @@ renderer.camera.lookAt({ x: 2, y: 2, z: -4 });
 // Create a new constraint to be applied to the `test` Node.
 const constraints = Constraints.getInstance();
 constraints.add(test.root(), (node: Node) => {
-    node
-        .hold(node.point('base'))
+    node.hold(node.point('base'))
         .grab(node.point('tip'))
         .stretchTo(tower.root().point('tip'))
         .release();

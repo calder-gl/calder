@@ -66,7 +66,6 @@ export class FillVolume {
 
         return points;
     }
-        
 
     private addAABBToGrid(aabb: AABB, grid: Grid, onAdded: (added: string) => void) {
         this.pointsInAABB(aabb).forEach((point: string) => {
@@ -114,7 +113,10 @@ export class FillVolume {
                     (point: string) =>
                         // If this point was in the target region, reduce the cost
                         (incrementalCost +=
-                            this.cellSize * this.cellSize * this.cellSize * (this.targetCoords[point] ? -1 : 1))
+                            this.cellSize *
+                            this.cellSize *
+                            this.cellSize *
+                            (this.targetCoords[point] ? -1 : 1))
                 )
             )
         );
@@ -129,7 +131,10 @@ export class FillVolume {
                 heuristicGrid,
                 (point: string) =>
                     (heuristicCost +=
-                        this.cellSize * this.cellSize * this.cellSize * (this.targetCoords[point] ? -1 : 1))
+                        this.cellSize *
+                        this.cellSize *
+                        this.cellSize *
+                        (this.targetCoords[point] ? -1 : 1))
             );
         });
 

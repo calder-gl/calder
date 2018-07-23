@@ -45,7 +45,7 @@ export const emptyCost: Cost = { realCost: 0, heuristicCost: 0 };
  */
 export interface CostFn {
     getCost(instance: GeneratorInstance, nodes: Node[]): Cost;
-};
+}
 
 /**
  * An instance of a generated model, possibly in the middle of generation.
@@ -283,7 +283,7 @@ export class Generator {
      * @returns {Model} The model that was generated.
      */
     public generate(params: { start: string; depth?: number }): Model {
-        const instance = new GeneratorInstance(this, {getCost: () => emptyCost});
+        const instance = new GeneratorInstance(this, { getCost: () => emptyCost });
         instance.generate(params);
 
         return instance.getModel();
@@ -312,7 +312,14 @@ export class Generator {
          */
         onLastGeneration?: (instances: GeneratorInstance[]) => void;
     }): Model {
-        const { start, sosmcDepth = 10, finalDepth=100, samples = 50, costFn, onLastGeneration } = params;
+        const {
+            start,
+            sosmcDepth = 10,
+            finalDepth = 100,
+            samples = 50,
+            costFn,
+            onLastGeneration
+        } = params;
         let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
 
         this.computeExpectedVolumes(10, 40);
@@ -365,10 +372,12 @@ export class Generator {
         }
 
         // From the last generation, pick the one with the lowest cost.
-        const finalInstance = <GeneratorInstance>minBy(instances, (instance: GeneratorInstance) =>
-            instance.getCost()
+        const finalInstance = <GeneratorInstance>(
+            minBy(instances, (instance: GeneratorInstance) => instance.getCost())
         );
-        range(0, Math.max(0, finalDepth - sosmcDepth)).forEach(() => finalInstance.growIfPossible())
+        range(0, Math.max(0, finalDepth - sosmcDepth)).forEach(() =>
+            finalInstance.growIfPossible()
+        );
 
         return finalInstance.getModel();
     }

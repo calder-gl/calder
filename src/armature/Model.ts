@@ -124,8 +124,8 @@ export class Model {
             } else if (renderCache.has(node.parent)) {
                 // If the node's parent has already been rendered, we can read its transformation
                 // information from the cache
-                const { currentMatrix, currentNormalMatrix } = <RenderInfo>renderCache.get(
-                    node.parent
+                const { currentMatrix, currentNormalMatrix } = <RenderInfo>(
+                    renderCache.get(node.parent)
                 );
                 const info = node.computeRenderInfo(currentMatrix, currentNormalMatrix, makeBones);
 

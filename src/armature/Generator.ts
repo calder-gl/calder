@@ -43,7 +43,9 @@ export const emptyCost: Cost = { realCost: 0, heuristicCost: 0 };
  * since the last iteration of generation are passed to the cost function so that, if you can,
  * you can just compute the incremental cost and add it to the previous cost, `instance.getCost()`.
  */
-export type CostFn = (instance: GeneratorInstance, nodes: Node[]) => Cost;
+export interface CostFn {
+    getCost(instance: GeneratorInstance, nodes: Node[]): Cost;
+};
 
 /**
  * An instance of a generated model, possibly in the middle of generation.
@@ -118,7 +120,7 @@ export class GeneratorInstance {
     public getCostWeight(): number {
         // 1 / e^x means that lower (even negative) costs get a higher weight.
         // Using 1/ e^x instead of e^(-x) for numerical stability.
-        return 1 / Math.exp(this.cost.realCost + this.cost.heuristicCost);
+        return 1 / Math.exp(this.cost.realCost + 50 * this.cost.heuristicCost);
     }
 
     /**
@@ -155,7 +157,7 @@ export class GeneratorInstance {
         const added = this.model.nodes.slice(originalLength);
 
         // Recompute the cost
-        this.cost = this.costFn(this, added);
+        this.cost = this.costFn.getCost(this, added);
     }
 
     /**
@@ -281,7 +283,7 @@ export class Generator {
      * @returns {Model} The model that was generated.
      */
     public generate(params: { start: string; depth?: number }): Model {
-        const instance = new GeneratorInstance(this, () => emptyCost);
+        const instance = new GeneratorInstance(this, {getCost: () => emptyCost});
         instance.generate(params);
 
         return instance.getModel();
@@ -292,14 +294,16 @@ export class Generator {
      * generator, favoring ones with a lower cost.
      *
      * @param {string} start The name of the rule to start generating from.
-     * @param {number} depth How many iterations to run before stopping.
+     * @param {number} sosmcDepth How many iterations to run before stopping SOSMC.
+     * @param {number} finalDepth How many iterations to run the final sample to afterward.
      * @param {number} samples How many samples to look at in parallel.
      * @param {CostFn} costFn A function used to measure the cost of each sample.
      * @returns {Model} The model that was generated.
      */
     public generateSOSMC(params: {
         start: string;
-        depth?: number;
+        sosmcDepth?: number;
+        finalDepth?: number;
         samples?: number;
         costFn: CostFn;
         /**
@@ -308,7 +312,7 @@ export class Generator {
          */
         onLastGeneration?: (instances: GeneratorInstance[]) => void;
     }): Model {
-        const { start, depth = 10, samples = 50, costFn, onLastGeneration } = params;
+        const { start, sosmcDepth = 10, finalDepth=100, samples = 50, costFn, onLastGeneration } = params;
         let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
 
         this.computeExpectedVolumes(10, 40);
@@ -316,12 +320,12 @@ export class Generator {
         // Seed instances with starting state
         instances.forEach((instance: GeneratorInstance) => instance.initialize(start));
 
-        range(depth).forEach((iteration: number) => {
+        range(sosmcDepth).forEach((iteration: number) => {
             // Step 1: grow samples
             instances.forEach((instance: GeneratorInstance) => instance.growIfPossible());
 
             // Step 2: if there will be more iterations, do a weighted resample
-            if (iteration + 1 !== depth) {
+            if (iteration + 1 !== sosmcDepth) {
                 // We use "weight" here instead of cost to define how likely an instance is to be
                 // picked for the next generation. A low cost should give a high weight, and a high
                 // cost should give a low weight.
@@ -361,9 +365,12 @@ export class Generator {
         }
 
         // From the last generation, pick the one with the lowest cost.
-        return (<GeneratorInstance>minBy(instances, (instance: GeneratorInstance) =>
+        const finalInstance = <GeneratorInstance>minBy(instances, (instance: GeneratorInstance) =>
             instance.getCost()
-        )).getModel();
+        );
+        range(0, Math.max(0, finalDepth - sosmcDepth)).forEach(() => finalInstance.growIfPossible())
+
+        return finalInstance.getModel();
     }
 
     /**

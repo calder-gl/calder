@@ -30,7 +30,8 @@
     "lint": "tslint -t stylish --project \"tsconfig.json\"",
     "test": "npm run test-only",
     "test-only": "jest --coverage",
-    "watch": "tsc -w -p tsconfig.build.json"
+    "watch": "tsc -w -p tsconfig.build.json",
+    "webpack": "webpack"
   },
   "author": "",
   "license": "MIT",

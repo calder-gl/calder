@@ -13,6 +13,9 @@ import {
     Shape
 } from '../calder';
 
+// tslint:disable-next-line:import-name
+import Bezier = require('bezier-js');
+
 // Create the renderer
 const renderer: Renderer = new Renderer({
     width: 800,
@@ -97,10 +100,18 @@ const tree = treeGen.generateSOSMC({
     samples: 100,
     costFn: CostFunction.guidingVectors(
         [
-            { influence: 50, point: { x: 0, y: 0, z: 0 }, vector: { x: 0, y: 2, z: 0 } },
-            { influence: 50, point: { x: 0.5, y: 2, z: 0 }, vector: { x: 1, y: 0.2, z: 0 } },
-            { influence: 50, point: { x: -0.5, y: 2, z: 0 }, vector: { x: -1, y: 0.2, z: 0 } }
+            new Bezier([
+                {x: 0, y: 0, z: 0},
+                {x: 0, y: 1, z: 0},
+                {x: 0.5, y: 1, z: 0},
+                {x: 0.5, y: 2, z: 0}
+            ])
         ],
+        //[
+            //{ influence: 50, point: { x: 0, y: 0, z: 0 }, vector: { x: 0, y: 2, z: 0 } },
+            //{ influence: 50, point: { x: 0.5, y: 2, z: 0 }, vector: { x: 1, y: 0.2, z: 0 } },
+            //{ influence: 50, point: { x: -0.5, y: 2, z: 0 }, vector: { x: -1, y: 0.2, z: 0 } }
+        //],
         [
             { point: { x: -2, y: 2, z: 0 }, influence: -20 },
             { point: { x: 2, y: 2, z: 0 }, influence: -20 },

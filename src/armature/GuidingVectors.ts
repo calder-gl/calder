@@ -1,28 +1,21 @@
 import { coord } from '../calder';
-import { vec3ToPoint, vec3ToVector } from '../math/utils';
+import { vec3From4, vec3ToPoint } from '../math/utils';
 import { Mapper } from '../utils/mapper';
 import { ForcePoint } from './Forces';
 import { Cost, GeneratorInstance } from './Generator';
 import { Node } from './Node';
 
-import { vec4 } from 'gl-matrix';
+import 'bezier-js';
+import { vec3, vec4 } from 'gl-matrix';
 import { minBy } from 'lodash';
 
-export type GuidingVector = {
-    point: coord;
-    vector: coord;
-    influence: number;
-};
-
-type InternalGuidingVector = {
-    point: vec4;
-    vector: vec4;
-    lengthSquared: number;
-    influence: number;
+type Closest = {
+    curve: BezierJs.Bezier;
+    point: BezierJs.Projection;
 };
 
 export class GuidingVectors {
-    private vectors: InternalGuidingVector[];
+    private vectors: BezierJs.Bezier[];
     private forces: { vector: vec4; influence: number }[];
     private nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();
 
@@ -30,18 +23,8 @@ export class GuidingVectors {
      * @param {ForcePoint[]} points The points of influence, where negative influence means the
      * point reduces the overall cost when nodes get close.
      */
-    constructor(guidingVectors: GuidingVector[], forcePoints: ForcePoint[]) {
-        this.vectors = guidingVectors.map((guide: GuidingVector) => {
-            const direction = vec3ToVector(Mapper.coordToVector(guide.vector));
-            const lengthSquared = vec4.squaredLength(direction);
-            vec4.normalize(direction, direction);
-            return {
-                point: vec3ToPoint(Mapper.coordToVector(guide.point)),
-                vector: direction,
-                lengthSquared,
-                influence: guide.influence
-            };
-        });
+    constructor(guidingVectors: BezierJs.Bezier[], forcePoints: ForcePoint[]) {
+        this.vectors = guidingVectors;
 
         this.forces = forcePoints.map((forcePoint: ForcePoint) => {
             return {
@@ -51,10 +34,15 @@ export class GuidingVectors {
         });
     }
 
-    public closestVector(point: vec4): InternalGuidingVector {
-        return <InternalGuidingVector>minBy(this.vectors, (v: InternalGuidingVector) => {
-            return vec4.squaredDistance(point, v.point);
-        });
+    public closest(point: vec4): Closest {
+        return <Closest>minBy(
+            this.vectors.map((b: BezierJs.Bezier) => {
+                return {
+                    curve: b,
+                    point: b.project(Mapper.vectorToCoord(vec3From4(point)))
+                };
+            }),
+            (c: Closest) => c.point.d);
     }
 
     public getCost(instance: GeneratorInstance, added: Node[]): Cost {
@@ -94,7 +82,6 @@ export class GuidingVectors {
                     ? vec4.fromValues(0, 0, 0, 1)
                     : <vec4>this.nodeLocations.get(node.parent);
             const vector = vec4.sub(vec4.create(), globalPosition, parentPosition);
-            const vectorLengthSquared = vec4.squaredLength(vector);
             vec4.normalize(vector, vector);
 
             // Add force point influence
@@ -107,14 +94,12 @@ export class GuidingVectors {
             });
 
             // Add guiding vector influence
-            const guidingVector = this.closestVector(parentPosition);
-            totalCost +=
-                guidingVector.influence *
-                (1 - vec4.dot(guidingVector.vector, vector)) *
-                (1 + Math.abs(vectorLengthSquared - guidingVector.lengthSquared));
-        });
+            const closest = this.closest(parentPosition);
+            const guidingVector = Mapper.coordToVector(<coord>closest.curve.derivative(<number>closest.point.t));
 
-        totalCost /= 10;
+            totalCost +=
+                -vec3.dot(guidingVector, vec3From4(vector)) + 1;
+        });
 
         return { realCost: totalCost, heuristicCost: 0 };
     }

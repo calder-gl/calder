@@ -5,6 +5,7 @@ import { NodeRenderObject } from '../armature/NodeRenderObject';
 import {
     createDrawAxes,
     createDrawObject,
+    createDrawVectorField,
     Animation,
     Camera,
     Color,
@@ -12,6 +13,7 @@ import {
     DebugParams,
     DrawAxesProps,
     DrawObjectProps,
+    DrawVectorFieldProps,
     Light,
     Model,
     Node,
@@ -48,6 +50,7 @@ export class Renderer {
     private clearDepth: () => void;
     private drawObject: REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps>;
     private drawAxes: REGL.DrawCommand<REGL.DefaultContext, DrawAxesProps>;
+    private drawVectorField: REGL.DrawCommand<REGL.DefaultContext, DrawVectorFieldProps>;
     private lights: Light[];
     private ambientLight: vec3;
 
@@ -131,6 +134,7 @@ export class Renderer {
 
         this.drawObject = createDrawObject(this.regl, this.maxLights);
         this.drawAxes = createDrawAxes(this.regl);
+        this.drawVectorField = createDrawVectorField(this.regl);
     }
 
     public destroy() {
@@ -140,7 +144,7 @@ export class Renderer {
 
     public draw(
         objects: Model[],
-        debug: DebugParams = { drawAxes: false, drawArmatureBones: false }
+        debug: DebugParams = { drawAxes: false, drawArmatureBones: false, drawVectorField: undefined }
     ) {
         this.clearAll();
 
@@ -234,6 +238,10 @@ export class Renderer {
             );
         }
 
+        if (debug.drawVectorField !== undefined) {
+            this.drawField(debug.drawVectorField);
+        }
+
         if (debug.drawAxes === true) {
             this.drawCrosshairs();
         }
@@ -297,6 +305,14 @@ export class Renderer {
         };
 
         window.requestAnimationFrame(draw);
+    }
+
+    private drawField(field: Float32Array) {
+        this.drawVectorField({
+            cameraTransform: this.camera.getTransform(),
+            projectionMatrix: this.projectionMatrix,
+            positions: field
+        });
     }
 
     private drawCrosshairs() {

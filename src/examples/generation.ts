@@ -4,10 +4,8 @@ import {
     GeneratorInstance,
     Light,
     Material,
-    Matrix,
     Node,
     Point,
-    Quaternion,
     Renderer,
     RGBColor,
     Shape
@@ -93,31 +91,30 @@ treeGen
         instance.addDetail({ component: 'branch', at: root });
     });
 
+const guidingVectors = CostFunction.guidingVectors(
+    [
+        new Bezier([
+            {x: -0.5, y: 0, z: 0},
+            {x: -0.5, y: 1, z: 0},
+            {x: 1, y: 0.5, z: 1},
+            {x: 1, y: 1, z: 1}
+        ])
+    ],
+    [
+        { point: { x: -2, y: 2, z: 0 }, influence: -20 },
+        { point: { x: 2, y: 2, z: 0 }, influence: -20 },
+        { point: { x: 0, y: 3, z: 0 }, influence: -20 }
+    ]
+);
+
+const vectorField = guidingVectors.generateVectorField();
+
 const tree = treeGen.generateSOSMC({
     start: 'branch',
     sosmcDepth: 100,
     finalDepth: 100,
     samples: 100,
-    costFn: CostFunction.guidingVectors(
-        [
-            new Bezier([
-                {x: 0, y: 0, z: 0},
-                {x: 0, y: 1, z: 0},
-                {x: 0.5, y: 1, z: 0},
-                {x: 0.5, y: 2, z: 0}
-            ])
-        ],
-        //[
-            //{ influence: 50, point: { x: 0, y: 0, z: 0 }, vector: { x: 0, y: 2, z: 0 } },
-            //{ influence: 50, point: { x: 0.5, y: 2, z: 0 }, vector: { x: 1, y: 0.2, z: 0 } },
-            //{ influence: 50, point: { x: -0.5, y: 2, z: 0 }, vector: { x: -1, y: 0.2, z: 0 } }
-        //],
-        [
-            { point: { x: -2, y: 2, z: 0 }, influence: -20 },
-            { point: { x: 2, y: 2, z: 0 }, influence: -20 },
-            { point: { x: 0, y: 3, z: 0 }, influence: -20 }
-        ]
-    ),
+    costFn: guidingVectors,
     onLastGeneration: (instances: GeneratorInstance[]) => {
         const result = document.createElement('p');
         result.innerText = 'Costs in final generation: ';
@@ -161,18 +158,22 @@ const tree = treeGen.generateSOSMC({
 
 document.body.appendChild(renderer.stage);
 
-renderer.camera.moveTo({ x: 0, y: 0, z: 8 });
-renderer.camera.lookAt({ x: 2, y: 2, z: -4 });
+renderer.camera.lookAt({ x: 0, y: 1, z: 0 });
 
 // Draw the armature
 let angle = 0;
 const draw = () => {
-    angle += 0.5;
-    tree.root().setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
+    angle += 0.001;
+    renderer.camera.moveToWithFixedTarget({
+        x: Math.cos(angle) * 8,
+        y: 1,
+        z: -Math.sin(angle) * 8,
+    })
+    //tree.root().setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 
     return {
         objects: [tree],
-        debugParams: { drawAxes: true, drawArmatureBones: false }
+        debugParams: { drawAxes: true, drawArmatureBones: false, drawVectorField: vectorField }
     };
 };
 

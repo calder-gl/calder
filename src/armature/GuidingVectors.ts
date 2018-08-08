@@ -7,7 +7,7 @@ import { Node } from './Node';
 
 import 'bezier-js';
 import { vec3, vec4 } from 'gl-matrix';
-import { minBy } from 'lodash';
+import { minBy, range } from 'lodash';
 
 type Closest = {
     curve: BezierJs.Bezier;
@@ -32,6 +32,28 @@ export class GuidingVectors {
                 influence: forcePoint.influence
             };
         });
+    }
+
+    public generateVectorField(radius: number = 3, step: number = 0.5): Float32Array {
+        const field: number[] = [];
+
+        range(-radius, radius, step).forEach((x: number) => {
+            range(-radius, radius, step).forEach((y: number) => {
+                range(-radius, radius, step).forEach((z: number) => {
+                    field.push(x, y, z);
+                    const closest = this.closest(vec4.fromValues(x, y, z, 1));
+                    const vector = <coord>closest.curve.derivative(<number>closest.point.t);
+                    //console.log(vector);
+                    const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+                    vector.x /= length;
+                    vector.y /= length;
+                    vector.z /= length;
+                    field.push(x + vector.x / 4, y + vector.y / 4, z + vector.z / 4);
+                });
+            });
+        });
+
+        return Float32Array.from(field);
     }
 
     public closest(point: vec4): Closest {
@@ -88,7 +110,7 @@ export class GuidingVectors {
             this.forces.forEach((point: { vector: vec4; influence: number }) => {
                 // Add cost relative to the point's influence, and inversely proportional
                 // to the distance to the point
-                totalCost +=
+                totalCost += 0 *
                     point.influence /
                     Math.min(10000, vec4.squaredDistance(point.vector, globalPosition));
             });
@@ -98,7 +120,7 @@ export class GuidingVectors {
             const guidingVector = Mapper.coordToVector(<coord>closest.curve.derivative(<number>closest.point.t));
 
             totalCost +=
-                -vec3.dot(guidingVector, vec3From4(vector)) + 1;
+                100 * (-vec3.dot(guidingVector, vec3From4(vector)) + 1);
         });
 
         return { realCost: totalCost, heuristicCost: 0 };

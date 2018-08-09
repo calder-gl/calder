@@ -43,7 +43,7 @@ export function createDrawVectorField(
             uniform mat4 view;
 
             void main() {
-                vec4 vertexPosition = view * vec4(position, 1);
+                vertexPosition = view * vec4(position, 1);
                 gl_Position = projection * vertexPosition;
             }
         `,
@@ -53,7 +53,7 @@ export function createDrawVectorField(
 
             void main() {
                 gl_FragColor = vec4(
-                    clamp(vertexPosition.z * 1000.0, 0.0, 1.0) * vec3(1.0, 1.0, 1.0),
+                    clamp(vertexPosition / 5.0 + 0.7, 0.0, 1.0).xyz * vec3(1.0, 1.0, 1.0),
                     1.0);
             }
         `,

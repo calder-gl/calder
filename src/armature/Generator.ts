@@ -1,3 +1,4 @@
+import { AABB } from '../geometry/BakedGeometry';
 import { RandomGenerator } from '../utils/random';
 import { Model } from './Model';
 import { Node, Point } from './Node';
@@ -14,9 +15,15 @@ type Definition = {
     generator: GeneratorFn;
 };
 
-type SpawnPoint = {
+export type SpawnPoint = {
     component: string;
     at: Point;
+};
+
+type RuleInfo = {
+    totalWeight: number;
+    definitions: Definition[];
+    expectedVolumes: AABB[];
 };
 
 /**
@@ -42,8 +49,8 @@ export type CostFn = (instance: GeneratorInstance, nodes: Node[]) => Cost;
  * An instance of a generated model, possibly in the middle of generation.
  */
 export class GeneratorInstance {
+    public readonly generator: Generator;
     private model: Model = new Model();
-    private generator: Generator;
     private costFn: CostFn;
     private cost: Cost = emptyCost;
     private spawnPoints: SpawnPoint[] = [];
@@ -88,6 +95,13 @@ export class GeneratorInstance {
      */
     public getModel(): Model {
         return this.model;
+    }
+
+    /**
+     * @returns {SpawnPoint[]} The currently open spawn points that have yet to be generated from.
+     */
+    public getSpawnPoints(): SpawnPoint[] {
+        return this.spawnPoints;
     }
 
     /**
@@ -190,7 +204,7 @@ export class GeneratorInstance {
  * definition for the same rule.
  */
 export class Generator {
-    private rules: { [name: string]: { totalWeight: number; definitions: Definition[] } } = {};
+    private rules: { [name: string]: RuleInfo } = {};
     private random: RandomGenerator = Math.random;
 
     /**
@@ -248,7 +262,7 @@ export class Generator {
     public defineWeighted(name: string, weight: number, generator: GeneratorFn): Generator {
         // Make a component for the given name if one doesn't already exist
         if (this.rules[name] === undefined) {
-            this.rules[name] = { totalWeight: 0, definitions: [] };
+            this.rules[name] = { totalWeight: 0, definitions: [], expectedVolumes: [] };
         }
 
         // Keep track of the total weight for all component definitions of this name, so we can later
@@ -296,6 +310,8 @@ export class Generator {
     }): Model {
         const { start, depth = 10, samples = 50, costFn, onLastGeneration } = params;
         let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
+
+        this.computeExpectedVolumes(10, 40);
 
         // Seed instances with starting state
         instances.forEach((instance: GeneratorInstance) => instance.initialize(start));
@@ -373,5 +389,34 @@ export class Generator {
         }
 
         throw new Error('Error finding a weighted definition. Are all weights positive?');
+    }
+
+    /**
+     * Picks a plausible bounding volume that a component, when generated, could occupy.
+     *
+     * @param {string} component The component being spawned.
+     * @returns {AABB} An axis-aligned bounding box that the component could occupy.
+     */
+    public getExpectedRuleVolume(component: string): AABB {
+        const volumes = this.rules[component].expectedVolumes;
+
+        return volumes[Math.floor(Math.random() * volumes.length)];
+    }
+
+    /**
+     * Generates each component multiple times to compute expected bounding volumes.
+     *
+     * @param {number} numVolumes The number of bounding volumes to generate per component.
+     * @param {number} depth How many rounds of generation should be used per generated instance
+     * of a component.
+     */
+    private computeExpectedVolumes(numVolumes: number, depth: number) {
+        Object.keys(this.rules).forEach((name: string) => {
+            const rule = this.rules[name];
+
+            rule.expectedVolumes = range(numVolumes).map(() =>
+                this.generate({ start: name, depth }).computeAABB()
+            );
+        });
     }
 }

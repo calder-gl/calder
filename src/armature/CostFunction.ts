@@ -1,8 +1,9 @@
 import { coord } from '../calder';
 import { AABB } from '../geometry/BakedGeometry';
 import { vec3From4 } from '../math/utils';
+import { worldSpaceAABB } from '../utils/aabb';
 import { Mapper } from '../utils/mapper';
-import { CostFn, GeneratorInstance } from './Generator';
+import { CostFn, GeneratorInstance, SpawnPoint } from './Generator';
 import { Model } from './Model';
 import { GeometryNode, Node } from './Node';
 
@@ -68,24 +69,6 @@ export namespace CostFunction {
         };
     }
 
-    // Given a GeometryNode, make an axis-aligned bounding box, which consists of a min corner
-    // and a max corner.
-    const worldSpaceAABB = (node: GeometryNode) => {
-        const localToGlobalTransform = node.localToGlobalTransform();
-        const min = vec4.transformMat4(
-            vec4.create(),
-            node.geometry.aabb.min,
-            localToGlobalTransform
-        );
-        const max = vec4.transformMat4(
-            vec4.create(),
-            node.geometry.aabb.max,
-            localToGlobalTransform
-        );
-
-        return { min, max };
-    };
-
     /**
      * Creates a cost function based on how much of a target volume a shape fills.
      *
@@ -93,6 +76,7 @@ export namespace CostFunction {
      * @param {number} cellSize How big each cell in the volume grid should be.
      * @returns {CostFn} The resulting cost function.
      */
+    // tslint:disable-next-line:max-func-body-length
     export function fillVolume(targetModel: Model, cellSize: number): CostFn {
         const gridCache = new Map<Node, Grid>();
 
@@ -110,6 +94,9 @@ export namespace CostFunction {
         const pointsInAABB = (aabb: AABB) => {
             const points: string[] = [];
             const point = vec4.fromValues(0, 0, 0, 1);
+            if (isNaN(vec4.squaredLength(aabb.min)) || isNaN(vec4.squaredLength(aabb.max))) {
+                return [];
+            }
 
             // Step through x, y, and z from min to max, adding each step to the
             // `points` array
@@ -135,11 +122,21 @@ export namespace CostFunction {
             return points;
         };
 
+        const addAABBToGrid = (aabb: AABB, grid: Grid, onAdded: (added: string) => void) => {
+            pointsInAABB(aabb).forEach((point: string) => {
+                if (!grid[point]) {
+                    grid[point] = true;
+
+                    onAdded(point);
+                }
+            });
+        };
+
         // For each node in the target model, find its bounding box
         const targetCoords: Grid = {};
         targetModel.nodes.forEach((n: Node) =>
             n.geometryCallback((node: GeometryNode) => {
-                pointsInAABB(worldSpaceAABB(node)).forEach(
+                pointsInAABB(worldSpaceAABB(node, node.geometry.aabb)).forEach(
                     (point: string) => (targetCoords[point] = true)
                 );
             })
@@ -159,26 +156,38 @@ export namespace CostFunction {
             const grid = parentGrid === undefined ? {} : { ...parentGrid };
 
             let incrementalCost = 0;
+            let heuristicCost = 0;
 
             // For each point in the new added geometry, see if it fills a point in the target shape
             // that wasn't previously filled, and make the current model cost less accordingly
             added.forEach((n: Node) =>
-                n.geometryCallback((node: GeometryNode) => {
-                    pointsInAABB(worldSpaceAABB(node)).forEach((point: string) => {
-                        if (!grid[point]) {
-                            grid[point] = true;
-
+                n.geometryCallback((node: GeometryNode) =>
+                    addAABBToGrid(
+                        worldSpaceAABB(node, node.geometry.aabb),
+                        grid,
+                        (point: string) =>
                             // If this point was in the target region, reduce the cost
-                            incrementalCost +=
-                                cellSize * cellSize * cellSize * (targetCoords[point] ? -1 : 1);
-                        }
-                    });
-                })
+                            (incrementalCost +=
+                                cellSize * cellSize * cellSize * (targetCoords[point] ? -1 : 1))
+                    )
+                )
             );
 
             gridCache.set(instance.getModel().latest(), grid);
 
-            return { realCost: instance.getCost().realCost + incrementalCost, heuristicCost: 0 };
+            const heuristicGrid = { ...grid };
+            instance.getSpawnPoints().forEach((spawnPoint: SpawnPoint) => {
+                const aabb = instance.generator.getExpectedRuleVolume(spawnPoint.component);
+                addAABBToGrid(
+                    worldSpaceAABB(spawnPoint.at.node, aabb),
+                    heuristicGrid,
+                    (point: string) =>
+                        (heuristicCost +=
+                            cellSize * cellSize * cellSize * (targetCoords[point] ? -1 : 1))
+                );
+            });
+
+            return { realCost: instance.getCost().realCost + incrementalCost, heuristicCost };
         };
     }
 }

@@ -13,7 +13,7 @@ type Grid = { [key: string]: true };
  * Creates a cost function based on how much of a target volume a shape fills.
  */
 export class FillVolume {
-    private gridCache = new Map<Node, Grid>();
+    private gridCache: Map<Node, Grid> = new Map<Node, Grid>();
     private cellSize: number;
     private targetCoords: Grid = {};
 
@@ -33,58 +33,6 @@ export class FillVolume {
                 );
             })
         );
-    }
-
-    // Returns the points that are in a world-space AABB.
-    private pointsInAABB(aabb: AABB): string[] {
-        const points: string[] = [];
-        const point = vec4.fromValues(0, 0, 0, 1);
-        if (isNaN(vec4.squaredLength(aabb.min)) || isNaN(vec4.squaredLength(aabb.max))) {
-            return [];
-        }
-
-        // Step through x, y, and z from min to max, adding each step to the
-        // `points` array
-        range(Math.floor(aabb.min[0]), Math.ceil(aabb.max[0]), this.cellSize).forEach(
-            (x: number) => {
-                range(Math.floor(aabb.min[1]), Math.ceil(aabb.max[1]), this.cellSize).forEach(
-                    (y: number) => {
-                        range(
-                            Math.floor(aabb.min[2]),
-                            Math.ceil(aabb.max[2]),
-                            this.cellSize
-                        ).forEach((z: number) => {
-                            point[0] = x;
-                            point[1] = y;
-                            point[2] = z;
-                            points.push(this.makeKey(point));
-                        });
-                    }
-                );
-            }
-        );
-
-        return points;
-    }
-
-    private addAABBToGrid(aabb: AABB, grid: Grid, onAdded: (added: string) => void) {
-        this.pointsInAABB(aabb).forEach((point: string) => {
-            if (!grid[point]) {
-                grid[point] = true;
-
-                onAdded(point);
-            }
-        });
-    }
-
-    // A grid uses a string as a key because otherwise it would use object equality on points,
-    // which we don't want. This function makes a string key from a point.
-    private makeKey(point: vec4): string {
-        const keyX = Math.floor(point[0] / this.cellSize);
-        const keyY = Math.floor(point[1] / this.cellSize);
-        const keyZ = Math.floor(point[2] / this.cellSize);
-
-        return `${keyX},${keyY},${keyZ}`;
     }
 
     public getCost(instance: GeneratorInstance, added: Node[]): Cost {
@@ -139,5 +87,57 @@ export class FillVolume {
         });
 
         return { realCost: instance.getCost().realCost + incrementalCost, heuristicCost };
+    }
+
+    // Returns the points that are in a world-space AABB.
+    private pointsInAABB(aabb: AABB): string[] {
+        const points: string[] = [];
+        const point = vec4.fromValues(0, 0, 0, 1);
+        if (isNaN(vec4.squaredLength(aabb.min)) || isNaN(vec4.squaredLength(aabb.max))) {
+            return [];
+        }
+
+        // Step through x, y, and z from min to max, adding each step to the
+        // `points` array
+        range(Math.floor(aabb.min[0]), Math.ceil(aabb.max[0]), this.cellSize).forEach(
+            (x: number) => {
+                range(Math.floor(aabb.min[1]), Math.ceil(aabb.max[1]), this.cellSize).forEach(
+                    (y: number) => {
+                        range(
+                            Math.floor(aabb.min[2]),
+                            Math.ceil(aabb.max[2]),
+                            this.cellSize
+                        ).forEach((z: number) => {
+                            point[0] = x;
+                            point[1] = y;
+                            point[2] = z;
+                            points.push(this.makeKey(point));
+                        });
+                    }
+                );
+            }
+        );
+
+        return points;
+    }
+
+    private addAABBToGrid(aabb: AABB, grid: Grid, onAdded: (added: string) => void) {
+        this.pointsInAABB(aabb).forEach((point: string) => {
+            if (!grid[point]) {
+                grid[point] = true;
+
+                onAdded(point);
+            }
+        });
+    }
+
+    // A grid uses a string as a key because otherwise it would use object equality on points,
+    // which we don't want. This function makes a string key from a point.
+    private makeKey(point: vec4): string {
+        const keyX = Math.floor(point[0] / this.cellSize);
+        const keyY = Math.floor(point[1] / this.cellSize);
+        const keyZ = Math.floor(point[2] / this.cellSize);
+
+        return `${keyX},${keyY},${keyZ}`;
     }
 }

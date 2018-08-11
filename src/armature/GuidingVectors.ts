@@ -13,6 +13,10 @@ type Closest = {
     point: BezierJs.Projection;
 };
 
+/**
+ * A cost function that doesn't look at the geometry of a model, only the shape, by comparing
+ * the angles in the skeleton to guiding vectors.
+ */
 export class GuidingVectors {
     private vectors: BezierJs.Bezier[];
     private nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();

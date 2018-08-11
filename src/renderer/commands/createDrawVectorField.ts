@@ -30,7 +30,7 @@ export interface DrawVectorFieldProps {
  * @param {REGL.regl} regl The regl object factory to build a function to draw an object.
  */
 export function createDrawVectorField(
-    regl: REGL.Regl,
+    regl: REGL.Regl
 ): REGL.DrawCommand<REGL.DefaultContext, DrawVectorFieldProps> {
     return regl<Uniforms, Attributes, DrawVectorFieldProps>({
         vert: `
@@ -58,11 +58,13 @@ export function createDrawVectorField(
             }
         `,
         attributes: {
-            position: regl.prop<DrawVectorFieldProps, keyof DrawVectorFieldProps>('positions'),
+            position: regl.prop<DrawVectorFieldProps, keyof DrawVectorFieldProps>('positions')
         },
         uniforms: {
-            projection: regl.prop<DrawVectorFieldProps, keyof DrawVectorFieldProps>('projectionMatrix'),
-            view: regl.prop<DrawVectorFieldProps, keyof DrawVectorFieldProps>('cameraTransform'),
+            projection: regl.prop<DrawVectorFieldProps, keyof DrawVectorFieldProps>(
+                'projectionMatrix'
+            ),
+            view: regl.prop<DrawVectorFieldProps, keyof DrawVectorFieldProps>('cameraTransform')
         },
         // tslint:disable:typedef
         // tslint:disable:variable-name

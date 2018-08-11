@@ -149,7 +149,11 @@ export class Renderer {
 
     public draw(
         objects: Model[],
-        debug: DebugParams = { drawAxes: false, drawArmatureBones: false, drawVectorField: undefined }
+        debug: DebugParams = {
+            drawAxes: false,
+            drawArmatureBones: false,
+            drawVectorField: undefined
+        }
     ) {
         this.clearAll();
 
@@ -199,8 +203,8 @@ export class Renderer {
     }
 
     public drawObjectArray(objects: RenderObject[], bakedLights: BakedLight[]) {
-        this.drawObject(objects.map(
-            (o: RenderObject): DrawObjectProps => {
+        this.drawObject(
+            objects.map((o: RenderObject): DrawObjectProps => {
                 if (
                     o.geometry.verticesBuffer === undefined ||
                     o.geometry.normalsBuffer === undefined ||
@@ -224,8 +228,8 @@ export class Renderer {
                     ambientLight: this.ambientLight,
                     lights: bakedLights
                 };
-            }
-        ));
+            })
+        );
     }
 
     /**
@@ -289,13 +293,15 @@ export class Renderer {
     }
 
     private drawCurve(curves: Float32Array[]) {
-        this.drawGuidingCurve(curves.map((curve: Float32Array) => {
-            return {
-                cameraTransform: this.camera.getTransform(),
-                projectionMatrix: this.projectionMatrix,
-                positions: curve
-            }
-        }));
+        this.drawGuidingCurve(
+            curves.map((curve: Float32Array) => {
+                return {
+                    cameraTransform: this.camera.getTransform(),
+                    projectionMatrix: this.projectionMatrix,
+                    positions: curve
+                };
+            })
+        );
     }
 
     private drawField(field: Float32Array) {
@@ -356,20 +362,20 @@ export class Renderer {
         this.ctx2D.fillStyle = redHex;
         this.ctx2D.fillText(
             'x',
-            ((x[0] / x[3] + 1) / 2) * this.width,
-            ((-x[1] / x[3] + 1) / 2) * this.height
+            (x[0] / x[3] + 1) / 2 * this.width,
+            (-x[1] / x[3] + 1) / 2 * this.height
         );
         this.ctx2D.fillStyle = greenHex;
         this.ctx2D.fillText(
             'y',
-            ((y[0] / y[3] + 1) / 2) * this.width,
-            ((-y[1] / y[3] + 1) / 2) * this.height
+            (y[0] / y[3] + 1) / 2 * this.width,
+            (-y[1] / y[3] + 1) / 2 * this.height
         );
         this.ctx2D.fillStyle = blueHex;
         this.ctx2D.fillText(
             'z',
-            ((z[0] / z[3] + 1) / 2) * this.width,
-            ((-z[1] / z[3] + 1) / 2) * this.height
+            (z[0] / z[3] + 1) / 2 * this.width,
+            (-z[1] / z[3] + 1) / 2 * this.height
         );
     }
 }

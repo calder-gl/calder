@@ -372,8 +372,8 @@ export class Generator {
         }
 
         // From the last generation, pick the one with the lowest cost.
-        const finalInstance = <GeneratorInstance>(
-            minBy(instances, (instance: GeneratorInstance) => instance.getCost())
+        const finalInstance = <GeneratorInstance>minBy(instances, (instance: GeneratorInstance) =>
+            instance.getCost()
         );
         range(0, Math.max(0, finalDepth - sosmcDepth)).forEach(() =>
             finalInstance.growIfPossible()

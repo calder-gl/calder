@@ -55,7 +55,7 @@ export namespace Shape {
 
                 if (onEnd) {
                     // Place the middle vertex
-                    vertices.push(vec3.fromValues(0, (side * LENGTH) / 2, 0));
+                    vertices.push(vec3.fromValues(0, side * LENGTH / 2, 0));
                     normals.push(vec3.fromValues(0, side, 0));
                 }
 
@@ -63,7 +63,7 @@ export namespace Shape {
                 range(PRECISION).forEach((i: number) => {
                     const angle = Math.PI * 2 * (i / PRECISION);
                     vertices.push(
-                        vec3.fromValues(Math.cos(angle), (side * LENGTH) / 2, Math.sin(angle))
+                        vec3.fromValues(Math.cos(angle), side * LENGTH / 2, Math.sin(angle))
                     );
 
                     if (onEnd) {
@@ -90,7 +90,7 @@ export namespace Shape {
                 //    X---i+1
                 // The offset is the first index of either the top or the bottom ring.
 
-                faces.push(new Face([offset, offset + i + 1, offset + ((i + 1) % PRECISION) + 1]));
+                faces.push(new Face([offset, offset + i + 1, offset + (i + 1) % PRECISION + 1]));
             });
         });
 
@@ -111,7 +111,7 @@ export namespace Shape {
             // -----p+i-----p+i+1--
             // (p = PRECISION, which is # vertices in the ring)
             faces.push(
-                new Face([offset + i, offset + ((i + 1) % PRECISION), offset + PRECISION + i])
+                new Face([offset + i, offset + (i + 1) % PRECISION, offset + PRECISION + i])
             );
 
             // Triangle 2:
@@ -123,8 +123,8 @@ export namespace Shape {
             // (p = PRECISION, which is # vertices in the ring)
             faces.push(
                 new Face([
-                    offset + ((i + 1) % PRECISION),
-                    offset + PRECISION + ((i + 1) % PRECISION),
+                    offset + (i + 1) % PRECISION,
+                    offset + PRECISION + (i + 1) % PRECISION,
                     offset + PRECISION + i
                 ])
             );

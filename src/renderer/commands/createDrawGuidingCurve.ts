@@ -25,12 +25,12 @@ export interface DrawGuidingCurveProps {
 }
 
 /**
- * Shader to draw a field of vectors at points in the scene.
+ * Shader to draw a guiding curve on top of a scene.
  *
  * @param {REGL.regl} regl The regl object factory to build a function to draw an object.
  */
 export function createDrawGuidingCurve(
-    regl: REGL.Regl,
+    regl: REGL.Regl
 ): REGL.DrawCommand<REGL.DefaultContext, DrawGuidingCurveProps> {
     return regl<Uniforms, Attributes, DrawGuidingCurveProps>({
         vert: `
@@ -54,11 +54,13 @@ export function createDrawGuidingCurve(
             }
         `,
         attributes: {
-            position: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('positions'),
+            position: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('positions')
         },
         uniforms: {
-            projection: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('projectionMatrix'),
-            view: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('cameraTransform'),
+            projection: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>(
+                'projectionMatrix'
+            ),
+            view: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('cameraTransform')
         },
         depth: {
             enable: false

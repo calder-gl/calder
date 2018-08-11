@@ -46,7 +46,9 @@ export class GuidingVectors {
                     const vector = <coord>closest.curve.derivative(<number>closest.point.t);
 
                     // Make the vector as long as step/2
-                    const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+                    const length = Math.sqrt(
+                        vector.x * vector.x + vector.y * vector.y + vector.z * vector.z
+                    );
                     vector.x *= step / 2 / length;
                     vector.y *= step / 2 / length;
                     vector.z *= step / 2 / length;
@@ -125,9 +127,10 @@ export class GuidingVectors {
             const closest = this.closest(parentPosition);
 
             // Compare the new structure's vector with the direction vector for the curve point
-            const guidingVector = Mapper.coordToVector(<coord>closest.curve.derivative(<number>closest.point.t));
-            totalCost +=
-                (-vec3.dot(guidingVector, vec3From4(vector)) + 1) * 100;
+            const guidingVector = Mapper.coordToVector(<coord>closest.curve.derivative(
+                <number>closest.point.t
+            ));
+            totalCost += (-vec3.dot(guidingVector, vec3From4(vector)) + 1) * 100;
         });
 
         return { realCost: totalCost, heuristicCost: 0 };
@@ -144,6 +147,7 @@ export class GuidingVectors {
                     point: b.project(Mapper.vectorToCoord(vec3From4(point)))
                 };
             }),
-            (c: Closest) => c.point.d);
+            (c: Closest) => c.point.d
+        );
     }
 }

@@ -505,9 +505,8 @@ export class Node {
 
         if (makeBones) {
             objects.bones.push(
-                ...Object.keys(this.points).map(
-                    (name: string): RenderObject =>
-                        this.boneRenderObject(this.points[name], currentMatrix, currentNormalMatrix)
+                ...Object.keys(this.points).map((name: string): RenderObject =>
+                    this.boneRenderObject(this.points[name], currentMatrix, currentNormalMatrix)
                 )
             );
         }

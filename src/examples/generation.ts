@@ -62,10 +62,12 @@ treeGen
         const node = instance.add(bone());
         node.point('base').stickTo(root);
         node.scale(Math.random() * 0.4 + 0.9);
-        node.hold(node.point('tip'))
+        node
+            .hold(node.point('tip'))
             .rotate(Math.random() * 360)
             .release();
-        node.hold(node.point('handle'))
+        node
+            .hold(node.point('handle'))
             .rotate(Math.random() * 70)
             .release();
         node.scale(0.8); // Shrink a bit
@@ -93,16 +95,16 @@ treeGen
 
 const guidingVectors = CostFunction.guidingVectors([
     new Bezier([
-        {x: 0, y: 0, z: 0},
-        {x: 0, y: 1, z: 0},
-        {x: 1, y: 1, z: 1},
-        {x: 2, y: 2, z: 1}
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 1, z: 0 },
+        { x: 1, y: 1, z: 1 },
+        { x: 2, y: 2, z: 1 }
     ]),
     new Bezier([
-        {x: 0, y: 1, z: 0},
-        {x: 0.5, y: 2, z: 1},
-        {x: 0, y: 3, z: 1},
-        {x: 0, y: 3, z: 2}
+        { x: 0, y: 1, z: 0 },
+        { x: 0.5, y: 2, z: 1 },
+        { x: 0, y: 3, z: 1 },
+        { x: 0, y: 3, z: 2 }
     ])
 ]);
 
@@ -167,8 +169,8 @@ const draw = () => {
     renderer.camera.moveToWithFixedTarget({
         x: Math.cos(angle) * 8,
         y: 1,
-        z: -Math.sin(angle) * 8,
-    })
+        z: -Math.sin(angle) * 8
+    });
     //tree.root().setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 
     return {

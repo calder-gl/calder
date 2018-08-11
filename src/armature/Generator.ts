@@ -354,7 +354,7 @@ export class Generator {
                     // the random number we generated.
                     let picked: GeneratorInstance = instances[0];
                     let i = 0;
-                    while (sample > 0) {
+                    while (sample > 0 && i < instances.length - 1) {
                         picked = instances[i];
                         sample -= instances[i].getCostWeight();
                         i += 1;

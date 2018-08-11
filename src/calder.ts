@@ -76,6 +76,7 @@ export * from './renderer/Material';
 export * from './renderer/commands/createDrawAxes';
 export * from './renderer/commands/createDrawObject';
 export * from './renderer/commands/createDrawVectorField';
+export * from './renderer/commands/createDrawGuidingCurve';
 
 /*****************************
  * Types

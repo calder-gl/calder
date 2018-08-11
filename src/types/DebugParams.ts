@@ -20,4 +20,9 @@ export type DebugParams = {
      * point followed by the three components of the end point of the vector.
      */
     drawVectorField?: Float32Array;
+
+    /**
+     * Draw a guiding curve, represented as an array of points along the curve.
+     */
+    drawGuidingCurve?: Float32Array[];
 };

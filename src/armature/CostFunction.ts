@@ -14,10 +14,7 @@ export namespace CostFunction {
         return new FillVolume(targetModel, cellSize);
     }
 
-    export function guidingVectors(
-        curves: BezierJs.Bezier[],
-        forcePoints: ForcePoint[]
-    ): GuidingVectors {
-        return new GuidingVectors(curves, forcePoints);
+    export function guidingVectors(curves: BezierJs.Bezier[]): GuidingVectors {
+        return new GuidingVectors(curves);
     }
 }

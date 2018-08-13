@@ -1,7 +1,7 @@
 import { coord } from '../calder';
 import { vec3From4 } from '../math/utils';
 import { Mapper } from '../utils/mapper';
-import { Cost, GeneratorInstance } from './Generator';
+import { Cost, CostFn, GeneratorInstance } from './Generator';
 import { Node } from './Node';
 
 import 'bezier-js';
@@ -17,7 +17,7 @@ type Closest = {
  * A cost function that doesn't look at the geometry of a model, only the shape, by comparing
  * the angles in the skeleton to guiding vectors.
  */
-export class GuidingVectors {
+export class GuidingVectors implements CostFn {
     private vectors: BezierJs.Bezier[];
     private nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();
 

@@ -1,7 +1,7 @@
 import { coord } from '../calder';
 import { vec3From4 } from '../math/utils';
 import { Mapper } from '../utils/mapper';
-import { Cost, GeneratorInstance } from './Generator';
+import { Cost, CostFn, GeneratorInstance } from './Generator';
 import { GeometryNode, Node } from './Node';
 
 import { vec3, vec4 } from 'gl-matrix';
@@ -14,7 +14,7 @@ export type ForcePoint = {
 /**
  * Use points with positive and negative influence to control generation.
  */
-export class Forces {
+export class Forces implements CostFn {
     private vectors: { vector: vec3; influence: number }[];
 
     /**

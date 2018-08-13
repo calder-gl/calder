@@ -1,6 +1,6 @@
 import { AABB } from '../geometry/BakedGeometry';
 import { worldSpaceAABB } from '../utils/aabb';
-import { Cost, GeneratorInstance, SpawnPoint } from './Generator';
+import { Cost, CostFn, GeneratorInstance, SpawnPoint } from './Generator';
 import { Model } from './Model';
 import { GeometryNode, Node } from './Node';
 
@@ -12,7 +12,7 @@ type Grid = { [key: string]: true };
 /**
  * Creates a cost function based on how much of a target volume a shape fills.
  */
-export class FillVolume {
+export class FillVolume implements CostFn {
     private gridCache: Map<Node, Grid> = new Map<Node, Grid>();
     private cellSize: number;
     private targetCoords: Grid = {};

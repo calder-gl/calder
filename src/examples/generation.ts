@@ -137,6 +137,10 @@ const branch = treeTarget.add(new GeometryNode(branchShape));
 branch.scale({ x: 0.2, y: 2, z: 0.2 });
 branch.moveTo({ x: 0, y: 1, z: 0 });
 
+const result = document.createElement('p');
+let minCost: number = 0;
+let minInstances: GeneratorInstance[] = [];
+
 const tree = treeGen.generateSOSMC({
     start: 'branch',
     sosmcDepth: 50,
@@ -145,16 +149,27 @@ const tree = treeGen.generateSOSMC({
     samples: 50,
     costFn: CostFunction.fillVolume(treeTarget, 1),
     iterationHook: (instances: GeneratorInstance[]) => {
-        const result = document.createElement('p');
-        result.innerText = 'Costs in final generation: ';
-        result.innerText += instances
-            .map((instance: GeneratorInstance) => instance.getCost().realCost)
-            .sort((a: number, b: number) => a - b)
-            .map((cost: number) => Math.round(cost * 100) / 100)
-            .join(', ');
-        document.body.appendChild(result);
+        const currCost = instances.reduce((accum: number, instance: GeneratorInstance) => {
+            return accum + instance.getCost().realCost;
+        }, 0);
+
+        // Update the best cost instances.
+        if (minCost === 0 || currCost < minCost) {
+            minCost = currCost;
+            minInstances = instances;
+        }
     }
 });*/
+
+// Display the best cost instances from the best generation.
+result.innerText = 'Costs in best generation: ';
+result.innerText += minInstances
+    .map((instance: GeneratorInstance) => instance.getCost().realCost)
+    .sort((a: number, b: number) => a - b)
+    .map((cost: number) => Math.round(cost * 100) / 100)
+    .join(', ');
+
+document.body.appendChild(result);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer

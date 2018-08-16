@@ -118,7 +118,7 @@ const tree = treeGen.generateSOSMC({
     finalDepth: 100,
     samples: 100,
     costFn: guidingVectors,
-    onLastGeneration: (instances: GeneratorInstance[]) => {
+    iterationHook: (instances: GeneratorInstance[]) => {
         const result = document.createElement('p');
         result.innerText = 'Costs in final generation: ';
         result.innerText += instances
@@ -141,9 +141,10 @@ const tree = treeGen.generateSOSMC({
     start: 'branch',
     sosmcDepth: 50,
     finalDepth: 200,
-    samples: 100,
+    depth: 200,
+    samples: 50,
     costFn: CostFunction.fillVolume(treeTarget, 1),
-    onLastGeneration: (instances: GeneratorInstance[]) => {
+    iterationHook: (instances: GeneratorInstance[]) => {
         const result = document.createElement('p');
         result.innerText = 'Costs in final generation: ';
         result.innerText += instances

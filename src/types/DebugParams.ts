@@ -14,4 +14,15 @@ export type DebugParams = {
      * of the rest of the image so it's visible.
      */
     drawArmatureBones?: boolean;
+
+    /**
+     * Draw a vector field in the 3D view, where the array is given as three components of a
+     * point followed by the three components of the end point of the vector.
+     */
+    drawVectorField?: Float32Array;
+
+    /**
+     * Draw a guiding curve, represented as an array of points along the curve.
+     */
+    drawGuidingCurve?: Float32Array[];
 };

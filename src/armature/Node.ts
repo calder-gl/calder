@@ -97,6 +97,10 @@ export class Node {
 
     public geometryCallback(_: (node: GeometryNode) => void) {}
 
+    public structureCallback(callback: (node: Node) => void) {
+        callback(this);
+    }
+
     public createPoint(name: string, positionCoord: coord) {
         const position = Mapper.coordToVector(positionCoord);
 
@@ -905,6 +909,8 @@ export class GeometryNode extends Node {
     public geometryCallback(callback: (node: GeometryNode) => void) {
         callback(this);
     }
+
+    public structureCallback(_: (node: Node) => void) {}
 }
 
 /**

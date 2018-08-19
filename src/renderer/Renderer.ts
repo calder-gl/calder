@@ -4,14 +4,19 @@ import REGL = require('regl');
 import { NodeRenderObject } from '../armature/NodeRenderObject';
 import {
     createDrawAxes,
+    createDrawGuidingCurve,
     createDrawObject,
+    createDrawVectorField,
     Animation,
+    BakedLight,
     Camera,
     Color,
     Constraints,
     DebugParams,
     DrawAxesProps,
+    DrawGuidingCurveProps,
     DrawObjectProps,
+    DrawVectorFieldProps,
     Light,
     Model,
     Node,
@@ -48,6 +53,8 @@ export class Renderer {
     private clearDepth: () => void;
     private drawObject: REGL.DrawCommand<REGL.DefaultContext, DrawObjectProps>;
     private drawAxes: REGL.DrawCommand<REGL.DefaultContext, DrawAxesProps>;
+    private drawVectorField: REGL.DrawCommand<REGL.DefaultContext, DrawVectorFieldProps>;
+    private drawGuidingCurve: REGL.DrawCommand<REGL.DefaultContext, DrawGuidingCurveProps>;
     private lights: Light[];
     private ambientLight: vec3;
 
@@ -131,6 +138,8 @@ export class Renderer {
 
         this.drawObject = createDrawObject(this.regl, this.maxLights);
         this.drawAxes = createDrawAxes(this.regl);
+        this.drawVectorField = createDrawVectorField(this.regl);
+        this.drawGuidingCurve = createDrawGuidingCurve(this.regl);
     }
 
     public destroy() {
@@ -140,7 +149,11 @@ export class Renderer {
 
     public draw(
         objects: Model[],
-        debug: DebugParams = { drawAxes: false, drawArmatureBones: false }
+        debug: DebugParams = {
+            drawAxes: false,
+            drawArmatureBones: false,
+            drawVectorField: undefined
+        }
     ) {
         this.clearAll();
 
@@ -170,8 +183,28 @@ export class Renderer {
 
         const bakedLights = this.lights.map((l: Light) => l.bake());
 
+        this.drawObjectArray(renderObjects.geometry, bakedLights);
+
+        if (debug.drawArmatureBones === true && renderObjects.bones.length > 0) {
+            this.clearDepth();
+
+            this.drawObjectArray(renderObjects.bones, bakedLights);
+        }
+
+        if (debug.drawVectorField !== undefined) {
+            this.drawField(debug.drawVectorField);
+        }
+        if (debug.drawGuidingCurve !== undefined) {
+            this.drawCurve(debug.drawGuidingCurve);
+        }
+        if (debug.drawAxes === true) {
+            this.drawCrosshairs();
+        }
+    }
+
+    public drawObjectArray(objects: RenderObject[], bakedLights: BakedLight[]) {
         this.drawObject(
-            renderObjects.geometry.map((o: RenderObject): DrawObjectProps => {
+            objects.map((o: RenderObject): DrawObjectProps => {
                 if (
                     o.geometry.verticesBuffer === undefined ||
                     o.geometry.normalsBuffer === undefined ||
@@ -197,42 +230,6 @@ export class Renderer {
                 };
             })
         );
-
-        if (debug.drawArmatureBones === true && renderObjects.bones.length > 0) {
-            this.clearDepth();
-
-            this.drawObject(
-                renderObjects.bones.map((o: RenderObject): DrawObjectProps => {
-                    if (
-                        o.geometry.verticesBuffer === undefined ||
-                        o.geometry.normalsBuffer === undefined ||
-                        o.geometry.indicesBuffer === undefined
-                    ) {
-                        throw new Error('Buffers were not created correctly');
-                    }
-
-                    return {
-                        model: o.transform,
-                        normalTransform: o.normalTransform,
-                        cameraTransform: this.camera.getTransform(),
-                        projectionMatrix: this.projectionMatrix,
-                        positions: o.geometry.verticesBuffer,
-                        normals: o.geometry.normalsBuffer,
-                        indices: o.geometry.indicesBuffer,
-                        materialColor: o.geometry.material.materialColor,
-                        materialShininess: o.geometry.material.materialShininess,
-                        isShadeless: o.isShadeless === true,
-                        numLights: this.lights.length,
-                        ambientLight: this.ambientLight,
-                        lights: bakedLights
-                    };
-                })
-            );
-        }
-
-        if (debug.drawAxes === true) {
-            this.drawCrosshairs();
-        }
     }
 
     /**
@@ -293,6 +290,26 @@ export class Renderer {
         };
 
         window.requestAnimationFrame(draw);
+    }
+
+    private drawCurve(curves: Float32Array[]) {
+        this.drawGuidingCurve(
+            curves.map((curve: Float32Array) => {
+                return {
+                    cameraTransform: this.camera.getTransform(),
+                    projectionMatrix: this.projectionMatrix,
+                    positions: curve
+                };
+            })
+        );
+    }
+
+    private drawField(field: Float32Array) {
+        this.drawVectorField({
+            cameraTransform: this.camera.getTransform(),
+            projectionMatrix: this.projectionMatrix,
+            positions: field
+        });
     }
 
     private drawCrosshairs() {

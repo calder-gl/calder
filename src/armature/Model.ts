@@ -175,6 +175,14 @@ export class Model {
         return { min, max };
     }
 
+    /**
+     * Given an ambient scene colour, this exports a model in a format traditional 3D software
+     * can read.
+     *
+     * @param {Color} ambientLightColor The scene's ambient component, added to materials.
+     * @returns {{obj: string; mtl: string}} The source code for the .obj file for geometry and
+     * the corresponding .mtl file for materials.
+     */
     public exportOBJ(ambientLightColor: Color): { obj: string; mtl: string } {
         const vertices: vec4[] = [];
         const normals: vec3[] = [];

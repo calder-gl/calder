@@ -22,7 +22,8 @@ export type DistanceMultiplier = [number, number, number];
 
 export type Curve = {
     bezier: BezierJs.Bezier;
-    multiplier: DistanceMultiplier;
+    distanceMultiplier: DistanceMultiplier;
+    alignmentMultiplier: number;
 };
 
 /**
@@ -150,7 +151,9 @@ export class GuidingVectors implements CostFn {
             const guidingVector = Mapper.coordToVector(<coord>closest.curve.bezier.derivative(
                 <number>closest.point.t
             ));
-            const alignmentCost = (-vec3.dot(guidingVector, vec3From4(vector)) + 1) * 100;
+            const alignmentCost =
+                (-vec3.dot(guidingVector, vec3From4(vector)) + 1) *
+                closest.curve.alignmentMultiplier;
 
             // Add cost for the distance away from the curve
             const closestPoint = vec3ToVector(Mapper.coordToVector(<coord>closest.point));
@@ -159,7 +162,7 @@ export class GuidingVectors implements CostFn {
             // Evaluate distance cost polynomial using Horner's method
             let distanceCost = 0;
             for (let power = 2; power >= 0; power -= 1) {
-                distanceCost = closest.curve.multiplier[power] + distanceCost * distance;
+                distanceCost = closest.curve.distanceMultiplier[power] + distanceCost * distance;
             }
 
             totalCost += alignmentCost + distanceCost;

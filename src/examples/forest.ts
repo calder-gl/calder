@@ -12,6 +12,8 @@ import {
     Shape
 } from '../calder';
 
+import { range } from 'lodash';
+
 // tslint:disable-next-line:import-name
 import Bezier = require('bezier-js');
 
@@ -59,6 +61,16 @@ const bone = Armature.define((root: Node) => {
 
 const treeGen = Armature.generator();
 treeGen
+    .define('forest', (_: Point, instance: GeneratorInstance) => {
+        range(5).forEach(() => {
+            const node = instance.add(bone());
+            node
+                // Move to random spot in [-8, 8] x [-8, 8] on the ground
+                .moveTo({ x: Math.random() * 16 - 8, y: 0, z: Math.random() * 16 - 8 });
+
+            instance.addDetail({ component: 'branch', at: node.point('base') });
+        });
+    })
     .define('branch', (root: Point, instance: GeneratorInstance) => {
         const node = instance.add(bone());
         node.point('base').stickTo(root);
@@ -98,33 +110,22 @@ const guidingVectors = CostFunction.guidingVectors([
     {
         bezier: new Bezier([
             { x: 0, y: 0, z: 0 },
-            { x: 0, y: 1, z: 0 },
-            { x: 1, y: 1, z: 1 },
-            { x: 2, y: 2, z: 1 }
+            { x: 2, y: 0.5, z: 0 },
+            { x: 6, y: 1.5, z: 0 },
+            { x: 8, y: 2, z: 0 }
         ]),
-        distanceMultiplier: GuidingVectors.QUADRATIC,
-        alignmentMultiplier: 500
-    },
-    {
-        bezier: new Bezier([
-            { x: 0, y: 1, z: 0 },
-            { x: 0.5, y: 2, z: 1 },
-            { x: 0, y: 3, z: 1 },
-            { x: 0, y: 3, z: 2 }
-        ]),
-        distanceMultiplier: GuidingVectors.QUADRATIC,
-        alignmentMultiplier: 500
+        distanceMultiplier: GuidingVectors.NONE,
+        alignmentMultiplier: 1000
     }
 ]);
 
-const vectorField = guidingVectors.generateVectorField();
 const guidingCurve = guidingVectors.generateGuidingCurve();
 
 const tree = treeGen.generateSOSMC({
-    start: 'branch',
+    start: 'forest',
     sosmcDepth: 100,
     finalDepth: 100,
-    samples: 100,
+    samples: 400,
     costFn: guidingVectors,
     onLastGeneration: (instances: GeneratorInstance[]) => {
         const result = document.createElement('p');
@@ -138,31 +139,6 @@ const tree = treeGen.generateSOSMC({
     }
 });
 
-/*const treeTarget = Model.create();
-const sphere = treeTarget.add(new GeometryNode(leafSphere));
-sphere.moveTo({ x: 0, y: 3, z: 0 });
-const branch = treeTarget.add(new GeometryNode(branchShape));
-branch.scale({ x: 0.2, y: 2, z: 0.2 });
-branch.moveTo({ x: 0, y: 1, z: 0 });
-
-const tree = treeGen.generateSOSMC({
-    start: 'branch',
-    sosmcDepth: 50,
-    finalDepth: 200,
-    samples: 100,
-    costFn: CostFunction.fillVolume(treeTarget, 1),
-    onLastGeneration: (instances: GeneratorInstance[]) => {
-        const result = document.createElement('p');
-        result.innerText = 'Costs in final generation: ';
-        result.innerText += instances
-            .map((instance: GeneratorInstance) => instance.getCost().realCost)
-            .sort((a: number, b: number) => a - b)
-            .map((cost: number) => Math.round(cost * 100) / 100)
-            .join(', ');
-        document.body.appendChild(result);
-    }
-});*/
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -172,22 +148,20 @@ document.body.appendChild(renderer.stage);
 renderer.camera.lookAt({ x: 0, y: 1, z: 0 });
 
 // Draw the armature
-let angle = 0;
+let angle = -Math.PI / 2;
 const draw = () => {
     angle += 0.001;
     renderer.camera.moveToWithFixedTarget({
-        x: Math.cos(angle) * 8,
+        x: Math.cos(angle) * 20,
         y: 1,
-        z: -Math.sin(angle) * 8
+        z: -Math.sin(angle) * 20
     });
-    //tree.root().setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 
     return {
         objects: [tree],
         debugParams: {
             drawAxes: true,
             drawArmatureBones: false,
-            drawVectorField: vectorField,
             drawGuidingCurve: guidingCurve
         }
     };

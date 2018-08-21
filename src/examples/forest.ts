@@ -62,7 +62,7 @@ const bone = Armature.define((root: Node) => {
 const treeGen = Armature.generator();
 treeGen
     .define('forest', (_: Point, instance: GeneratorInstance) => {
-        range(5).forEach(() => {
+        range(15).forEach(() => {
             const node = instance.add(bone());
             node
                 // Move to random spot in [-8, 8] x [-8, 8] on the ground
@@ -109,23 +109,25 @@ treeGen
 const guidingVectors = CostFunction.guidingVectors([
     {
         bezier: new Bezier([
-            { x: 0, y: 0, z: 0 },
-            { x: 2, y: 0.5, z: 0 },
-            { x: 6, y: 1.5, z: 0 },
-            { x: 8, y: 2, z: 0 }
+            { x: 2, y: -1, z: 0 },
+            { x: 2.5, y: 0, z: 0 },
+            { x: 5, y: 2.9, z: 0 },
+            { x: 6, y: 3, z: 0 }
         ]),
         distanceMultiplier: GuidingVectors.NONE,
-        alignmentMultiplier: 1000
+        alignmentMultiplier: 100,
+        alignmentOffset: 0.85
     }
 ]);
 
 const guidingCurve = guidingVectors.generateGuidingCurve();
+const vectorField = guidingVectors.generateVectorField(8, 2);
 
 const tree = treeGen.generateSOSMC({
     start: 'forest',
-    sosmcDepth: 100,
-    finalDepth: 100,
-    samples: 400,
+    sosmcDepth: 200,
+    finalDepth: 200,
+    samples: 500,
     costFn: guidingVectors,
     onLastGeneration: (instances: GeneratorInstance[]) => {
         const result = document.createElement('p');
@@ -162,7 +164,8 @@ const draw = () => {
         debugParams: {
             drawAxes: true,
             drawArmatureBones: false,
-            drawGuidingCurve: guidingCurve
+            drawGuidingCurve: guidingCurve,
+            drawVectorField: vectorField
         }
     };
 };

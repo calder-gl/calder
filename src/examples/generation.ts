@@ -103,7 +103,8 @@ const guidingVectors = CostFunction.guidingVectors([
             { x: 2, y: 2, z: 1 }
         ]),
         distanceMultiplier: GuidingVectors.QUADRATIC,
-        alignmentMultiplier: 500
+        alignmentMultiplier: 500,
+        alignmentOffset: 0.7
     },
     {
         bezier: new Bezier([
@@ -113,7 +114,8 @@ const guidingVectors = CostFunction.guidingVectors([
             { x: 0, y: 3, z: 2 }
         ]),
         distanceMultiplier: GuidingVectors.QUADRATIC,
-        alignmentMultiplier: 500
+        alignmentMultiplier: 500,
+        alignmentOffset: 0.6
     }
 ]);
 

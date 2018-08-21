@@ -1,6 +1,6 @@
 import { FillVolume } from './FillVolume';
 import { Forces, ForcePoint } from './Forces';
-import { Curve, GuidingVectors } from './GuidingVectors';
+import { GuidingCurve, GuidingVectors } from './GuidingVectors';
 import { Model } from './Model';
 
 export namespace CostFunction {
@@ -12,7 +12,7 @@ export namespace CostFunction {
         return new FillVolume(targetModel, cellSize);
     }
 
-    export function guidingVectors(curves: Curve[]): GuidingVectors {
+    export function guidingVectors(curves: GuidingCurve[]): GuidingVectors {
         return new GuidingVectors(curves);
     }
 }

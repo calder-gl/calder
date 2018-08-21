@@ -9,7 +9,7 @@ import { vec3, vec4 } from 'gl-matrix';
 import { minBy, range } from 'lodash';
 
 type Closest = {
-    curve: Curve;
+    curve: GuidingCurve;
     point: BezierJs.Projection;
 };
 
@@ -20,10 +20,47 @@ type Closest = {
  */
 export type DistanceMultiplier = [number, number, number];
 
-export type Curve = {
+/**
+ * A representation of a guiding curve, which is a Bezier path, and multipliers affecting the cost
+ * around the curve.
+ *
+ * Alignment is used to incentivize adding placing structure pointing in the same direction as
+ * guiding curves, whereas distance is used to penalize structure that veers too far from the
+ * curves. Multipliers and offsets should be chosen to achieve a balance of allowing shapes to
+ * still be placed, but with high enough costs that shapes are only placed if they are "good".
+ */
+export type GuidingCurve = {
+    /**
+     * The guiding curve.
+     */
     bezier: BezierJs.Bezier;
+
+    /**
+     * A multiplier that adds cost the father from the curve you go.
+     */
     distanceMultiplier: DistanceMultiplier;
+
+    /**
+     * A multiplier that scales the cost associated with the alignment of placed structure relative
+     * to the guiding vector field.
+     */
     alignmentMultiplier: number;
+
+    /**
+     * A number in [-1, 1] representing how aligned added structure needs to be with the vector field
+     * for it to receive a negative cost (that is to say, there is incentive to add it.)
+     *
+     * Structure perfectly aligned with the vector field has a raw alignment cost of -1. If it is
+     * perpendicular, the cost is 0. If it is exactly the opposite direction, it has a cost of 1.
+     *
+     * A positive offset therefore means structure needs to be **more aligned** in order to be
+     * incentivized (the higher the offset, the closer it has to be to perfect alignment).
+     *
+     * A negative negative offset means that alignment is more leniant and is incentivized even if
+     * structure is facing away from the vector field. This can be useful if adding *any* new
+     * structure should be incentivized over only adding well-aligned structure.
+     */
+    alignmentOffset: number;
 };
 
 /**
@@ -35,14 +72,14 @@ export class GuidingVectors implements CostFn {
     public static LINEAR: DistanceMultiplier = [0, 100, 0];
     public static QUADRATIC: DistanceMultiplier = [0, 0, 100];
 
-    private vectors: Curve[];
+    private vectors: GuidingCurve[];
     private nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();
 
     /**
      * @param {BezierJs.Bezier[]} guidingVectors The Bezier paths that will be used to guide the
      * growth of the procedural shape.
      */
-    constructor(guidingVectors: Curve[]) {
+    constructor(guidingVectors: GuidingCurve[]) {
         this.vectors = guidingVectors;
     }
 
@@ -89,7 +126,7 @@ export class GuidingVectors implements CostFn {
      * @returns {Float32Array[]} A vertex buffer for each curve.
      */
     public generateGuidingCurve(): Float32Array[] {
-        return this.vectors.map((c: Curve) => {
+        return this.vectors.map((c: GuidingCurve) => {
             const curve: number[] = [];
 
             c.bezier.getLUT().forEach((p: BezierJs.Point) => {
@@ -151,8 +188,10 @@ export class GuidingVectors implements CostFn {
             const guidingVector = Mapper.coordToVector(<coord>closest.curve.bezier.derivative(
                 <number>closest.point.t
             ));
+            vec3.normalize(guidingVector, guidingVector);
+
             const alignmentCost =
-                (-vec3.dot(guidingVector, vec3From4(vector)) + 1) *
+                (-vec3.dot(guidingVector, vec3From4(vector)) + closest.curve.alignmentOffset) *
                 closest.curve.alignmentMultiplier;
 
             // Add cost for the distance away from the curve
@@ -176,7 +215,7 @@ export class GuidingVectors implements CostFn {
      */
     private closest(point: vec4): Closest {
         return <Closest>minBy(
-            this.vectors.map((c: Curve) => {
+            this.vectors.map((c: GuidingCurve) => {
                 return {
                     curve: c,
                     point: c.bezier.project(Mapper.vectorToCoord(vec3From4(point)))

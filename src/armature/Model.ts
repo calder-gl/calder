@@ -246,7 +246,10 @@ export class Model {
             ...flatMap(groups, (g: { indices: number[][]; material: number }, i: number) => [
                 `g group${i}`,
                 `usemtl material${g.material}`,
-                ...g.indices.map((idx: number[]) => `f ${idx[0]} ${idx[1]} ${idx[2]}`)
+                ...g.indices.map(
+                    (idx: number[]) =>
+                        `f ${idx[0]}//${idx[0]} ${idx[1]}//${idx[1]} ${idx[2]}//${idx[2]}`
+                )
             ])
         ].join('\n');
 

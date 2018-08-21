@@ -32,14 +32,14 @@ describe('Model', () => {
                 normals !== null ? normals.length : 0
             );
 
-            const faceRegex = new RegExp('^f (\\d+) (\\d+) (\\d+)$', 'mg');
+            const faceRegex = new RegExp('^f (\\d+)//(\\d+) (\\d+)//(\\d+) (\\d+)//(\\d+)$', 'mg');
 
             // Iterate over each face
             let match: string[] | null = null;
             do {
                 match = faceRegex.exec(exported.obj);
                 if (match !== null) {
-                    for (let i = 1; i <= 3; i += 1) {
+                    for (let i = 1; i <= 6; i += 1) {
                         // Check that faces all refer to real vertices
                         const vertex = parseInt(match[i], 10);
                         expect(vertex).toBeGreaterThan(0);

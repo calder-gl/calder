@@ -1,10 +1,4 @@
-import {
-    Armature,
-    Model,
-    Node,
-    RGBColor,
-    Shape
-} from '../../src/calder';
+import { Armature, Model, Node, RGBColor, Shape } from '../../src/calder';
 
 const bone = Armature.define((root: Node) => {
     root.createPoint('base', { x: 0, y: 0, z: 0 });
@@ -15,12 +9,19 @@ describe('Model', () => {
     describe('exportOBJ', () => {
         it('generates the expected file for a simple shape', () => {
             const model = Model.create(bone());
-            model.add(model.root().point('base').attach(Shape.sphere()));
+            model.add(
+                model
+                    .root()
+                    .point('base')
+                    .attach(Shape.sphere())
+            );
             const exported = model.exportOBJ('model', RGBColor.fromHex('#000000'));
 
             // Assert that the given name was used for the model and material
             expect(exported.obj).toEqual(expect.stringMatching(new RegExp('^o model', 'm')));
-            expect(exported.obj).toEqual(expect.stringMatching(new RegExp('^mtllib model.mtl', 'm')));
+            expect(exported.obj).toEqual(
+                expect.stringMatching(new RegExp('^mtllib model.mtl', 'm'))
+            );
 
             // Check that there is a vertex normal for every vertex
             const vertices = exported.obj.match(new RegExp('^v .*$', 'mg'));
@@ -46,8 +47,12 @@ describe('Model', () => {
             } while (match);
 
             // Check that a material was produced
-            expect(exported.mtl).toEqual(expect.stringMatching(new RegExp('^newmtl material0$', 'm')));
-            expect(exported.mtl).toEqual(expect.stringMatching(new RegExp('^newmtl material0$', 'm')));
+            expect(exported.mtl).toEqual(
+                expect.stringMatching(new RegExp('^newmtl material0$', 'm'))
+            );
+            expect(exported.mtl).toEqual(
+                expect.stringMatching(new RegExp('^newmtl material0$', 'm'))
+            );
         });
     });
 });

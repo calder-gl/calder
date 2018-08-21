@@ -28,7 +28,9 @@ describe('Model', () => {
             const normals = exported.obj.match(new RegExp('^vn .*$', 'mg'));
             expect(vertices).not.toBeNull();
             expect(normals).not.toBeNull();
-            expect(vertices && vertices.length).toEqual(normals && normals.length);
+            expect(vertices !== null ? vertices.length : 0).toEqual(
+                normals !== null ? normals.length : 0
+            );
 
             const faceRegex = new RegExp('^f (\\d+) (\\d+) (\\d+)$', 'mg');
 
@@ -41,10 +43,10 @@ describe('Model', () => {
                         // Check that faces all refer to real vertices
                         const vertex = parseInt(match[i], 10);
                         expect(vertex).toBeGreaterThan(0);
-                        expect(vertex).toBeLessThanOrEqual(vertices ? vertices.length : 0);
+                        expect(vertex).toBeLessThanOrEqual(vertices !== null ? vertices.length : 0);
                     }
                 }
-            } while (match);
+            } while (match !== null);
 
             // Check that a material was produced
             expect(exported.mtl).toEqual(

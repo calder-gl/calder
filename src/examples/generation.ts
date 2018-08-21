@@ -195,7 +195,7 @@ renderer.eachFrame(draw);
 const exportBtn = document.createElement('button');
 exportBtn.innerText = 'Export .obj';
 exportBtn.addEventListener('click', () => {
-    const obj = tree.exportOBJ(ambientLightColor);
+    const obj = tree.exportOBJ('calderExport', ambientLightColor);
 
     const link = document.createElement('a');
     link.style.display = 'none';

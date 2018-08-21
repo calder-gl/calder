@@ -177,13 +177,17 @@ export class Model {
 
     /**
      * Given an ambient scene colour, this exports a model in a format traditional 3D software
-     * can read.
+     * can read, the .obj file.
      *
+     * .obj spec: http://paulbourke.net/dataformats/obj/
+     * .mtl spec: http://paulbourke.net/dataformats/mtl/
+     *
+     * @param {string} name The name of the model, onto which .obj and .mtl will be appended.
      * @param {Color} ambientLightColor The scene's ambient component, added to materials.
      * @returns {{obj: string; mtl: string}} The source code for the .obj file for geometry and
      * the corresponding .mtl file for materials.
      */
-    public exportOBJ(ambientLightColor: Color): { obj: string; mtl: string } {
+    public exportOBJ(name: string, ambientLightColor: Color): { obj: string; mtl: string } {
         const vertices: vec4[] = [];
         const normals: vec3[] = [];
         const groups: { indices: number[][]; material: number }[] = [];
@@ -222,10 +226,10 @@ export class Model {
         });
 
         const obj = [
-            'o calderExport',
+            `o ${name}`,
 
             // Source the corresponding material file
-            'mtllib calderExport.mtl',
+            `mtllib ${name}.mtl`,
 
             // List all vertices and normals
             ...vertices.map(
@@ -259,7 +263,10 @@ export class Model {
                 4
             )} ${m.materialColor[2].toFixed(4)}`,
 
-            `Ns ${m.materialShininess.toFixed(4)}`
+            `Ns ${m.materialShininess.toFixed(4)}`,
+
+            // Specify that we want highlights in our illumination model
+            'illum 2'
         ]).join('\n');
 
         return { obj, mtl };

@@ -239,12 +239,10 @@ export class Model {
                 (v: vec3) => `vn ${v[0].toFixed(4)} ${v[1].toFixed(4)} ${v[2].toFixed(4)}`
             ),
 
-            // Turn on smooth shading
-            's 1',
-
             // Create a group for each distinct object, with the proper material applied
             ...flatMap(groups, (g: { indices: number[][]; material: number }, i: number) => [
                 `g group${i}`,
+
                 `usemtl material${g.material}`,
                 ...g.indices.map(
                     (idx: number[]) =>

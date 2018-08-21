@@ -90,7 +90,14 @@ export namespace Shape {
                 //    X---i+1
                 // The offset is the first index of either the top or the bottom ring.
 
-                faces.push(new Face([offset, offset + i + 1, offset + (i + 1) % PRECISION + 1]));
+                const face = [offset, offset + i + 1, offset + (i + 1) % PRECISION + 1];
+
+                // Ensure proper winding order on top and bottom
+                if (side === 0) {
+                    face.reverse();
+                }
+
+                faces.push(new Face(face));
             });
         });
 

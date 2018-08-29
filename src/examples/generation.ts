@@ -118,56 +118,24 @@ const tree = treeGen.generateSOSMC({
     finalDepth: 100,
     samples: 100,
     costFn: guidingVectors,
-    iterationHook: (instances: GeneratorInstance[]) => {
-        const result = document.createElement('p');
-        result.innerText = 'Costs in final generation: ';
-        result.innerText += instances
-            .map((instance: GeneratorInstance) => instance.getCost().realCost)
-            .sort((a: number, b: number) => a - b)
-            .map((cost: number) => Math.round(cost * 100) / 100)
-            .join(', ');
-        document.body.appendChild(result);
-    }
+    iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
 });
 
-/*const treeTarget = Model.create();
-const sphere = treeTarget.add(new GeometryNode(leafSphere));
-sphere.moveTo({ x: 0, y: 3, z: 0 });
-const branch = treeTarget.add(new GeometryNode(branchShape));
-branch.scale({ x: 0.2, y: 2, z: 0.2 });
-branch.moveTo({ x: 0, y: 1, z: 0 });
-
 const result = document.createElement('p');
-let minCost: number = 0;
-let minInstances: GeneratorInstance[] = [];
+const generationInstances: GeneratorInstance[][] = [];
 
-const tree = treeGen.generateSOSMC({
-    start: 'branch',
-    sosmcDepth: 50,
-    finalDepth: 200,
-    depth: 200,
-    samples: 50,
-    costFn: CostFunction.fillVolume(treeTarget, 1),
-    iterationHook: (instances: GeneratorInstance[]) => {
-        const currCost = instances.reduce((accum: number, instance: GeneratorInstance) => {
-            return accum + instance.getCost().realCost;
-        }, 0);
-
-        // Update the best cost instances.
-        if (minCost === 0 || currCost < minCost) {
-            minCost = currCost;
-            minInstances = instances;
-        }
-    }
-});*/
+result.innerText = '';
 
 // Display the best cost instances from the best generation.
-result.innerText = 'Costs in best generation: ';
-result.innerText += minInstances
-    .map((instance: GeneratorInstance) => instance.getCost().realCost)
-    .sort((a: number, b: number) => a - b)
-    .map((cost: number) => Math.round(cost * 100) / 100)
-    .join(', ');
+generationInstances.forEach((instances: GeneratorInstance[], index: number) => {
+    result.innerText += `Generation (${index}) costs: `;
+    result.innerText += instances
+        .map((instance: GeneratorInstance) => instance.getCost().realCost)
+        .sort((a: number, b: number) => a - b)
+        .map((cost: number) => Math.round(cost * 100) / 100)
+        .join(', ');
+    result.innerText += '\n\n';
+});
 
 document.body.appendChild(result);
 

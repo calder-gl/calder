@@ -15,11 +15,12 @@ import {
 import Bezier = require('bezier-js');
 
 // Create the renderer
+const ambientLightColor = RGBColor.fromRGB(90, 90, 90);
 const renderer: Renderer = new Renderer({
     width: 800,
     height: 600,
     maxLights: 2,
-    ambientLightColor: RGBColor.fromRGB(90, 90, 90),
+    ambientLightColor,
     backgroundColor: RGBColor.fromHex('#FFDDFF')
 });
 
@@ -186,3 +187,30 @@ const draw = () => {
 
 // Apply the constraints each frame.
 renderer.eachFrame(draw);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Step 4: add .obj export
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+const exportBtn = document.createElement('button');
+exportBtn.innerText = 'Export .obj';
+exportBtn.addEventListener('click', () => {
+    const obj = tree.exportOBJ('calderExport', ambientLightColor);
+
+    const link = document.createElement('a');
+    link.style.display = 'none';
+    document.body.appendChild(link);
+
+    // Download obj
+    link.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(obj.obj)}`);
+    link.setAttribute('download', 'calderExport.obj');
+    link.click();
+
+    // Download mtl
+    link.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(obj.mtl)}`);
+    link.setAttribute('download', 'calderExport.mtl');
+    link.click();
+
+    document.body.removeChild(link);
+});
+document.body.appendChild(exportBtn);

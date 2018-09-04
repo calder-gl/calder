@@ -112,6 +112,9 @@ const guidingVectors = CostFunction.guidingVectors([
 const vectorField = guidingVectors.generateVectorField();
 const guidingCurve = guidingVectors.generateGuidingCurve();
 
+const result = document.createElement('p');
+const generationInstances: GeneratorInstance[][] = [];
+
 const tree = treeGen.generateSOSMC({
     start: 'branch',
     sosmcDepth: 100,
@@ -120,9 +123,6 @@ const tree = treeGen.generateSOSMC({
     costFn: guidingVectors,
     iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
 });
-
-const result = document.createElement('p');
-const generationInstances: GeneratorInstance[][] = [];
 
 result.innerText = '';
 

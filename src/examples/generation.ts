@@ -113,6 +113,8 @@ const vectorField = guidingVectors.generateVectorField();
 const guidingCurve = guidingVectors.generateGuidingCurve();
 
 const result = document.createElement('p');
+result.style.display = 'none';
+
 const generationInstances: GeneratorInstance[][] = [];
 
 const tree = treeGen.generateSOSMC({

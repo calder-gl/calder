@@ -65,7 +65,7 @@ export function createDrawGuidingCurve(
         depth: {
             enable: false
         },
-        lineWidth: 4,
+        lineWidth: 1, // crazy how chrome (nature) do that
         // tslint:disable:typedef
         // tslint:disable:variable-name
         count: (_context, props, _batch_id) => props.positions.length / 3,

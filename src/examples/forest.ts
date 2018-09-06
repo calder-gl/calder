@@ -128,17 +128,7 @@ const tree = treeGen.generateSOSMC({
     sosmcDepth: 200,
     finalDepth: 200,
     samples: 500,
-    costFn: guidingVectors,
-    onLastGeneration: (instances: GeneratorInstance[]) => {
-        const result = document.createElement('p');
-        result.innerText = 'Costs in final generation: ';
-        result.innerText += instances
-            .map((instance: GeneratorInstance) => instance.getCost().realCost)
-            .sort((a: number, b: number) => a - b)
-            .map((cost: number) => Math.round(cost * 100) / 100)
-            .join(', ');
-        document.body.appendChild(result);
-    }
+    costFn: guidingVectors
 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

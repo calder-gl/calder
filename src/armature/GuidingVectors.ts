@@ -56,7 +56,7 @@ export type GuidingCurve = {
      * A positive offset therefore means structure needs to be **more aligned** in order to be
      * incentivized (the higher the offset, the closer it has to be to perfect alignment).
      *
-     * A negative negative offset means that alignment is more leniant and is incentivized even if
+     * A negative negative offset means that alignment is more lenient and is incentivized even if
      * structure is facing away from the vector field. This can be useful if adding *any* new
      * structure should be incentivized over only adding well-aligned structure.
      */

@@ -1,9 +1,14 @@
-import { mat3, mat4, vec4 } from 'gl-matrix';
+import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
 
+import { Color } from '../colors/Color';
 import { AABB } from '../geometry/BakedGeometry';
+import { BakedMaterial } from '../renderer/Material';
+import { RenderObject } from '../types/RenderObject';
 import { worldSpaceAABB } from '../utils/aabb';
 import { GeometryNode, Node } from './Node';
 import { NodeRenderObject } from './NodeRenderObject';
+
+import { chunk, flatMap } from 'lodash';
 
 type RenderInfo = {
     /**
@@ -168,5 +173,103 @@ export class Model {
         );
 
         return { min, max };
+    }
+
+    /**
+     * Given an ambient scene colour, this exports a model in a format traditional 3D software
+     * can read, the .obj file.
+     *
+     * .obj spec: http://paulbourke.net/dataformats/obj/
+     * .mtl spec: http://paulbourke.net/dataformats/mtl/
+     *
+     * @param {string} name The name of the model, onto which .obj and .mtl will be appended.
+     * @param {Color} ambientLightColor The scene's ambient component, added to materials.
+     * @returns {{obj: string; mtl: string}} The source code for the .obj file for geometry and
+     * the corresponding .mtl file for materials.
+     */
+    public exportOBJ(name: string, ambientLightColor: Color): { obj: string; mtl: string } {
+        const vertices: vec4[] = [];
+        const normals: vec3[] = [];
+        const groups: { indices: number[][]; material: number }[] = [];
+        const materialIndices: Map<BakedMaterial, number> = new Map<BakedMaterial, number>();
+        const materials: BakedMaterial[] = [];
+
+        this.computeRenderInfo(false).geometry.forEach((r: RenderObject) => {
+            // Give each material a unique number representing it. If a material has already been
+            // given a number, don't add it again, ensuring there are no duplicates.
+            if (!materialIndices.has(r.geometry.material)) {
+                materialIndices.set(r.geometry.material, materials.length);
+                materials.push(r.geometry.material);
+            }
+
+            // Add the vertex indices to a group with the specified material
+            groups.push({
+                // Use an array literal and ... to convert the int16 array to doubles
+                indices: chunk(
+                    [...r.geometry.indices].map((i: number) => i + vertices.length + 1),
+                    3
+                ),
+                material: <number>materialIndices.get(r.geometry.material)
+            });
+
+            // Add vertex and normals, transformed into world space
+            vertices.push(
+                ...chunk(r.geometry.vertices, 3).map(([x, y, z]: number[]) =>
+                    vec4.transformMat4(vec4.create(), vec4.fromValues(x, y, z, 1), r.transform)
+                )
+            );
+            normals.push(
+                ...chunk(r.geometry.normals, 3).map(([x, y, z]: number[]) =>
+                    vec3.transformMat3(vec3.create(), vec3.fromValues(x, y, z), r.normalTransform)
+                )
+            );
+        });
+
+        const obj = [
+            `o ${name}`,
+
+            // Source the corresponding material file
+            `mtllib ${name}.mtl`,
+
+            // List all vertices and normals
+            ...vertices.map(
+                (v: vec4) => `v ${v[0].toFixed(4)} ${v[1].toFixed(4)} ${v[2].toFixed(4)}`
+            ),
+            ...normals.map(
+                (v: vec3) => `vn ${v[0].toFixed(4)} ${v[1].toFixed(4)} ${v[2].toFixed(4)}`
+            ),
+
+            // Create a group for each distinct object, with the proper material applied
+            ...flatMap(groups, (g: { indices: number[][]; material: number }, i: number) => [
+                `g group${i}`,
+
+                `usemtl material${g.material}`,
+                ...g.indices.map(
+                    (idx: number[]) =>
+                        `f ${idx[0]}//${idx[0]} ${idx[1]}//${idx[1]} ${idx[2]}//${idx[2]}`
+                )
+            ])
+        ].join('\n');
+
+        const ambient = ambientLightColor.asVec();
+        const mtl = flatMap(materials, (m: BakedMaterial, i: number) => [
+            `newmtl material${i}`,
+            `Ka ${ambient[0].toFixed(4)} ${ambient[1].toFixed(4)} ${ambient[2].toFixed(4)}`,
+
+            // In our shading model, diffuse and specular color are the same
+            `Kd ${m.materialColor[0].toFixed(4)} ${m.materialColor[1].toFixed(
+                4
+            )} ${m.materialColor[2].toFixed(4)}`,
+            `Ks ${m.materialColor[0].toFixed(4)} ${m.materialColor[1].toFixed(
+                4
+            )} ${m.materialColor[2].toFixed(4)}`,
+
+            `Ns ${m.materialShininess.toFixed(4)}`,
+
+            // Specify that we want highlights in our illumination model
+            'illum 2'
+        ]).join('\n');
+
+        return { obj, mtl };
     }
 }

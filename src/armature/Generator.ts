@@ -310,7 +310,7 @@ export class Generator {
          * For debugging, a callback can be passed in so that every sample in the final
          * generation can be examined.
          */
-        onLastGeneration?: (instances: GeneratorInstance[]) => void;
+        iterationHook?: (instances: GeneratorInstance[]) => void;
     }): Model {
         const {
             start,
@@ -318,7 +318,7 @@ export class Generator {
             finalDepth = 100,
             samples = 50,
             costFn,
-            onLastGeneration
+            iterationHook
         } = params;
         let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
 
@@ -365,11 +365,11 @@ export class Generator {
                     return picked.clone();
                 });
             }
-        });
 
-        if (onLastGeneration !== undefined) {
-            onLastGeneration(instances);
-        }
+            if (iterationHook !== undefined) {
+                iterationHook(instances);
+            }
+        });
 
         // From the last generation, pick the one with the lowest cost.
         const finalInstance = <GeneratorInstance>minBy(instances, (instance: GeneratorInstance) =>

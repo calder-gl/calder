@@ -12,16 +12,17 @@ import {
     Shape
 } from '../calder';
 
+import { range } from 'lodash';
+
 // tslint:disable-next-line:import-name
 import Bezier = require('bezier-js');
 
 // Create the renderer
-const ambientLightColor = RGBColor.fromRGB(90, 90, 90);
 const renderer: Renderer = new Renderer({
     width: 800,
     height: 600,
     maxLights: 2,
-    ambientLightColor,
+    ambientLightColor: RGBColor.fromRGB(90, 90, 90),
     backgroundColor: RGBColor.fromHex('#FFDDFF')
 });
 
@@ -60,6 +61,16 @@ const bone = Armature.define((root: Node) => {
 
 const treeGen = Armature.generator();
 treeGen
+    .define('forest', (_: Point, instance: GeneratorInstance) => {
+        range(15).forEach(() => {
+            const node = instance.add(bone());
+            node
+                // Move to random spot in [-8, 8] x [-8, 8] on the ground
+                .moveTo({ x: Math.random() * 16 - 8, y: 0, z: Math.random() * 16 - 8 });
+
+            instance.addDetail({ component: 'branch', at: node.point('base') });
+        });
+    })
     .define('branch', (root: Point, instance: GeneratorInstance) => {
         const node = instance.add(bone());
         node.point('base').stickTo(root);
@@ -98,59 +109,27 @@ treeGen
 const guidingVectors = CostFunction.guidingVectors([
     {
         bezier: new Bezier([
-            { x: 0, y: 0, z: 0 },
-            { x: 0, y: 1, z: 0 },
-            { x: 1, y: 1, z: 1 },
-            { x: 2, y: 2, z: 1 }
+            { x: 2, y: -1, z: 0 },
+            { x: 2.5, y: 0, z: 0 },
+            { x: 5, y: 2.9, z: 0 },
+            { x: 6, y: 3, z: 0 }
         ]),
-        distanceMultiplier: GuidingVectors.QUADRATIC,
-        alignmentMultiplier: 500,
-        alignmentOffset: 0.7
-    },
-    {
-        bezier: new Bezier([
-            { x: 0, y: 1, z: 0 },
-            { x: 0.5, y: 2, z: 1 },
-            { x: 0, y: 3, z: 1 },
-            { x: 0, y: 3, z: 2 }
-        ]),
-        distanceMultiplier: GuidingVectors.QUADRATIC,
-        alignmentMultiplier: 500,
-        alignmentOffset: 0.6
+        distanceMultiplier: GuidingVectors.NONE,
+        alignmentMultiplier: 100,
+        alignmentOffset: 0.85
     }
 ]);
 
-const vectorField = guidingVectors.generateVectorField();
 const guidingCurve = guidingVectors.generateGuidingCurve();
-
-const result = document.createElement('p');
-result.style.display = 'none';
-
-const generationInstances: GeneratorInstance[][] = [];
+const vectorField = guidingVectors.generateVectorField(8, 2);
 
 const tree = treeGen.generateSOSMC({
-    start: 'branch',
-    sosmcDepth: 100,
-    finalDepth: 100,
-    samples: 100,
-    costFn: guidingVectors,
-    iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
+    start: 'forest',
+    sosmcDepth: 200,
+    finalDepth: 200,
+    samples: 500,
+    costFn: guidingVectors
 });
-
-result.innerText = '';
-
-// Display the best cost instances from the best generation.
-generationInstances.forEach((instances: GeneratorInstance[], index: number) => {
-    result.innerText += `Generation (${index}) costs: `;
-    result.innerText += instances
-        .map((instance: GeneratorInstance) => instance.getCost().realCost)
-        .sort((a: number, b: number) => a - b)
-        .map((cost: number) => Math.round(cost * 100) / 100)
-        .join(', ');
-    result.innerText += '\n\n';
-});
-
-document.body.appendChild(result);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer
@@ -161,53 +140,25 @@ document.body.appendChild(renderer.stage);
 renderer.camera.lookAt({ x: 0, y: 1, z: 0 });
 
 // Draw the armature
-let angle = 0;
+let angle = -Math.PI / 2;
 const draw = () => {
     angle += 0.001;
     renderer.camera.moveToWithFixedTarget({
-        x: Math.cos(angle) * 8,
+        x: Math.cos(angle) * 20,
         y: 1,
-        z: -Math.sin(angle) * 8
+        z: -Math.sin(angle) * 20
     });
-    //tree.root().setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 
     return {
         objects: [tree],
         debugParams: {
             drawAxes: true,
             drawArmatureBones: false,
-            drawVectorField: vectorField,
-            drawGuidingCurve: guidingCurve
+            drawGuidingCurve: guidingCurve,
+            drawVectorField: vectorField
         }
     };
 };
 
 // Apply the constraints each frame.
 renderer.eachFrame(draw);
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Step 4: add .obj export
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-const exportBtn = document.createElement('button');
-exportBtn.innerText = 'Export .obj';
-exportBtn.addEventListener('click', () => {
-    const obj = tree.exportOBJ('calderExport', ambientLightColor);
-
-    const link = document.createElement('a');
-    link.style.display = 'none';
-    document.body.appendChild(link);
-
-    // Download obj
-    link.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(obj.obj)}`);
-    link.setAttribute('download', 'calderExport.obj');
-    link.click();
-
-    // Download mtl
-    link.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(obj.mtl)}`);
-    link.setAttribute('download', 'calderExport.mtl');
-    link.click();
-
-    document.body.removeChild(link);
-});
-document.body.appendChild(exportBtn);

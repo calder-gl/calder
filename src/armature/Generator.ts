@@ -55,6 +55,7 @@ export class GeneratorInstance {
     private model: Model = new Model();
     private costFn: CostFn;
     private cost: Cost = emptyCost;
+    private probability: number = 1;
     private spawnPoints: SpawnPoint[] = [];
     private random: RandomGenerator = Math.random;
 
@@ -87,6 +88,7 @@ export class GeneratorInstance {
         const cloned = new GeneratorInstance(this.generator, this.costFn);
         cloned.model = this.model.clone();
         cloned.cost = this.cost;
+        cloned.probability = this.probability;
         cloned.spawnPoints = [...this.spawnPoints];
 
         return cloned;
@@ -124,6 +126,21 @@ export class GeneratorInstance {
     }
 
     /**
+     * @returns {number} The probability of this sample, used for importance sampling.
+     */
+    public getProbability(): number {
+        return this.probability;
+    }
+
+    /**
+     * @returns {number} The non-normalized weight of this sample, as a product of its probability
+     * and the cost (used as a likelihood function.)
+     */
+    public getWeight(): number {
+        return this.getProbability() * this.getCostWeight();
+    }
+
+    /**
      * Tells the generator that more components can be generated somewhere.
      *
      * @param {SpawnPoint} spawnPoint The name of the component to spawn and the point at which to
@@ -139,8 +156,12 @@ export class GeneratorInstance {
     public growIfPossible() {
         const originalLength = this.model.nodes.length;
 
+        let choiceProbability = 1;
+
         while (this.model.nodes.length === originalLength && this.spawnPoints.length > 0) {
-            // Remove a random spawn point from the list of active points
+            // Remove a random spawn point from the list of active points, updating the probability
+            // given the number of choices we have
+            choiceProbability /= this.spawnPoints.length;
             const spawnPoint = this.spawnPoints.splice(
                 Math.floor(this.random() * this.spawnPoints.length),
                 1
@@ -158,6 +179,9 @@ export class GeneratorInstance {
 
         // Recompute the cost
         this.cost = this.costFn.getCost(this, added);
+
+        // Update probability
+        this.probability *= choiceProbability;
     }
 
     /**
@@ -339,7 +363,7 @@ export class Generator {
 
                 const totalWeight = instances.reduce(
                     (accum: number, instance: GeneratorInstance) => {
-                        return accum + instance.getCostWeight();
+                        return accum + instance.getWeight();
                     },
                     0
                 );
@@ -356,7 +380,7 @@ export class Generator {
                     let i = 0;
                     while (sample > 0 && i < instances.length - 1) {
                         picked = instances[i];
-                        sample -= instances[i].getCostWeight();
+                        sample -= instances[i].getWeight();
                         i += 1;
                     }
 

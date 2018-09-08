@@ -33,6 +33,7 @@ export * from './armature/Armature';
 export * from './armature/Constraints';
 export * from './armature/CostFunction';
 export * from './armature/Generator';
+export * from './armature/GuidingVectors';
 export * from './armature/Model';
 export * from './armature/Node';
 

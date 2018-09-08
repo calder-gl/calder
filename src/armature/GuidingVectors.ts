@@ -1,5 +1,5 @@
 import { coord } from '../calder';
-import { vec3From4 } from '../math/utils';
+import { vec3From4, vec3ToVector } from '../math/utils';
 import { Mapper } from '../utils/mapper';
 import { Cost, CostFn, GeneratorInstance } from './Generator';
 import { Node } from './Node';
@@ -9,8 +9,58 @@ import { vec3, vec4 } from 'gl-matrix';
 import { minBy, range } from 'lodash';
 
 type Closest = {
-    curve: BezierJs.Bezier;
+    curve: GuidingCurve;
     point: BezierJs.Projection;
+};
+
+/**
+ * A DistanceMultiplier adds cost for added bones that are farther away from a guiding curve. For
+ * a multiplier m, the distance cost is the sum of m[i] * distance^i, for i in [0, 2]. That is to
+ * say, m[0] adds a constant offset, m[1] is a linear multiplier, and m[2] is quadratic.
+ */
+export type DistanceMultiplier = [number, number, number];
+
+/**
+ * A representation of a guiding curve, which is a Bezier path, and multipliers affecting the cost
+ * around the curve.
+ *
+ * Alignment is used to incentivize adding placing structure pointing in the same direction as
+ * guiding curves, whereas distance is used to penalize structure that veers too far from the
+ * curves. Multipliers and offsets should be chosen to achieve a balance of allowing shapes to
+ * still be placed, but with high enough costs that shapes are only placed if they are "good".
+ */
+export type GuidingCurve = {
+    /**
+     * The guiding curve.
+     */
+    bezier: BezierJs.Bezier;
+
+    /**
+     * A multiplier that adds cost the father from the curve you go.
+     */
+    distanceMultiplier: DistanceMultiplier;
+
+    /**
+     * A multiplier that scales the cost associated with the alignment of placed structure relative
+     * to the guiding vector field.
+     */
+    alignmentMultiplier: number;
+
+    /**
+     * A number in [-1, 1] representing how aligned added structure needs to be with the vector field
+     * for it to receive a negative cost (that is to say, there is incentive to add it.)
+     *
+     * Structure perfectly aligned with the vector field has a raw alignment cost of -1. If it is
+     * perpendicular, the cost is 0. If it is exactly the opposite direction, it has a cost of 1.
+     *
+     * A positive offset therefore means structure needs to be **more aligned** in order to be
+     * incentivized (the higher the offset, the closer it has to be to perfect alignment).
+     *
+     * A negative negative offset means that alignment is more lenient and is incentivized even if
+     * structure is facing away from the vector field. This can be useful if adding *any* new
+     * structure should be incentivized over only adding well-aligned structure.
+     */
+    alignmentOffset: number;
 };
 
 /**
@@ -18,14 +68,18 @@ type Closest = {
  * the angles in the skeleton to guiding vectors.
  */
 export class GuidingVectors implements CostFn {
-    private vectors: BezierJs.Bezier[];
+    public static NONE: DistanceMultiplier = [0, 0, 0];
+    public static LINEAR: DistanceMultiplier = [0, 100, 0];
+    public static QUADRATIC: DistanceMultiplier = [0, 0, 100];
+
+    private vectors: GuidingCurve[];
     private nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();
 
     /**
      * @param {BezierJs.Bezier[]} guidingVectors The Bezier paths that will be used to guide the
      * growth of the procedural shape.
      */
-    constructor(guidingVectors: BezierJs.Bezier[]) {
+    constructor(guidingVectors: GuidingCurve[]) {
         this.vectors = guidingVectors;
     }
 
@@ -47,7 +101,7 @@ export class GuidingVectors implements CostFn {
                     field.push(x, y, z);
 
                     const closest = this.closest(vec4.fromValues(x, y, z, 1));
-                    const vector = <coord>closest.curve.derivative(<number>closest.point.t);
+                    const vector = <coord>closest.curve.bezier.derivative(<number>closest.point.t);
 
                     // Make the vector as long as step/2
                     const length = Math.sqrt(
@@ -72,11 +126,11 @@ export class GuidingVectors implements CostFn {
      * @returns {Float32Array[]} A vertex buffer for each curve.
      */
     public generateGuidingCurve(): Float32Array[] {
-        return this.vectors.map((b: BezierJs.Bezier) => {
+        return this.vectors.map((c: GuidingCurve) => {
             const curve: number[] = [];
 
-            b.getLUT().forEach((c: BezierJs.Point) => {
-                curve.push(c.x, c.y, (<coord>c).z);
+            c.bezier.getLUT().forEach((p: BezierJs.Point) => {
+                curve.push(p.x, p.y, (<coord>p).z);
             });
 
             return Float32Array.from(curve);
@@ -131,10 +185,26 @@ export class GuidingVectors implements CostFn {
             const closest = this.closest(parentPosition);
 
             // Compare the new structure's vector with the direction vector for the curve point
-            const guidingVector = Mapper.coordToVector(<coord>closest.curve.derivative(
+            const guidingVector = Mapper.coordToVector(<coord>closest.curve.bezier.derivative(
                 <number>closest.point.t
             ));
-            totalCost += (-vec3.dot(guidingVector, vec3From4(vector)) + 1) * 100;
+            vec3.normalize(guidingVector, guidingVector);
+
+            const alignmentCost =
+                (-vec3.dot(guidingVector, vec3From4(vector)) + closest.curve.alignmentOffset) *
+                closest.curve.alignmentMultiplier;
+
+            // Add cost for the distance away from the curve
+            const closestPoint = vec3ToVector(Mapper.coordToVector(<coord>closest.point));
+            const distance = vec4.distance(closestPoint, parentPosition);
+
+            // Evaluate distance cost polynomial using Horner's method
+            let distanceCost = 0;
+            for (let power = 2; power >= 0; power -= 1) {
+                distanceCost = closest.curve.distanceMultiplier[power] + distanceCost * distance;
+            }
+
+            totalCost += alignmentCost + distanceCost;
         });
 
         return { realCost: totalCost, heuristicCost: 0 };
@@ -145,10 +215,10 @@ export class GuidingVectors implements CostFn {
      */
     private closest(point: vec4): Closest {
         return <Closest>minBy(
-            this.vectors.map((b: BezierJs.Bezier) => {
+            this.vectors.map((c: GuidingCurve) => {
                 return {
-                    curve: b,
-                    point: b.project(Mapper.vectorToCoord(vec3From4(point)))
+                    curve: c,
+                    point: c.bezier.project(Mapper.vectorToCoord(vec3From4(point)))
                 };
             }),
             (c: Closest) => c.point.d

@@ -3,7 +3,8 @@ module.exports = {
   devtool: 'inline-source-map',
   entry: {
       app: './src/examples/render.ts',
-      generation: './src/examples/generation.ts'
+      generation: './src/examples/generation.ts',
+      forest: './src/examples/forest.ts'
   },
   output: {
     path: __dirname + '/public',

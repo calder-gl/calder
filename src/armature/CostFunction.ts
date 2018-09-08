@@ -1,9 +1,7 @@
 import { FillVolume } from './FillVolume';
 import { Forces, ForcePoint } from './Forces';
-import { GuidingVectors } from './GuidingVectors';
+import { GuidingCurve, GuidingVectors } from './GuidingVectors';
 import { Model } from './Model';
-
-import 'bezier-js';
 
 export namespace CostFunction {
     export function forces(forcePoints: ForcePoint[]): Forces {
@@ -14,7 +12,7 @@ export namespace CostFunction {
         return new FillVolume(targetModel, cellSize);
     }
 
-    export function guidingVectors(curves: BezierJs.Bezier[]): GuidingVectors {
+    export function guidingVectors(curves: GuidingCurve[]): GuidingVectors {
         return new GuidingVectors(curves);
     }
 }

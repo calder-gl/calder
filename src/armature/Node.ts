@@ -15,6 +15,13 @@ import { Mapper } from '../utils/mapper';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
 
+const tempMat4 = mat4.create();
+const tempMat42 = mat4.create();
+const tempVec3 = vec3.create();
+const tempVec4 = vec4.create();
+
+const zeroVec3 = vec3.create();
+
 /**
  * A `Node` in a scene-graph.
  */
@@ -58,6 +65,11 @@ export class Node {
     protected anchor: vec3 | null = null;
     private held: vec3[] = [];
     private grabbed: vec3 | null = null;
+
+    private localToGlobalTransformCache: mat4 = mat4.create();
+    private globalToLocalTransformCache: mat4 = mat4.create();
+    private currentMatrixCache: mat4 = mat4.create();
+    private currentNormalMatrixCache: mat3 = mat3.create();
 
     /**
      * Instantiates a new `Node`.
@@ -182,12 +194,13 @@ export class Node {
         const anchor =
             constrainedPoints.length > 0 ? constrainedPoints[0] : vec3.fromValues(0, 0, 0);
 
-        const incScaling = mat4.fromTranslation(mat4.create(), anchor);
+        const incScaling = tempMat4;
+        mat4.fromTranslation(incScaling, anchor);
 
         mat4.scale(incScaling, incScaling, amountVec);
 
         // Shift the center back again
-        mat4.translate(incScaling, incScaling, vec3.sub(vec3.create(), vec3.create(), anchor));
+        mat4.translate(incScaling, incScaling, vec3.sub(tempVec3, zeroVec3, anchor));
 
         this.setScale(mat4.multiply(mat4.create(), this.getScale(), incScaling));
 
@@ -223,17 +236,17 @@ export class Node {
         vec4.transformMat4(held, held, scaleMatrix);
 
         // Compute the axis between the two constrained points
-        const heldAxis = vec4.sub(vec4.create(), held, anchor);
+        const heldAxis = vec4.sub(tempVec4, held, anchor);
         vec4.normalize(heldAxis, heldAxis);
 
         // Move the center of rotation to the anchor
-        const incRotation = mat4.fromTranslation(mat4.create(), vec3From4(anchor));
+        const incRotation = mat4.fromTranslation(tempMat4, vec3From4(anchor));
 
         // Add a rotation equal to the shortest rotation from the vector of the anchor to the grab
         // point to the vector from the anchor to the target point
         mat4.multiply(
             incRotation,
-            mat4.fromRotation(mat4.create(), glMatrix.toRadian(degrees), vec3From4(heldAxis)),
+            mat4.fromRotation(tempMat42, glMatrix.toRadian(degrees), vec3From4(heldAxis)),
             incRotation
         );
 
@@ -241,10 +254,10 @@ export class Node {
         mat4.translate(
             incRotation,
             incRotation,
-            vec3.sub(vec3.create(), vec3.create(), vec3From4(anchor))
+            vec3.sub(tempVec3, zeroVec3, vec3From4(anchor))
         );
 
-        this.setRotation(mat4.multiply(mat4.create(), this.getRotation(), incRotation));
+        this.setRotation(mat4.multiply(this.getRotation(), this.getRotation(), incRotation));
 
         return this;
     }
@@ -463,7 +476,9 @@ export class Node {
      * space.
      */
     public localToGlobalTransform(): mat4 {
-        const transform = this.transformation.getTransformation();
+        const transform = mat4.copy(
+            this.localToGlobalTransformCache,
+            this.transformation.getTransformation());
         if (this.parent !== null) {
             mat4.multiply(transform, this.parent.localToGlobalTransform(), transform);
         }
@@ -476,7 +491,9 @@ export class Node {
      * space.
      */
     public globalToLocalTransform(): mat4 {
-        const transform = this.transformation.getTransformation();
+        const transform = mat4.copy(
+            this.globalToLocalTransformCache,
+            this.transformation.getTransformation());
         mat4.invert(transform, transform);
 
         if (this.parent !== null) {
@@ -496,8 +513,12 @@ export class Node {
         parentNormalMatrix: mat3,
         makeBones: boolean
     ): { currentMatrix: mat4; currentNormalMatrix: mat3; objects: NodeRenderObject } {
-        const currentMatrix = this.transformation.getTransformation();
-        const currentNormalMatrix = this.transformation.getNormalTransformation();
+        const currentMatrix = mat4.copy(
+            this.currentMatrixCache,
+            this.transformation.getTransformation());
+        const currentNormalMatrix = mat3.copy(
+            this.currentNormalMatrixCache,
+            this.transformation.getNormalTransformation());
         mat4.multiply(currentMatrix, parentMatrix, currentMatrix);
         mat3.multiply(currentNormalMatrix, parentNormalMatrix, currentNormalMatrix);
 
@@ -848,7 +869,7 @@ export class Node {
         // Shift the center back again
         mat4.translate(incScaling, incScaling, vec3.sub(vec3.create(), vec3.create(), anchor));
 
-        this.setScale(mat4.multiply(mat4.create(), this.getScale(), incScaling));
+        this.setScale(mat4.multiply(this.getScale(), this.getScale(), incScaling));
     }
 }
 

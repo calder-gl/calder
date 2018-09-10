@@ -1,5 +1,6 @@
 import { mat3, mat4, quat, vec3 } from 'gl-matrix';
 import { matrix4, vector3 } from '../types/InternalVectorTypes';
+import { Cache } from '../utils/Cache';
 
 /**
  * Not intended to be user facing.
@@ -8,6 +9,8 @@ export class Transformation {
     private position: vector3;
     private rotation: matrix4;
     private scale: matrix4;
+    private matrix: Cache<mat4>;
+    private normal: Cache<mat3>;
 
     constructor(
         position: vector3 = vec3.fromValues(0, 0, 0),
@@ -17,6 +20,25 @@ export class Transformation {
         this.position = position;
         this.rotation = rotation;
         this.scale = scale;
+
+        this.matrix = Cache.create(() => {
+            const transform = mat4.fromTranslation(mat4.create(), this.getPosition());
+            mat4.multiply(transform, transform, this.getRotation());
+            mat4.multiply(transform, transform, this.getScale());
+
+            return transform;
+        });
+
+        this.normal = Cache.create(() => {
+            const transform = this.getTransformation();
+            const normal = mat3.normalFromMat4(mat3.create(), transform);
+
+            if (normal === null) {
+                throw new Error('Transformation was not invertable!');
+            }
+
+            return normal;
+        });
     }
 
     /**
@@ -26,11 +48,7 @@ export class Transformation {
      * @returns {mat4}
      */
     public getTransformation(): mat4 {
-        const transform = mat4.fromTranslation(mat4.create(), this.getPosition());
-        mat4.multiply(transform, transform, this.getRotation());
-        mat4.multiply(transform, transform, this.getScale());
-
-        return transform;
+        return this.matrix.value();
     }
 
     /**
@@ -40,14 +58,7 @@ export class Transformation {
      * @returns {mat3}
      */
     public getNormalTransformation(): mat3 {
-        const transform = this.getTransformation();
-        const normal = mat3.normalFromMat4(mat3.create(), transform);
-
-        if (normal === null) {
-            throw new Error('Transformation was not invertable!');
-        }
-
-        return normal;
+        return this.normal.value();
     }
 
     public getPosition(): vec3 {
@@ -56,6 +67,8 @@ export class Transformation {
 
     public setPosition(position: vector3) {
         this.position = position;
+        this.matrix.invalidate();
+        this.normal.invalidate();
     }
 
     public getRotation(): mat4 {
@@ -64,6 +77,8 @@ export class Transformation {
 
     public setRotation(rotation: matrix4) {
         this.rotation = rotation;
+        this.matrix.invalidate();
+        this.normal.invalidate();
     }
 
     public getScale(): mat4 {
@@ -72,6 +87,8 @@ export class Transformation {
 
     public setScale(scale: matrix4) {
         this.scale = scale;
+        this.matrix.invalidate();
+        this.normal.invalidate();
     }
 
     /**

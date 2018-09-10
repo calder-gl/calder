@@ -1,9 +1,12 @@
 import { vec3, vec4 } from 'gl-matrix';
 
+const temp = vec4.create();
+
 /**
  * Converts a point or vector vec4 into a vec3 by discarding the final field.
  */
-export const vec3From4 = (v: vec4) => vec3.fromValues(v[0], v[1], v[2]);
+// tslint:disable-next-line:no-any
+export const vec3From4 = (v: vec4) => <vec3><any>v;
 
 /**
  * Converts a vec3 to a vec4 point by making the final field a 1.
@@ -24,7 +27,7 @@ export const vec3ToVector = (v: vec3) => vec4.fromValues(v[0], v[1], v[2], 0);
  */
 export const project = (v: vec4, onto: vec4) => {
     const angle = vec3.angle(vec3From4(v), vec3From4(onto));
-    const normalizedOnto = vec4.normalize(vec4.create(), onto);
+    const normalizedOnto = vec4.normalize(temp, onto);
 
     return vec4.scale(vec4.create(), normalizedOnto, vec4.length(v) * Math.cos(angle));
 };
@@ -41,5 +44,5 @@ export const closestPointOnLine = (p: vec4, lineOrigin: vec4, lineDirection: vec
     vec4.add(
         vec4.create(),
         lineOrigin,
-        project(vec4.sub(vec4.create(), p, lineOrigin), lineDirection)
+        project(vec4.sub(temp, p, lineOrigin), lineDirection)
     );

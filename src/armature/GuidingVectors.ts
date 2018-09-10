@@ -230,11 +230,7 @@ export class GuidingVectors implements CostFn {
         if (vector === undefined) {
             const expectedVector = this.getOrCreateExpectedVector(generator, spawnPoint.component);
             const localToGlobalTransform = spawnPoint.at.node.localToGlobalTransform();
-            vector = vec4.transformMat4(
-                vec4.create(),
-                expectedVector,
-                localToGlobalTransform
-            );
+            vector = vec4.transformMat4(vec4.create(), expectedVector, localToGlobalTransform);
             this.spawnPointVectors.set(spawnPoint, <vec4>vector);
         }
 
@@ -255,11 +251,7 @@ export class GuidingVectors implements CostFn {
                 });
             });
 
-            vec4.scale(
-                vector,
-                vector,
-                1 / totalSamples
-            );
+            vec4.scale(vector, vector, 1 / totalSamples);
 
             this.expectedVectors.set(component, vector);
         }

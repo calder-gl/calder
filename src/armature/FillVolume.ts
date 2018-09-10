@@ -95,7 +95,8 @@ export class FillVolume implements CostFn {
 
         if (aabbs === undefined) {
             aabbs = range(10).map(() =>
-                generator.generate({ start: component, depth: 40 }).computeAABB());
+                generator.generate({ start: component, depth: 40 }).computeAABB()
+            );
             this.expectedVolumes[component] = aabbs;
         }
 

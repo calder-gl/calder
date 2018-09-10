@@ -251,11 +251,7 @@ export class Node {
         );
 
         // Shift the center back again
-        mat4.translate(
-            incRotation,
-            incRotation,
-            vec3.sub(tempVec3, zeroVec3, vec3From4(anchor))
-        );
+        mat4.translate(incRotation, incRotation, vec3.sub(tempVec3, zeroVec3, vec3From4(anchor)));
 
         this.setRotation(mat4.multiply(this.getRotation(), this.getRotation(), incRotation));
 
@@ -478,7 +474,8 @@ export class Node {
     public localToGlobalTransform(): mat4 {
         const transform = mat4.copy(
             this.localToGlobalTransformCache,
-            this.transformation.getTransformation());
+            this.transformation.getTransformation()
+        );
         if (this.parent !== null) {
             mat4.multiply(transform, this.parent.localToGlobalTransform(), transform);
         }
@@ -493,7 +490,8 @@ export class Node {
     public globalToLocalTransform(): mat4 {
         const transform = mat4.copy(
             this.globalToLocalTransformCache,
-            this.transformation.getTransformation());
+            this.transformation.getTransformation()
+        );
         mat4.invert(transform, transform);
 
         if (this.parent !== null) {
@@ -515,10 +513,12 @@ export class Node {
     ): { currentMatrix: mat4; currentNormalMatrix: mat3; objects: NodeRenderObject } {
         const currentMatrix = mat4.copy(
             this.currentMatrixCache,
-            this.transformation.getTransformation());
+            this.transformation.getTransformation()
+        );
         const currentNormalMatrix = mat3.copy(
             this.currentNormalMatrixCache,
-            this.transformation.getNormalTransformation());
+            this.transformation.getNormalTransformation()
+        );
         mat4.multiply(currentMatrix, parentMatrix, currentMatrix);
         mat3.multiply(currentNormalMatrix, parentNormalMatrix, currentNormalMatrix);
 

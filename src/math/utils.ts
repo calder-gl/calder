@@ -6,7 +6,7 @@ const temp = vec4.create();
  * Converts a point or vector vec4 into a vec3 by discarding the final field.
  */
 // tslint:disable-next-line:no-any
-export const vec3From4 = (v: vec4) => <vec3><any>v;
+export const vec3From4 = (v: vec4) => <vec3>(<any>v);
 
 /**
  * Converts a vec3 to a vec4 point by making the final field a 1.
@@ -41,8 +41,4 @@ export const project = (v: vec4, onto: vec4) => {
  * @returns {vec4} The closest point on the line to `p`.
  */
 export const closestPointOnLine = (p: vec4, lineOrigin: vec4, lineDirection: vec4) =>
-    vec4.add(
-        vec4.create(),
-        lineOrigin,
-        project(vec4.sub(temp, p, lineOrigin), lineDirection)
-    );
+    vec4.add(vec4.create(), lineOrigin, project(vec4.sub(temp, p, lineOrigin), lineDirection));

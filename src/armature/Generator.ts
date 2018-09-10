@@ -332,8 +332,8 @@ export class Generator {
         finalDepth?: number;
         samples?: number;
         costFn: CostFn;
-        initialHeuristicScale?: number,
-        finalHeuristicScale?: number,
+        initialHeuristicScale?: number;
+        finalHeuristicScale?: number;
         /**
          * For debugging, a callback can be passed in so that every sample in the final
          * generation can be examined.
@@ -356,7 +356,9 @@ export class Generator {
         instances.forEach((instance: GeneratorInstance) => instance.initialize(start));
 
         range(sosmcDepth).forEach((iteration: number) => {
-            const heuristicScale = (iteration / (sosmcDepth - 1)) * (finalHeuristicScale - initialHeuristicScale) + initialHeuristicScale;
+            const heuristicScale =
+                iteration / (sosmcDepth - 1) * (finalHeuristicScale - initialHeuristicScale) +
+                initialHeuristicScale;
 
             // Step 1: grow samples
             instances.forEach((instance: GeneratorInstance) => instance.growIfPossible());

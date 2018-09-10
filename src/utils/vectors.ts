@@ -14,7 +14,6 @@ const getNewVector = () => {
         nextVectorIndex += 1;
 
         return nextVector;
-
     } else {
         const nextVector = vec4.create();
         vectorPool.push(nextVector);
@@ -71,8 +70,8 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
 
                 const parentPosition =
                     node.parent === null
-                    ? vec4.fromValues(0, 0, 0, 1)
-                    : <vec4>nodeLocations.get(node.parent);
+                        ? vec4.fromValues(0, 0, 0, 1)
+                        : <vec4>nodeLocations.get(node.parent);
 
                 // Get the vector between the parent position and the current position
                 const vector = vec4.sub(getNewVector(), globalPosition, parentPosition);

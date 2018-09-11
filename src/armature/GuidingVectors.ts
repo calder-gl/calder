@@ -152,6 +152,7 @@ export class GuidingVectors implements CostFn {
 
         let totalCost = instance.getCost().realCost;
         let lastClosest: Closest | null = null;
+        let lastLocation: vec3 | null = null;
 
         // For each added shape and each influence point, add the resulting cost to the
         // instance's existing cost.
@@ -165,6 +166,7 @@ export class GuidingVectors implements CostFn {
                 localToGlobalTransform
             );
             this.nodeLocations.set(node, globalPosition);
+            lastLocation = vec3From4(globalPosition);
 
             // If the node has a parent that isn't yet in the cache, add it
             if (node.parent !== null && !this.nodeLocations.has(node.parent)) {
@@ -184,12 +186,13 @@ export class GuidingVectors implements CostFn {
 
             // Get the vector between the parent position and the current position
             const vector = vec4.sub(vec4.create(), globalPosition, parentPosition);
+            vec4.normalize(vector, vector);
 
             // Find the closest point on a guiding curve
             const closest = this.closest(parentPosition);
             lastClosest = closest;
 
-            totalCost += this.computeCost(closest, vector);
+            totalCost += this.computeCost(closest, vector, vec3From4(parentPosition));
         });
 
         let heuristicCost = 0;
@@ -197,7 +200,8 @@ export class GuidingVectors implements CostFn {
             instance.getSpawnPoints().forEach((spawnPoint: SpawnPoint) => {
                 heuristicCost += this.computeCost(
                     <Closest>lastClosest,
-                    this.getOrCreateSpawnPointVector(instance.generator, spawnPoint)
+                    this.getOrCreateSpawnPointVector(instance.generator, spawnPoint),
+                    <vec3>lastLocation
                 );
             });
         }
@@ -205,9 +209,8 @@ export class GuidingVectors implements CostFn {
         return { realCost: totalCost, heuristicCost };
     }
 
-    private computeCost(closest: Closest, added: vec4): number {
-        // Add cost for the distance away from the curve
-        const distance = vec4.length(added);
+    private computeCost(closest: Closest, added: vec4, parentPosition: vec3): number {
+        const distance = vec3.distance(Mapper.coordToVector(<coord>closest.point), parentPosition);
 
         // Evaluate distance cost polynomial using Horner's method
         let distanceCost = 0;
@@ -216,7 +219,6 @@ export class GuidingVectors implements CostFn {
         }
 
         // Add cost for vector alignment
-        vec4.normalize(added, added);
         const alignmentCost =
             (-vec3.dot(closest.guidingVector, vec3From4(added)) + closest.curve.alignmentOffset) *
             closest.curve.alignmentMultiplier;
@@ -275,7 +277,7 @@ export class GuidingVectors implements CostFn {
                     point: c.bezier.project(Mapper.vectorToCoord(vec3From4(point)))
                 };
             }),
-            (c: Closest) => c.point.d
+            (c: PartialClosest) => c.point.d
         );
 
         const guidingVector = Mapper.coordToVector(<coord>closestPoint.curve.bezier.derivative(

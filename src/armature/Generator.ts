@@ -346,7 +346,7 @@ export class Generator {
             finalDepth = 100,
             samples = 50,
             costFn,
-            initialHeuristicScale = 100,
+            initialHeuristicScale = 0,
             finalHeuristicScale = 0,
             iterationHook
         } = params;

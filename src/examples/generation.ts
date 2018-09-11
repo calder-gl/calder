@@ -2,7 +2,6 @@ import {
     Armature,
     CostFunction,
     GeneratorInstance,
-    GuidingVectors,
     Light,
     Material,
     Node,
@@ -95,6 +94,7 @@ treeGen
         instance.addDetail({ component: 'branch', at: root });
     });
 
+const scale: [number, number, number] = [0, 0, 100];
 const guidingVectors = CostFunction.guidingVectors([
     {
         bezier: new Bezier([
@@ -103,7 +103,7 @@ const guidingVectors = CostFunction.guidingVectors([
             { x: 1, y: 1, z: 1 },
             { x: 2, y: 2, z: 1 }
         ]),
-        distanceMultiplier: GuidingVectors.QUADRATIC,
+        distanceMultiplier: scale,
         alignmentMultiplier: 500,
         alignmentOffset: 0.7
     },
@@ -114,7 +114,7 @@ const guidingVectors = CostFunction.guidingVectors([
             { x: 0, y: 3, z: 1 },
             { x: 0, y: 3, z: 2 }
         ]),
-        distanceMultiplier: GuidingVectors.QUADRATIC,
+        distanceMultiplier: scale,
         alignmentMultiplier: 500,
         alignmentOffset: 0.6
     }
@@ -134,6 +134,8 @@ const tree = treeGen.generateSOSMC({
     finalDepth: 100,
     samples: 100,
     costFn: guidingVectors,
+    initialHeuristicScale: 0,
+    finalHeuristicScale: 0,
     iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
 });
 

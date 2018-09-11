@@ -253,7 +253,9 @@ export class GuidingVectors implements CostFn {
                 });
             });
 
-            vec4.scale(vector, vector, 1 / totalSamples);
+            if (totalSamples > 0) {
+                vec4.scale(vector, vector, 1 / totalSamples);
+            }
 
             this.expectedVectors.set(component, vector);
         }

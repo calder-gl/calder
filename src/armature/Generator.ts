@@ -120,7 +120,7 @@ export class GeneratorInstance {
     public getCostWeight(heuristicScale: number): number {
         // 1 / e^x means that lower (even negative) costs get a higher weight.
         // Using 1/ e^x instead of e^(-x) for numerical stability.
-        return 1 / Math.exp(this.cost.realCost + this.cost.heuristicCost * heuristicScale);
+        return 1 / Math.exp(this.cost.realCost + (this.cost.heuristicCost * heuristicScale));
     }
 
     /**

@@ -134,7 +134,7 @@ const tree = treeGen.generateSOSMC({
     finalDepth: 100,
     samples: 100,
     costFn: guidingVectors,
-    initialHeuristicScale: 0,
+    initialHeuristicScale: 0.01,
     finalHeuristicScale: 0,
     iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
 });

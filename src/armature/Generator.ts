@@ -328,6 +328,8 @@ export class Generator {
      * generation.
      * @param {number} finalHeuristicScale A multiplier for the heuristic in the final generation;
      * generations in between will scale linearly.
+     * @param {number} finalHeuristicTime The percent time through the generation at which the
+     * heuristic scale reaches its final value.
      * @returns {Model} The model that was generated.
      */
     public generateSOSMC(params: {
@@ -338,6 +340,7 @@ export class Generator {
         costFn: CostFn;
         initialHeuristicScale?: number;
         finalHeuristicScale?: number;
+        finalHeuristicTime?: number;
         /**
          * For debugging, a callback can be passed in so that every sample in the final
          * generation can be examined.
@@ -352,6 +355,7 @@ export class Generator {
             costFn,
             initialHeuristicScale = 0,
             finalHeuristicScale = 0,
+            finalHeuristicTime = 1,
             iterationHook
         } = params;
         let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
@@ -362,7 +366,7 @@ export class Generator {
         range(sosmcDepth).forEach((iteration: number) => {
             // Linearly interpolate between the initial and final scale values
             const heuristicScale =
-                iteration / (sosmcDepth - 1) * (finalHeuristicScale - initialHeuristicScale) +
+                Math.max(1, iteration / ((sosmcDepth - 1) * finalHeuristicTime)) * (finalHeuristicScale - initialHeuristicScale) +
                 initialHeuristicScale;
 
             // Step 1: grow samples

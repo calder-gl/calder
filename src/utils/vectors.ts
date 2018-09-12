@@ -8,6 +8,7 @@ const vectorPool: vec4[] = [];
 let nextVectorIndex: number = 0;
 const zero = vec4.fromValues(0, 0, 0, 1);
 
+// Convenience functions to reuse a pool of vectors
 const getNewVector = () => {
     if (nextVectorIndex < vectorPool.length) {
         const nextVector = vectorPool[nextVectorIndex];
@@ -27,6 +28,15 @@ const done = () => {
     nextVectorIndex = 0;
 };
 
+/**
+ * Given a generator and a component to generate, creates a set of direction vectors generated as
+ * children of that component. Vectors are scaled by their probability of being generated.
+ *
+ * Importantly, this reuses vectos in each call, so it assumes the vectors have been read and
+ * processed and can be reused by the time this function is called again.
+ *
+ * @returns {vec4[]} A set of generated, scaled vectors.
+ */
 export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
     const nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();
     const nodeProbabilities: Map<Node, number> = new Map<Node, number>();
@@ -35,10 +45,12 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
     const instance = new GeneratorInstance(generator, { getCost: () => emptyCost });
     instance.generate({ start, depth: 0 });
 
+    // Grow ten times, since any more than that starts to have low probabilities and lower weight
     range(10).forEach(() => {
         const numChoices = instance.getSpawnPoints().length;
 
         instance.growIfPossible((added: Node[]) => {
+            // Just get the added structure
             const addedStructure: Node[] = [];
             added.forEach((n: Node) =>
                 n.structureCallback((node: Node) => {
@@ -76,7 +88,9 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
                 // Get the vector between the parent position and the current position
                 const vector = vec4.sub(getNewVector(), globalPosition, parentPosition);
 
-                // Calculate the probability of this particular node
+                // Calculate the probability of this particular node being generated, given the
+                // choices we had to pick from
+                // tslint:disable-next-line:strict-boolean-expressions
                 const parentProbability = (node.parent && nodeProbabilities.get(node.parent)) || 1;
                 const nodeProbability = parentProbability / numChoices;
                 nodeProbabilities.set(node, nodeProbability);
@@ -89,6 +103,7 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
         });
     });
 
+    // Reuse the pool of vectors for the next call
     done();
 
     return vectors;

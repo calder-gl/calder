@@ -324,6 +324,10 @@ export class Generator {
      * @param {number} finalDepth How many iterations to run the final sample to afterward.
      * @param {number} samples How many samples to look at in parallel.
      * @param {CostFn} costFn A function used to measure the cost of each sample.
+     * @param {number} initialHeuristicScale A multiplier for the heuristic in the first
+     * generation.
+     * @param {number} finalHeuristicScale A multiplier for the heuristic in the final generation;
+     * generations in between will scale linearly.
      * @returns {Model} The model that was generated.
      */
     public generateSOSMC(params: {
@@ -356,6 +360,7 @@ export class Generator {
         instances.forEach((instance: GeneratorInstance) => instance.initialize(start));
 
         range(sosmcDepth).forEach((iteration: number) => {
+            // Linearly interpolate between the initial and final scale values
             const heuristicScale =
                 iteration / (sosmcDepth - 1) * (finalHeuristicScale - initialHeuristicScale) +
                 initialHeuristicScale;

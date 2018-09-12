@@ -30,7 +30,7 @@ const done = () => {
 
 /**
  * Given a generator and a component to generate, creates a set of direction vectors generated as
- * children of that component. Vectors are scaled by their probability of being generated.
+ * children of that component.
  *
  * Importantly, this reuses vectos in each call, so it assumes the vectors have been read and
  * processed and can be reused by the time this function is called again.
@@ -39,7 +39,6 @@ const done = () => {
  */
 export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
     const nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();
-    const nodeProbabilities: Map<Node, number> = new Map<Node, number>();
     const vectors: vec4[] = [];
 
     const instance = new GeneratorInstance(generator, { getCost: () => emptyCost });
@@ -47,8 +46,6 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
 
     // Grow ten times, since any more than that starts to have low probabilities and lower weight
     range(10).forEach(() => {
-        const numChoices = instance.getSpawnPoints().length;
-
         instance.growIfPossible((added: Node[]) => {
             // Just get the added structure
             const addedStructure: Node[] = [];
@@ -87,16 +84,6 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
 
                 // Get the vector between the parent position and the current position
                 const vector = vec4.sub(getNewVector(), globalPosition, parentPosition);
-
-                // Calculate the probability of this particular node being generated, given the
-                // choices we had to pick from
-                // tslint:disable-next-line:strict-boolean-expressions
-                const parentProbability = (node.parent && nodeProbabilities.get(node.parent)) || 1;
-                const nodeProbability = parentProbability / numChoices;
-                nodeProbabilities.set(node, nodeProbability);
-
-                // Weight the vector by its probability
-                vec4.scale(vector, vector, nodeProbability);
 
                 vectors.push(vector);
             });

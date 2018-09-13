@@ -366,7 +366,8 @@ export class Generator {
         range(sosmcDepth).forEach((iteration: number) => {
             // Linearly interpolate between the initial and final scale values
             const heuristicScale =
-                Math.max(1, iteration / ((sosmcDepth - 1) * finalHeuristicTime)) * (finalHeuristicScale - initialHeuristicScale) +
+                Math.max(1, iteration / ((sosmcDepth - 1) * finalHeuristicTime)) *
+                    (finalHeuristicScale - initialHeuristicScale) +
                 initialHeuristicScale;
 
             // Step 1: grow samples

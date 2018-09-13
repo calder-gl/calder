@@ -78,6 +78,7 @@ export class GuidingVectors implements CostFn {
     private nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();
     private expectedVectors: Map<string, vec4> = new Map<string, vec4>();
     private spawnPointVectors: Map<SpawnPoint, vec4> = new Map<SpawnPoint, vec4>();
+    private spawnPointClosests: Map<SpawnPoint, Closest> = new Map<SpawnPoint, Closest>();
 
     /**
      * @param {BezierJs.Bezier[]} guidingVectors The Bezier paths that will be used to guide the
@@ -199,8 +200,7 @@ export class GuidingVectors implements CostFn {
         if (lastClosest !== null) {
             instance.getSpawnPoints().forEach((spawnPoint: SpawnPoint) => {
                 heuristicCost += this.computeCost(
-                    // TODO(davepagurek): Maybe compute and cache the actual closest curve
-                    <Closest>lastClosest,
+                    this.getOrCreateSpawnPointClosest(spawnPoint),
                     this.getOrCreateSpawnPointVector(instance.generator, spawnPoint),
                     <vec3>lastLocation
                 );
@@ -234,6 +234,26 @@ export class GuidingVectors implements CostFn {
             closest.curve.alignmentMultiplier;
 
         return alignmentCost + distanceCost;
+    }
+
+    /**
+     * Given a spawn point, computes and stores the closest point on the guiding curves for
+     * that point.
+     */
+    private getOrCreateSpawnPointClosest(spawnPoint: SpawnPoint): Closest {
+        let closest = this.spawnPointClosests.get(spawnPoint);
+
+        if (closest === undefined) {
+            const localToGlobalTransform = spawnPoint.at.node.localToGlobalTransform();
+            const point = vec4.fromValues(0, 0, 0, 1);
+            vec4.transformMat4(point, point, localToGlobalTransform);
+
+            closest = this.closest(point);
+
+            this.spawnPointClosests.set(spawnPoint, closest);
+        }
+
+        return closest;
     }
 
     /**

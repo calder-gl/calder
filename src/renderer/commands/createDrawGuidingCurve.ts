@@ -2,7 +2,7 @@ import { mat4 } from 'gl-matrix';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 
-import { flatMap, range } from 'lodash';
+import { flatMap } from 'lodash';
 
 // tslint:disable:no-unsafe-any
 // tslint:disable:variable-name
@@ -17,7 +17,7 @@ interface Uniforms {
 
 // Attributes are per vertex.
 interface Attributes {
-    position: number[];
+    position: [number, number, number][];
     side: number[];
     direction: number[][];
 }
@@ -57,7 +57,7 @@ export function createDrawGuidingCurve(
                 vec4 screenDirection = projection * view * vec4(direction, 0);
                 vec2 screenNormal = normalize(vec2(screenDirection.y, -screenDirection.x));
                 gl_Position = screenPosition +
-                    vec4(screenPosition.w * screenNormal * side * thickness / screenSize, 0.0, 0.0);
+                    vec4(screenPosition.w * screenNormal * side * thickness / screenSize / 2.0, 0.0, 0.0);
             }
         `,
         frag: `
@@ -69,19 +69,23 @@ export function createDrawGuidingCurve(
         `,
         attributes: {
             position: (_context: REGL.DefaultContext, props: DrawGuidingCurveProps) =>
-                flatMap(props.positions, (position: number) => [position, position]),
+                flatMap(props.positions, (position: [number, number, number]) => [
+                    position,
+                    position
+                ]),
             side: (_context: REGL.DefaultContext, props: DrawGuidingCurveProps) =>
-                flatMap(props.positions, (_position: number) => [-1, 1]),
+                flatMap(props.positions, (_position: [number, number, number]) => [-1, 1]),
             direction: (_context: REGL.DefaultContext, props: DrawGuidingCurveProps) =>
-                range(props.positions.length * 2).map((i: number) => {
-                    let index = Math.floor(i / 2);
+                flatMap(props.positions, (_position: [number, number, number], i: number) => {
+                    let index: number = i;
                     if (index === props.positions.length - 1) {
                         index -= 1;
                     }
                     const [ax, ay, az] = props.positions[index];
                     const [bx, by, bz] = props.positions[index + 1];
+                    const direction = [bx - ax, by - ay, bz - az];
 
-                    return [bx - ax, by - ay, bz - az];
+                    return [direction, direction];
                 })
         },
         uniforms: {
@@ -89,7 +93,7 @@ export function createDrawGuidingCurve(
                 'projectionMatrix'
             ),
             view: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('cameraTransform'),
-            thickness: 5,
+            thickness: 8,
             screenSize: (context: REGL.DefaultContext) => [
                 context.viewportWidth,
                 context.viewportHeight

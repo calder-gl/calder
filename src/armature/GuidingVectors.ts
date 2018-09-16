@@ -123,7 +123,7 @@ export class GuidingVectors implements CostFn {
     /**
      * For each target curve, creates a vertex buffer of points along the curve.
      *
-     * @returns {Float32Array[]} A vertex buffer for each curve.
+     * @returns {[number, number, number][][]} An array of vertices for each curve.
      */
     public generateGuidingCurve(): [number, number, number][][] {
         return this.vectors.map((c: GuidingCurve) => {

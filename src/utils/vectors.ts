@@ -81,9 +81,7 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
                 }
 
                 const parentPosition =
-                    node.parent === null
-                        ? zeroVec4
-                        : <vec4>nodeLocations.get(node.parent);
+                    node.parent === null ? zeroVec4 : <vec4>nodeLocations.get(node.parent);
 
                 // Get the vector between the parent position and the current position
                 const vector = vec4.sub(getNewVector(), globalPosition, parentPosition);

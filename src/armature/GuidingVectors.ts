@@ -268,8 +268,7 @@ export class GuidingVectors implements CostFn {
             const localToGlobalTransform = spawnPoint.at.node.localToGlobalTransform();
             vector = vec4.transformMat4(vec4.create(), expectedVector, localToGlobalTransform);
 
-            // To avoid doing a matrix multiplication to orient the direction vector for a component
-            // to the spawn point for every spawn point for every frame, save the value
+            // Cache spawn point direction vector
             this.spawnPointVectors.set(spawnPoint, vector);
         }
 

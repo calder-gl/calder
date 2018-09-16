@@ -30,8 +30,8 @@ const done = () => {
 };
 
 /**
- * Given a generator and a component to generate, creates a set of direction vectors generated as
- * children of that component.
+ * Given a generator and a component to generate, creates a set of direction vectors (from the
+ * parent to the child) generated as (possibly indirect) children of that component.
  *
  * Importantly, this reuses vectors in each call, so it assumes the vectors have been read and
  * processed and can be reused by the time this function is called again.
@@ -47,7 +47,7 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
     const instance = new GeneratorInstance(generator, { getCost: () => emptyCost });
     instance.generate({ start, depth: 0 });
 
-    // Grow ten times, since any more than that starts to have low probabilities and lower weight
+    // Grow ten times to get a range of possibly direct, possibly indirect children
     range(10).forEach(() => {
         instance.growIfPossible((added: Node[]) => {
             // Just get the added structure

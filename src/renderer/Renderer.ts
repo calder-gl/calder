@@ -292,9 +292,9 @@ export class Renderer {
         window.requestAnimationFrame(draw);
     }
 
-    private drawCurve(curves: Float32Array[]) {
+    private drawCurve(curves: [number, number, number][][]) {
         this.drawGuidingCurve(
-            curves.map((curve: Float32Array) => {
+            curves.map((curve: [number, number, number][]) => {
                 return {
                     cameraTransform: this.camera.getTransform(),
                     projectionMatrix: this.projectionMatrix,

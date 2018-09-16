@@ -2,17 +2,24 @@ import { mat4 } from 'gl-matrix';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 
+import { flatMap, range } from 'lodash';
+
 // tslint:disable:no-unsafe-any
+// tslint:disable:variable-name
 
 // Uniforms are the same for all vertices.
 interface Uniforms {
     projection: mat4;
     view: mat4;
+    thickness: number;
+    screenSize: [number, number];
 }
 
 // Attributes are per vertex.
 interface Attributes {
-    position: Float32Array;
+    position: number[];
+    side: number[];
+    direction: number[][];
 }
 
 /**
@@ -21,7 +28,7 @@ interface Attributes {
 export interface DrawGuidingCurveProps {
     cameraTransform: mat4;
     projectionMatrix: mat4;
-    positions: Float32Array;
+    positions: [number, number, number][];
 }
 
 /**
@@ -37,13 +44,20 @@ export function createDrawGuidingCurve(
             precision mediump float;
 
             attribute vec3 position;
+            attribute float side;
+            attribute vec3 direction;
 
             uniform mat4 projection;
             uniform mat4 view;
+            uniform float thickness;
+            uniform vec2 screenSize;
 
             void main() {
-                vec4 vertexPosition = view * vec4(position, 1);
-                gl_Position = projection * vertexPosition;
+                vec4 screenPosition = projection * view * vec4(position, 1);
+                vec4 screenDirection = projection * view * vec4(direction, 0);
+                vec2 screenNormal = normalize(vec2(screenDirection.y, -screenDirection.x));
+                gl_Position = screenPosition +
+                    vec4(screenPosition.w * screenNormal * side * thickness / screenSize, 0.0, 0.0);
             }
         `,
         frag: `
@@ -54,21 +68,38 @@ export function createDrawGuidingCurve(
             }
         `,
         attributes: {
-            position: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('positions')
+            position: (_context: REGL.DefaultContext, props: DrawGuidingCurveProps) =>
+                flatMap(props.positions, (position: number) => [position, position]),
+            side: (_context: REGL.DefaultContext, props: DrawGuidingCurveProps) =>
+                flatMap(props.positions, (_position: number) => [-1, 1]),
+            direction: (_context: REGL.DefaultContext, props: DrawGuidingCurveProps) =>
+                range(props.positions.length * 2).map((i: number) => {
+                    let index = Math.floor(i / 2);
+                    if (index === props.positions.length - 1) {
+                        index -= 1;
+                    }
+                    const [ax, ay, az] = props.positions[index];
+                    const [bx, by, bz] = props.positions[index + 1];
+
+                    return [bx - ax, by - ay, bz - az];
+                })
         },
         uniforms: {
             projection: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>(
                 'projectionMatrix'
             ),
-            view: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('cameraTransform')
+            view: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('cameraTransform'),
+            thickness: 5,
+            screenSize: (context: REGL.DefaultContext) => [
+                context.viewportWidth,
+                context.viewportHeight
+            ]
         },
         depth: {
             enable: false
         },
-        lineWidth: 1, // crazy how chrome (nature) do that
         // tslint:disable:typedef
-        // tslint:disable:variable-name
-        count: (_context, props, _batch_id) => props.positions.length / 3,
-        primitive: 'line strip'
+        count: (_context, props, _batch_id) => props.positions.length * 2,
+        primitive: 'triangle strip'
     });
 }

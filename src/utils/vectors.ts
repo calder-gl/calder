@@ -6,7 +6,8 @@ import { range } from 'lodash';
 
 const vectorPool: vec4[] = [];
 let nextVectorIndex: number = 0;
-const zero = vec4.fromValues(0, 0, 0, 1);
+
+export const zeroVec4 = vec4.fromValues(0, 0, 0, 1);
 
 // Convenience functions to reuse a pool of vectors
 const getNewVector = () => {
@@ -32,8 +33,10 @@ const done = () => {
  * Given a generator and a component to generate, creates a set of direction vectors generated as
  * children of that component.
  *
- * Importantly, this reuses vectos in each call, so it assumes the vectors have been read and
+ * Importantly, this reuses vectors in each call, so it assumes the vectors have been read and
  * processed and can be reused by the time this function is called again.
+ *
+ * TODO(https://github.com/calder-gl/calder/issues/151): Move this to a better location
  *
  * @returns {vec4[]} A set of generated, scaled vectors.
  */
@@ -61,7 +64,7 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
                 // Get the location for the current node
                 const globalPosition = vec4.transformMat4(
                     getNewVector(),
-                    zero,
+                    zeroVec4,
                     localToGlobalTransform
                 );
                 nodeLocations.set(node, globalPosition);
@@ -71,7 +74,7 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
                     const parentLocalToGlobalTransform = node.parent.localToGlobalTransform();
                     const parentGlobalPosition = vec4.transformMat4(
                         getNewVector(),
-                        zero,
+                        zeroVec4,
                         parentLocalToGlobalTransform
                     );
                     nodeLocations.set(node.parent, parentGlobalPosition);
@@ -79,7 +82,7 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
 
                 const parentPosition =
                     node.parent === null
-                        ? vec4.fromValues(0, 0, 0, 1)
+                        ? zeroVec4
                         : <vec4>nodeLocations.get(node.parent);
 
                 // Get the vector between the parent position and the current position

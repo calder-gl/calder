@@ -12,6 +12,7 @@ import { vec3From4, vec3ToPoint } from '../math/utils';
 import { defaultMaterial } from '../renderer/Material';
 import { matrix4, vector3 } from '../types/InternalVectorTypes';
 import { Mapper } from '../utils/mapper';
+import { zeroVec4 } from '../utils/vectors';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
 
@@ -20,7 +21,7 @@ const tempMat42 = mat4.create();
 const tempVec3 = vec3.create();
 const tempVec4 = vec4.create();
 
-const zeroVec3 = vec3.create();
+const zeroVec3 = vec3From4(zeroVec4);
 
 /**
  * A `Node` in a scene-graph.
@@ -194,8 +195,7 @@ export class Node {
         const anchor =
             constrainedPoints.length > 0 ? constrainedPoints[0] : vec3.fromValues(0, 0, 0);
 
-        const incScaling = tempMat4;
-        mat4.fromTranslation(incScaling, anchor);
+        const incScaling = mat4.fromTranslation(tempMat4, anchor);
 
         mat4.scale(incScaling, incScaling, amountVec);
 

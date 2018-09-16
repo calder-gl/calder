@@ -10,7 +10,7 @@ export class Transformation {
     private rotation: matrix4;
     private scale: matrix4;
     private matrix: Cache<mat4>;
-    private normal: Cache<mat3>;
+    private normalMatrix: Cache<mat3>;
 
     constructor(
         position: vector3 = vec3.fromValues(0, 0, 0),
@@ -29,7 +29,7 @@ export class Transformation {
             return transform;
         });
 
-        this.normal = Cache.create(() => {
+        this.normalMatrix = Cache.create(() => {
             const transform = this.getTransformation();
             const normal = mat3.normalFromMat4(mat3.create(), transform);
 
@@ -58,7 +58,7 @@ export class Transformation {
      * @returns {mat3}
      */
     public getNormalTransformation(): mat3 {
-        return this.normal.value();
+        return this.normalMatrix.value();
     }
 
     public getPosition(): vec3 {
@@ -68,7 +68,7 @@ export class Transformation {
     public setPosition(position: vector3) {
         this.position = position;
         this.matrix.invalidate();
-        this.normal.invalidate();
+        this.normalMatrix.invalidate();
     }
 
     public getRotation(): mat4 {
@@ -78,7 +78,7 @@ export class Transformation {
     public setRotation(rotation: matrix4) {
         this.rotation = rotation;
         this.matrix.invalidate();
-        this.normal.invalidate();
+        this.normalMatrix.invalidate();
     }
 
     public getScale(): mat4 {
@@ -88,7 +88,7 @@ export class Transformation {
     public setScale(scale: matrix4) {
         this.scale = scale;
         this.matrix.invalidate();
-        this.normal.invalidate();
+        this.normalMatrix.invalidate();
     }
 
     /**

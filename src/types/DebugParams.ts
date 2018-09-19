@@ -24,5 +24,5 @@ export type DebugParams = {
     /**
      * Draw a guiding curve, represented as an array of points along the curve.
      */
-    drawGuidingCurve?: Float32Array[];
+    drawGuidingCurve?: [number, number, number][][];
 };

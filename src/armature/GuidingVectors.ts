@@ -128,17 +128,17 @@ export class GuidingVectors implements CostFn {
     /**
      * For each target curve, creates a vertex buffer of points along the curve.
      *
-     * @returns {Float32Array[]} A vertex buffer for each curve.
+     * @returns {[number, number, number][][]} An array of vertices for each curve.
      */
-    public generateGuidingCurve(): Float32Array[] {
+    public generateGuidingCurve(): [number, number, number][][] {
         return this.vectors.map((c: GuidingCurve) => {
-            const curve: number[] = [];
+            const curve: [number, number, number][] = [];
 
             c.bezier.getLUT().forEach((p: BezierJs.Point) => {
-                curve.push(p.x, p.y, (<coord>p).z);
+                curve.push([p.x, p.y, (<coord>p).z]);
             });
 
-            return Float32Array.from(curve);
+            return curve;
         });
     }
 

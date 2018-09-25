@@ -1,4 +1,3 @@
-import { AABB } from '../geometry/BakedGeometry';
 import { RandomGenerator } from '../utils/random';
 import { Model } from './Model';
 import { Node, Point } from './Node';
@@ -23,7 +22,6 @@ export type SpawnPoint = {
 type RuleInfo = {
     totalWeight: number;
     definitions: Definition[];
-    expectedVolumes: AABB[];
 };
 
 /**
@@ -119,10 +117,10 @@ export class GeneratorInstance {
      * @returns {number} The weight for this instance based on its cost, so that more weight is
      * given to instances with lower cost.
      */
-    public getCostWeight(): number {
+    public getCostWeight(heuristicScale: number): number {
         // 1 / e^x means that lower (even negative) costs get a higher weight.
         // Using 1/ e^x instead of e^(-x) for numerical stability.
-        return 1 / Math.exp(this.cost.realCost + this.cost.heuristicCost * 50);
+        return 1 / Math.exp(this.cost.realCost + this.cost.heuristicCost * heuristicScale);
     }
 
     /**
@@ -136,8 +134,8 @@ export class GeneratorInstance {
      * @returns {number} The non-normalized weight of this sample, as a product of its probability
      * and the cost (used as a likelihood function.)
      */
-    public getWeight(): number {
-        return this.getProbability() * this.getCostWeight();
+    public getWeight(heuristicScale: number = 150): number {
+        return this.getProbability() * this.getCostWeight(heuristicScale);
     }
 
     /**
@@ -153,7 +151,7 @@ export class GeneratorInstance {
     /**
      * Grows this instance, if possible, until a new shape is added.
      */
-    public growIfPossible() {
+    public growIfPossible(onAdded?: (nodes: Node[]) => void) {
         const originalLength = this.model.nodes.length;
 
         let choiceProbability = 1;
@@ -176,6 +174,10 @@ export class GeneratorInstance {
 
         // Get the new nodes that were added
         const added = this.model.nodes.slice(originalLength);
+
+        if (onAdded !== undefined) {
+            onAdded(added);
+        }
 
         // Recompute the cost
         this.cost = this.costFn.getCost(this, added);
@@ -288,7 +290,7 @@ export class Generator {
     public defineWeighted(name: string, weight: number, generator: GeneratorFn): Generator {
         // Make a component for the given name if one doesn't already exist
         if (this.rules[name] === undefined) {
-            this.rules[name] = { totalWeight: 0, definitions: [], expectedVolumes: [] };
+            this.rules[name] = { totalWeight: 0, definitions: [] };
         }
 
         // Keep track of the total weight for all component definitions of this name, so we can later
@@ -322,6 +324,12 @@ export class Generator {
      * @param {number} finalDepth How many iterations to run the final sample to afterward.
      * @param {number} samples How many samples to look at in parallel.
      * @param {CostFn} costFn A function used to measure the cost of each sample.
+     * @param {number} initialHeuristicScale A multiplier for the heuristic in the first
+     * generation.
+     * @param {number} finalHeuristicScale A multiplier for the heuristic in the final generation;
+     * generations in between will scale linearly.
+     * @param {number} finalHeuristicTime The percent time through the generation at which the
+     * heuristic scale reaches its final value.
      * @returns {Model} The model that was generated.
      */
     public generateSOSMC(params: {
@@ -330,6 +338,9 @@ export class Generator {
         finalDepth?: number;
         samples?: number;
         costFn: CostFn;
+        initialHeuristicScale?: number;
+        finalHeuristicScale?: number;
+        finalHeuristicTime?: number;
         /**
          * For debugging, a callback can be passed in so that every sample in the final
          * generation can be examined.
@@ -342,16 +353,23 @@ export class Generator {
             finalDepth = 100,
             samples = 50,
             costFn,
+            initialHeuristicScale = 0,
+            finalHeuristicScale = 0,
+            finalHeuristicTime = 1,
             iterationHook
         } = params;
         let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
-
-        this.computeExpectedVolumes(10, 40);
 
         // Seed instances with starting state
         instances.forEach((instance: GeneratorInstance) => instance.initialize(start));
 
         range(sosmcDepth).forEach((iteration: number) => {
+            // Linearly interpolate between the initial and final scale values
+            const heuristicScale =
+                Math.max(1, iteration / ((sosmcDepth - 1) * finalHeuristicTime)) *
+                    (finalHeuristicScale - initialHeuristicScale) +
+                initialHeuristicScale;
+
             // Step 1: grow samples
             instances.forEach((instance: GeneratorInstance) => instance.growIfPossible());
 
@@ -363,7 +381,7 @@ export class Generator {
 
                 const totalWeight = instances.reduce(
                     (accum: number, instance: GeneratorInstance) => {
-                        return accum + instance.getWeight();
+                        return accum + instance.getWeight(heuristicScale);
                     },
                     0
                 );
@@ -380,7 +398,7 @@ export class Generator {
                     let i = 0;
                     while (sample > 0 && i < instances.length - 1) {
                         picked = instances[i];
-                        sample -= instances[i].getWeight();
+                        sample -= instances[i].getWeight(heuristicScale);
                         i += 1;
                     }
 
@@ -429,34 +447,5 @@ export class Generator {
         }
 
         throw new Error('Error finding a weighted definition. Are all weights positive?');
-    }
-
-    /**
-     * Picks a plausible bounding volume that a component, when generated, could occupy.
-     *
-     * @param {string} component The component being spawned.
-     * @returns {AABB} An axis-aligned bounding box that the component could occupy.
-     */
-    public getExpectedRuleVolume(component: string): AABB {
-        const volumes = this.rules[component].expectedVolumes;
-
-        return volumes[Math.floor(Math.random() * volumes.length)];
-    }
-
-    /**
-     * Generates each component multiple times to compute expected bounding volumes.
-     *
-     * @param {number} numVolumes The number of bounding volumes to generate per component.
-     * @param {number} depth How many rounds of generation should be used per generated instance
-     * of a component.
-     */
-    private computeExpectedVolumes(numVolumes: number, depth: number) {
-        Object.keys(this.rules).forEach((name: string) => {
-            const rule = this.rules[name];
-
-            rule.expectedVolumes = range(numVolumes).map(() =>
-                this.generate({ start: name, depth }).computeAABB()
-            );
-        });
     }
 }

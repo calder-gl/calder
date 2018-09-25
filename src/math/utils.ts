@@ -3,7 +3,8 @@ import { vec3, vec4 } from 'gl-matrix';
 /**
  * Converts a point or vector vec4 into a vec3 by discarding the final field.
  */
-export const vec3From4 = (v: vec4) => vec3.fromValues(v[0], v[1], v[2]);
+// tslint:disable-next-line:no-any
+export const vec3From4 = (v: vec4) => <vec3>(<any>v);
 
 /**
  * Converts a vec3 to a vec4 point by making the final field a 1.

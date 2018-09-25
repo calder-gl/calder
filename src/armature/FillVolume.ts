@@ -1,6 +1,6 @@
 import { AABB } from '../geometry/BakedGeometry';
 import { worldSpaceAABB } from '../utils/aabb';
-import { Cost, CostFn, GeneratorInstance, SpawnPoint } from './Generator';
+import { Cost, CostFn, Generator, GeneratorInstance, SpawnPoint } from './Generator';
 import { Model } from './Model';
 import { GeometryNode, Node } from './Node';
 
@@ -13,6 +13,7 @@ type Grid = { [key: string]: true };
  * Creates a cost function based on how much of a target volume a shape fills.
  */
 export class FillVolume implements CostFn {
+    private expectedVolumes: { [component: string]: AABB[] } = {};
     private gridCache: Map<Node, Grid> = new Map<Node, Grid>();
     private cellSize: number;
     private targetCoords: Grid = {};
@@ -73,7 +74,7 @@ export class FillVolume implements CostFn {
 
         const heuristicGrid = { ...grid };
         instance.getSpawnPoints().forEach((spawnPoint: SpawnPoint) => {
-            const aabb = instance.generator.getExpectedRuleVolume(spawnPoint.component);
+            const aabb = this.getOrCreateExpectedVolume(instance.generator, spawnPoint.component);
             this.addAABBToGrid(
                 worldSpaceAABB(spawnPoint.at.node, aabb),
                 heuristicGrid,
@@ -87,6 +88,19 @@ export class FillVolume implements CostFn {
         });
 
         return { realCost: instance.getCost().realCost + incrementalCost, heuristicCost };
+    }
+
+    private getOrCreateExpectedVolume(generator: Generator, component: string) {
+        let aabbs = this.expectedVolumes[component];
+
+        if (aabbs === undefined) {
+            aabbs = range(10).map(() =>
+                generator.generate({ start: component, depth: 40 }).computeAABB()
+            );
+            this.expectedVolumes[component] = aabbs;
+        }
+
+        return aabbs[Math.floor(Math.random() * aabbs.length)];
     }
 
     // Returns the points that are in a world-space AABB.

@@ -1,7 +1,8 @@
 import { coord } from '../calder';
-import { vec3From4, vec3ToVector } from '../math/utils';
+import { vec3From4 } from '../math/utils';
 import { Mapper } from '../utils/mapper';
-import { Cost, CostFn, GeneratorInstance } from './Generator';
+import { worldSpaceVectors } from '../utils/vectors';
+import { Cost, CostFn, Generator, GeneratorInstance, SpawnPoint } from './Generator';
 import { Node } from './Node';
 
 import 'bezier-js';
@@ -11,6 +12,7 @@ import { minBy, range } from 'lodash';
 type Closest = {
     curve: GuidingCurve;
     point: BezierJs.Projection;
+    guidingVector: vec3;
 };
 
 /**
@@ -74,6 +76,9 @@ export class GuidingVectors implements CostFn {
 
     private vectors: GuidingCurve[];
     private nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();
+    private expectedVectors: Map<string, vec4> = new Map<string, vec4>();
+    private spawnPointVectors: Map<SpawnPoint, vec4> = new Map<SpawnPoint, vec4>();
+    private spawnPointClosests: Map<SpawnPoint, Closest> = new Map<SpawnPoint, Closest>();
 
     /**
      * @param {BezierJs.Bezier[]} guidingVectors The Bezier paths that will be used to guide the
@@ -101,18 +106,18 @@ export class GuidingVectors implements CostFn {
                     field.push(x, y, z);
 
                     const closest = this.closest(vec4.fromValues(x, y, z, 1));
-                    const vector = <coord>closest.curve.bezier.derivative(<number>closest.point.t);
 
                     // Make the vector as long as step/2
-                    const length = Math.sqrt(
-                        vector.x * vector.x + vector.y * vector.y + vector.z * vector.z
-                    );
-                    vector.x *= step / 2 / length;
-                    vector.y *= step / 2 / length;
-                    vector.z *= step / 2 / length;
+                    closest.guidingVector[0] *= step / 2;
+                    closest.guidingVector[1] *= step / 2;
+                    closest.guidingVector[2] *= step / 2;
 
                     // Add second point: original point plus vector
-                    field.push(x + vector.x, y + vector.y, z + vector.z);
+                    field.push(
+                        x + closest.guidingVector[0],
+                        y + closest.guidingVector[1],
+                        z + closest.guidingVector[2]
+                    );
                 });
             });
         });
@@ -147,6 +152,8 @@ export class GuidingVectors implements CostFn {
         );
 
         let totalCost = instance.getCost().realCost;
+        let lastClosest: Closest | null = null;
+        let lastLocation: vec3 | null = null;
 
         // For each added shape and each influence point, add the resulting cost to the
         // instance's existing cost.
@@ -160,6 +167,7 @@ export class GuidingVectors implements CostFn {
                 localToGlobalTransform
             );
             this.nodeLocations.set(node, globalPosition);
+            lastLocation = vec3From4(globalPosition);
 
             // If the node has a parent that isn't yet in the cache, add it
             if (node.parent !== null && !this.nodeLocations.has(node.parent)) {
@@ -183,45 +191,146 @@ export class GuidingVectors implements CostFn {
 
             // Find the closest point on a guiding curve
             const closest = this.closest(parentPosition);
+            lastClosest = closest;
 
-            // Compare the new structure's vector with the direction vector for the curve point
-            const guidingVector = Mapper.coordToVector(<coord>closest.curve.bezier.derivative(
-                <number>closest.point.t
-            ));
-            vec3.normalize(guidingVector, guidingVector);
-
-            const alignmentCost =
-                (-vec3.dot(guidingVector, vec3From4(vector)) + closest.curve.alignmentOffset) *
-                closest.curve.alignmentMultiplier;
-
-            // Add cost for the distance away from the curve
-            const closestPoint = vec3ToVector(Mapper.coordToVector(<coord>closest.point));
-            const distance = vec4.distance(closestPoint, parentPosition);
-
-            // Evaluate distance cost polynomial using Horner's method
-            let distanceCost = 0;
-            for (let power = 2; power >= 0; power -= 1) {
-                distanceCost = closest.curve.distanceMultiplier[power] + distanceCost * distance;
-            }
-
-            totalCost += alignmentCost + distanceCost;
+            totalCost += this.computeCost(closest, vector, vec3From4(parentPosition));
         });
 
-        return { realCost: totalCost, heuristicCost: 0 };
+        let heuristicCost = 0;
+        if (lastClosest !== null) {
+            instance.getSpawnPoints().forEach((spawnPoint: SpawnPoint) => {
+                heuristicCost += this.computeCost(
+                    this.getOrCreateSpawnPointClosest(spawnPoint),
+                    this.getOrCreateSpawnPointVector(instance.generator, spawnPoint),
+                    <vec3>lastLocation
+                );
+            });
+        }
+
+        return { realCost: totalCost, heuristicCost };
+    }
+
+    /**
+     * Computes the cost for a given piece of added structure.
+     *
+     * @param {Closest} closest Information about the curve closest to the base of the parent.
+     * @param {vec4} added The direction vector for the added structure.
+     * @param {vec3} parentPosition The position of the parent that the added structure was
+     * attached to.
+     * @returns {number} The cost, given the above.
+     */
+    private computeCost(closest: Closest, added: vec4, parentPosition: vec3): number {
+        const distance = vec3.distance(Mapper.coordToVector(<coord>closest.point), parentPosition);
+
+        // Evaluate distance cost polynomial using Horner's method
+        let distanceCost = 0;
+        for (let power = 2; power >= 0; power -= 1) {
+            distanceCost = closest.curve.distanceMultiplier[power] + distanceCost * distance;
+        }
+
+        // Add cost for vector alignment
+        const alignmentCost =
+            (-vec3.dot(closest.guidingVector, vec3From4(added)) + closest.curve.alignmentOffset) *
+            closest.curve.alignmentMultiplier;
+
+        return alignmentCost + distanceCost;
+    }
+
+    /**
+     * Given a spawn point, computes and stores the closest point on the guiding curves for
+     * that point.
+     */
+    private getOrCreateSpawnPointClosest(spawnPoint: SpawnPoint): Closest {
+        let closest = this.spawnPointClosests.get(spawnPoint);
+
+        if (closest === undefined) {
+            const localToGlobalTransform = spawnPoint.at.node.localToGlobalTransform();
+            const point = vec4.fromValues(0, 0, 0, 1);
+            vec4.transformMat4(point, point, localToGlobalTransform);
+
+            closest = this.closest(point);
+
+            this.spawnPointClosests.set(spawnPoint, closest);
+        }
+
+        return closest;
+    }
+
+    /**
+     * Given a spawn point and a generator, computes the average direction vector coming from that
+     * spawn point.
+     */
+    private getOrCreateSpawnPointVector(generator: Generator, spawnPoint: SpawnPoint): vec4 {
+        let vector = this.spawnPointVectors.get(spawnPoint);
+
+        if (vector === undefined) {
+            const expectedVector = this.getOrCreateExpectedVector(generator, spawnPoint.component);
+            const localToGlobalTransform = spawnPoint.at.node.localToGlobalTransform();
+            vector = vec4.transformMat4(vec4.create(), expectedVector, localToGlobalTransform);
+
+            // Cache spawn point direction vector
+            this.spawnPointVectors.set(spawnPoint, vector);
+        }
+
+        return vector;
+    }
+
+    /**
+     * Create an average direction vector that will be generated by a component.
+     */
+    private getOrCreateExpectedVector(generator: Generator, component: string): vec4 {
+        let vector = this.expectedVectors.get(component);
+
+        if (vector === undefined) {
+            vector = vec4.fromValues(0, 0, 0, 0);
+
+            // Generate structure four times starting from the given component
+            let totalSamples = 0;
+            range(4).forEach(() => {
+                worldSpaceVectors(generator, component).forEach((sample: vec4) => {
+                    vec4.add(<vec4>vector, <vec4>vector, sample);
+                    totalSamples += 1;
+                });
+            });
+
+            // Average by the total number of samples
+            if (totalSamples > 0) {
+                vec4.scale(vector, vector, 1 / totalSamples);
+            }
+
+            this.expectedVectors.set(component, vector);
+        }
+
+        return vector;
     }
 
     /**
      * Returns the closest point on any of the target curves to an input point.
      */
     private closest(point: vec4): Closest {
-        return <Closest>minBy(
+        type PartialClosest = {
+            curve: GuidingCurve;
+            point: BezierJs.Projection;
+        };
+
+        const closestPoint = <PartialClosest>minBy(
             this.vectors.map((c: GuidingCurve) => {
                 return {
                     curve: c,
                     point: c.bezier.project(Mapper.vectorToCoord(vec3From4(point)))
                 };
             }),
-            (c: Closest) => c.point.d
+            (c: PartialClosest) => c.point.d
         );
+
+        const guidingVector = Mapper.coordToVector(<coord>closestPoint.curve.bezier.derivative(
+            <number>closestPoint.point.t
+        ));
+        vec3.normalize(guidingVector, guidingVector);
+
+        return {
+            ...closestPoint,
+            guidingVector
+        };
     }
 }

@@ -49,7 +49,7 @@ export function worldSpaceVectors(generator: Generator, start: string): vec4[] {
 
     // Grow ten times to get a range of possibly direct, possibly indirect children
     range(10).forEach(() => {
-        instance.growIfPossible(false, (added: Node[]) => {
+        instance.growIfPossible(true, false, (added: Node[]) => {
             // Just get the added structure
             const addedStructure: Node[] = [];
             added.forEach((n: Node) =>

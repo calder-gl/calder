@@ -42,7 +42,7 @@ export const emptyCost: Cost = { realCost: 0, heuristicCost: 0 };
  * you can just compute the incremental cost and add it to the previous cost, `instance.getCost()`.
  */
 export interface CostFn {
-    getCost(instance: GeneratorInstance, nodes: Node[]): Cost;
+    getCost(instance: GeneratorInstance, nodes: Node[], useHeuristic: boolean): Cost;
 }
 
 /**
@@ -151,7 +151,7 @@ export class GeneratorInstance {
     /**
      * Grows this instance, if possible, until a new shape is added.
      */
-    public growIfPossible(onAdded?: (nodes: Node[]) => void) {
+    public growIfPossible(useHeuristic: boolean = false, onAdded?: (nodes: Node[]) => void) {
         const originalLength = this.model.nodes.length;
 
         let choiceProbability = 1;
@@ -180,7 +180,7 @@ export class GeneratorInstance {
         }
 
         // Recompute the cost
-        this.cost = this.costFn.getCost(this, added);
+        this.cost = this.costFn.getCost(this, added, useHeuristic);
 
         // Update probability
         this.probability *= choiceProbability;
@@ -322,25 +322,20 @@ export class Generator {
      * @param {string} start The name of the rule to start generating from.
      * @param {number} sosmcDepth How many iterations to run before stopping SOSMC.
      * @param {number} finalDepth How many iterations to run the final sample to afterward.
-     * @param {number} samples How many samples to look at in parallel.
+     * @param {number | ((generation: number) => number)} samples How many samples to look at in
+     * parallel.
      * @param {CostFn} costFn A function used to measure the cost of each sample.
-     * @param {number} initialHeuristicScale A multiplier for the heuristic in the first
-     * generation.
-     * @param {number} finalHeuristicScale A multiplier for the heuristic in the final generation;
-     * generations in between will scale linearly.
-     * @param {number} finalHeuristicTime The percent time through the generation at which the
-     * heuristic scale reaches its final value.
+     * @param {number | ((generation: number) => number)} heuristicScale A multiplier for the
+     * heuristic in each generation.
      * @returns {Model} The model that was generated.
      */
     public generateSOSMC(params: {
         start: string;
         sosmcDepth?: number;
         finalDepth?: number;
-        samples?: number;
+        samples?: number | ((generation: number) => number);
         costFn: CostFn;
-        initialHeuristicScale?: number;
-        finalHeuristicScale?: number;
-        finalHeuristicTime?: number;
+        heuristicScale?: number | ((generation: number) => number);
         /**
          * For debugging, a callback can be passed in so that every sample in the final
          * generation can be examined.
@@ -353,25 +348,28 @@ export class Generator {
             finalDepth = 100,
             samples = 50,
             costFn,
-            initialHeuristicScale = 0,
-            finalHeuristicScale = 0,
-            finalHeuristicTime = 1,
+            heuristicScale,
             iterationHook
         } = params;
-        let instances = range(samples).map(() => new GeneratorInstance(this, costFn));
+        const getSamples = (generation: number) =>
+            samples instanceof Function ? samples(generation) : samples;
+        const getHeuristicScale = (generation: number) =>
+            heuristicScale instanceof Function ? heuristicScale(generation) : heuristicScale;
+
+        let instances = range(getSamples(0)).map(() => new GeneratorInstance(this, costFn));
 
         // Seed instances with starting state
         instances.forEach((instance: GeneratorInstance) => instance.initialize(start));
 
         range(sosmcDepth).forEach((iteration: number) => {
             // Linearly interpolate between the initial and final scale values
-            const heuristicScale =
-                Math.max(1, iteration / ((sosmcDepth - 1) * finalHeuristicTime)) *
-                    (finalHeuristicScale - initialHeuristicScale) +
-                initialHeuristicScale;
+            const currentHeuristicScale = getHeuristicScale(iteration);
+            const useHeuristic = currentHeuristicScale === 0;
 
             // Step 1: grow samples
-            instances.forEach((instance: GeneratorInstance) => instance.growIfPossible());
+            instances.forEach((instance: GeneratorInstance) =>
+                instance.growIfPossible(useHeuristic)
+            );
 
             // Step 2: if there will be more iterations, do a weighted resample
             if (iteration + 1 !== sosmcDepth) {
@@ -381,13 +379,13 @@ export class Generator {
 
                 const totalWeight = instances.reduce(
                     (accum: number, instance: GeneratorInstance) => {
-                        return accum + instance.getWeight(heuristicScale);
+                        return accum + instance.getWeight(currentHeuristicScale);
                     },
                     0
                 );
 
                 // Re-pick instances from the previous set, according to their weights
-                instances = instances.map(() => {
+                instances = range(getSamples(iteration + 1)).map(() => {
                     // Generate a random number in [0, totalWeight)
                     let sample = this.random() * totalWeight;
 
@@ -398,7 +396,7 @@ export class Generator {
                     let i = 0;
                     while (sample > 0 && i < instances.length - 1) {
                         picked = instances[i];
-                        sample -= instances[i].getWeight(heuristicScale);
+                        sample -= instances[i].getWeight(currentHeuristicScale);
                         i += 1;
                     }
 
@@ -418,7 +416,7 @@ export class Generator {
             instance.getCost()
         );
         range(0, Math.max(0, finalDepth - sosmcDepth)).forEach(() =>
-            finalInstance.growIfPossible()
+            finalInstance.growIfPossible(false)
         );
 
         return finalInstance.getModel();

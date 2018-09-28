@@ -36,7 +36,7 @@ export class FillVolume implements CostFn {
         );
     }
 
-    public getCost(instance: GeneratorInstance, added: Node[]): Cost {
+    public getCost(instance: GeneratorInstance, added: Node[], useHeuristic: boolean): Cost {
         // We will cache grids based on the last node that was added to a model. Since nodes are
         // added to the end of a model's node list, if n nodes are new in the current model
         // compared to its parent, then the parent grid will be indexed by the nth-from-last
@@ -72,20 +72,25 @@ export class FillVolume implements CostFn {
 
         this.gridCache.set(instance.getModel().latest(), grid);
 
-        const heuristicGrid = { ...grid };
-        instance.getSpawnPoints().forEach((spawnPoint: SpawnPoint) => {
-            const aabb = this.getOrCreateExpectedVolume(instance.generator, spawnPoint.component);
-            this.addAABBToGrid(
-                worldSpaceAABB(spawnPoint.at.node, aabb),
-                heuristicGrid,
-                (point: string) =>
-                    (heuristicCost +=
-                        this.cellSize *
-                        this.cellSize *
-                        this.cellSize *
-                        (this.targetCoords[point] ? -1 : 1))
-            );
-        });
+        if (useHeuristic) {
+            const heuristicGrid = { ...grid };
+            instance.getSpawnPoints().forEach((spawnPoint: SpawnPoint) => {
+                const aabb = this.getOrCreateExpectedVolume(
+                    instance.generator,
+                    spawnPoint.component
+                );
+                this.addAABBToGrid(
+                    worldSpaceAABB(spawnPoint.at.node, aabb),
+                    heuristicGrid,
+                    (point: string) =>
+                        (heuristicCost +=
+                            this.cellSize *
+                            this.cellSize *
+                            this.cellSize *
+                            (this.targetCoords[point] ? -1 : 1))
+                );
+            });
+        }
 
         return { realCost: instance.getCost().realCost + incrementalCost, heuristicCost };
     }

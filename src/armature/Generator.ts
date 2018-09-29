@@ -54,7 +54,8 @@ export class GeneratorInstance {
     private costFn: CostFn;
     private cost: Cost = emptyCost;
     private probability: number = 1;
-    private spawnPoints: SpawnPoint[] = [];
+    private skeletonSpawnPoints: SpawnPoint[] = [];
+    private postSkeletonSpawnPoints: SpawnPoint[] = [];
     private random: RandomGenerator = Math.random;
 
     /**
@@ -87,7 +88,8 @@ export class GeneratorInstance {
         cloned.model = this.model.clone();
         cloned.cost = this.cost;
         cloned.probability = this.probability;
-        cloned.spawnPoints = [...this.spawnPoints];
+        cloned.skeletonSpawnPoints = [...this.skeletonSpawnPoints];
+        cloned.postSkeletonSpawnPoints = [...this.postSkeletonSpawnPoints];
 
         return cloned;
     }
@@ -103,7 +105,14 @@ export class GeneratorInstance {
      * @returns {SpawnPoint[]} The currently open spawn points that have yet to be generated from.
      */
     public getSpawnPoints(): SpawnPoint[] {
-        return this.spawnPoints;
+        return this.skeletonSpawnPoints;
+    }
+
+    /**
+     * @returns {SpawnPoint[]} The spawn points that are to be used after optimization is completed.
+     */
+    public getPostSkeletonSpawnPoints(): SpawnPoint[] {
+        return this.postSkeletonSpawnPoints;
     }
 
     /**
@@ -145,23 +154,33 @@ export class GeneratorInstance {
      * spawn it.
      */
     public addDetail(spawnPoint: SpawnPoint) {
-        this.spawnPoints.push(spawnPoint);
+        if (this.generator.postSkeletonComponentNames.has(spawnPoint.component)) {
+            this.postSkeletonSpawnPoints.push(spawnPoint);
+        } else {
+            this.skeletonSpawnPoints.push(spawnPoint);
+        }
     }
 
     /**
      * Grows this instance, if possible, until a new shape is added.
      */
-    public growIfPossible(useHeuristic: boolean = false, onAdded?: (nodes: Node[]) => void) {
+    public growIfPossible(
+        skeleton: boolean,
+        useHeuristic: boolean = false,
+        onAdded?: (nodes: Node[]) => void
+    ) {
         const originalLength = this.model.nodes.length;
 
         let choiceProbability = 1;
 
-        while (this.model.nodes.length === originalLength && this.spawnPoints.length > 0) {
+        const spawnPoints = skeleton ? this.skeletonSpawnPoints : this.postSkeletonSpawnPoints;
+
+        while (this.model.nodes.length === originalLength && spawnPoints.length > 0) {
             // Remove a random spawn point from the list of active points, updating the probability
             // given the number of choices we have
-            choiceProbability /= this.spawnPoints.length;
-            const spawnPoint = this.spawnPoints.splice(
-                Math.floor(this.random() * this.spawnPoints.length),
+            choiceProbability /= spawnPoints.length;
+            const spawnPoint = spawnPoints.splice(
+                Math.floor(this.random() * spawnPoints.length),
                 1
             )[0];
 
@@ -200,8 +219,19 @@ export class GeneratorInstance {
 
         // Run `depth` rounds of generation
         range(depth).forEach(() => {
-            this.growIfPossible();
+            this.growIfPossible(true);
         });
+
+        // Grow all non-skeleton spawn points
+        while (this.skeletonSpawnPoints.length > 0) {
+            const spawnPoint: SpawnPoint = <SpawnPoint>this.skeletonSpawnPoints.pop();
+            // TODO: Throw an error if generator function not found in `wrapUpRules`
+            this.generator.wrapUpRules[spawnPoint.component](spawnPoint.at, this);
+        }
+
+        while (this.postSkeletonSpawnPoints.length > 0) {
+            this.growIfPossible(false);
+        }
     }
 
     /**
@@ -213,7 +243,8 @@ export class GeneratorInstance {
         this.cost = emptyCost;
 
         // Clear spawn points
-        this.spawnPoints.length = 0;
+        this.skeletonSpawnPoints.length = 0;
+        this.postSkeletonSpawnPoints.length = 0;
 
         // Create initial spawn point
         this.model = new Model([new Node()]);
@@ -232,8 +263,23 @@ export class GeneratorInstance {
  * definition for the same rule.
  */
 export class Generator {
+    public readonly wrapUpRules: { [name: string]: GeneratorFn } = {};
+    public readonly postSkeletonComponentNames: Set<string> = new Set<string>();
     private rules: { [name: string]: RuleInfo } = {};
     private random: RandomGenerator = Math.random;
+
+    /**
+     * Defines a generator function that adds a component with `name` at the root of the spawn
+     * point.
+     *
+     * @param {string} name The name of the component being generated.
+     * @returns {Generator} The current generator, so that more methods can be chained.
+     */
+    public static replaceWith(name: string): GeneratorFn {
+        return (root: Point, instance: GeneratorInstance) => {
+            instance.addDetail({ component: name, at: root });
+        };
+    }
 
     /**
      * Define a component to procedurally generate a component of a struture. All components defined
@@ -302,6 +348,54 @@ export class Generator {
     }
 
     /**
+     * Replaces the rule for a component `name` to be `generator` instead of its initial definition.
+     * The `name` should also be used in `thenComplete`.
+     *
+     * @param {string} name The name of a defined component.
+     * @param {GeneratorFn} generator A function that takes in a spawn point and generates
+     * geometry at that point.
+     * @returns {Generator} The current generator, so that more methods can be chained.
+     */
+    public wrapUp(name: string, generator: GeneratorFn): Generator {
+        this.wrapUpRules[name] = generator;
+
+        return this;
+    }
+
+    /**
+     * Calls `wrapUp` on the components in the `names` list to replace the rules to with `generator`.
+     *
+     * @param {string[]} names A list of component names that were previously defined.
+     * @param {GeneratorFn} generator A function that takes in a spawn point and generates
+     * geometry at that point.
+     * @returns {Generator} The current generator, so that more methods can be chained.
+     */
+    public wrapUpMany(names: string[], generator: GeneratorFn): Generator {
+        names.forEach((name: string) => {
+            this.wrapUp(name, generator);
+        });
+
+        return this;
+    }
+
+    /**
+     * Terminates a the generation by adding defined components to the remaining spawn points.
+     *
+     * @param {string[]} componentNames The names of the components that can be created at a spawn
+     * point.
+     * @returns {Generator} The current generator, so that more methods can be chained.
+     */
+    public thenComplete(componentNames: string[]): Generator {
+        this.postSkeletonComponentNames.clear();
+
+        componentNames.forEach((name: string) => {
+            this.postSkeletonComponentNames.add(name);
+        });
+
+        return this;
+    }
+
+    /**
      * Generates a single model.
      *
      * @param {string} start The name of the rule to start generating from.
@@ -321,7 +415,6 @@ export class Generator {
      *
      * @param {string} start The name of the rule to start generating from.
      * @param {number} sosmcDepth How many iterations to run before stopping SOSMC.
-     * @param {number} finalDepth How many iterations to run the final sample to afterward.
      * @param {number | ((generation: number) => number)} samples How many samples to look at in
      * parallel.
      * @param {CostFn} costFn A function used to measure the cost of each sample.
@@ -332,7 +425,6 @@ export class Generator {
     public generateSOSMC(params: {
         start: string;
         sosmcDepth?: number;
-        finalDepth?: number;
         samples?: number | ((generation: number) => number);
         costFn: CostFn;
         heuristicScale?: number | ((generation: number) => number);
@@ -345,7 +437,6 @@ export class Generator {
         const {
             start,
             sosmcDepth = 10,
-            finalDepth = 100,
             samples = 50,
             costFn,
             heuristicScale,
@@ -368,7 +459,7 @@ export class Generator {
 
             // Step 1: grow samples
             instances.forEach((instance: GeneratorInstance) =>
-                instance.growIfPossible(useHeuristic)
+                instance.growIfPossible(true, useHeuristic)
             );
 
             // Step 2: if there will be more iterations, do a weighted resample
@@ -415,9 +506,14 @@ export class Generator {
         const finalInstance = <GeneratorInstance>minBy(instances, (instance: GeneratorInstance) =>
             instance.getCost()
         );
-        range(0, Math.max(0, finalDepth - sosmcDepth)).forEach(() =>
-            finalInstance.growIfPossible(false)
-        );
+
+        while (finalInstance.getSpawnPoints().length > 0) {
+            const spawnPoint: SpawnPoint = <SpawnPoint>finalInstance.getSpawnPoints().pop();
+            this.wrapUpRules[spawnPoint.component](spawnPoint.at, finalInstance);
+        }
+        while (finalInstance.getPostSkeletonSpawnPoints().length > 0) {
+            finalInstance.growIfPossible(false, false);
+        }
 
         return finalInstance.getModel();
     }

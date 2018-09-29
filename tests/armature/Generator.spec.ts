@@ -17,6 +17,7 @@ describe('Generator', () => {
 
                 instance.addDetail({ component: 'block', at: node.point('tip') });
             })
+            .wrapUp('block', () => {})
             .generate({ start: 'block', depth: 5 });
 
         expect(tower.nodes.length).toBe(6); // Root plus five blocks

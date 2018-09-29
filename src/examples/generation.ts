@@ -1,6 +1,7 @@
 import {
     Armature,
     CostFunction,
+    Generator,
     GeneratorInstance,
     Light,
     Material,
@@ -92,7 +93,9 @@ treeGen
     })
     .maybe('maybeBranch', (root: Point, instance: GeneratorInstance) => {
         instance.addDetail({ component: 'branch', at: root });
-    });
+    })
+    .wrapUpMany(['branch', 'branchOrLeaf', 'maybeBranch'], Generator.replaceWith('leaf'))
+    .thenComplete(['leaf']);
 
 const scale: [number, number, number] = [0, 0, 100];
 const guidingVectors = CostFunction.guidingVectors([
@@ -132,7 +135,6 @@ const start = new Date().getTime();
 const tree = treeGen.generateSOSMC({
     start: 'branch',
     sosmcDepth: 100,
-    finalDepth: 100,
     samples: (generation: number) => 80 - generation / 100 * 70,
     heuristicScale: (generation: number) => {
         if (generation <= 50) {

@@ -154,7 +154,7 @@ export class GeneratorInstance {
      * spawn it.
      */
     public addDetail(spawnPoint: SpawnPoint) {
-        if (this.generator.notSkeletonComponentNames.has(spawnPoint.component)) {
+        if (this.generator.postSkeletonComponentNames.has(spawnPoint.component)) {
             this.postSkeletonSpawnPoints.push(spawnPoint);
         } else {
             this.skeletonSpawnPoints.push(spawnPoint);
@@ -260,7 +260,7 @@ export class GeneratorInstance {
  */
 export class Generator {
     public readonly wrapUpRules: { [name: string]: GeneratorFn } = {};
-    public readonly notSkeletonComponentNames: Set<string> = new Set<string>();
+    public readonly postSkeletonComponentNames: Set<string> = new Set<string>();
     private rules: { [name: string]: RuleInfo } = {};
     private random: RandomGenerator = Math.random;
 
@@ -382,10 +382,10 @@ export class Generator {
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
     public thenComplete(componentNames: string[]): Generator {
-        this.notSkeletonComponentNames.clear();
+        this.postSkeletonComponentNames.clear();
 
         componentNames.forEach((name: string) => {
-            this.notSkeletonComponentNames.add(name);
+            this.postSkeletonComponentNames.add(name);
         });
 
         return this;

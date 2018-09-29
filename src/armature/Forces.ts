@@ -30,7 +30,7 @@ export class Forces implements CostFn {
         });
     }
 
-    public getCost(instance: GeneratorInstance, added: Node[]): Cost {
+    public getCost(instance: GeneratorInstance, added: Node[], _: boolean): Cost {
         // Out of the added nodes, just get the geometry nodes
         const addedGeometry: GeometryNode[] = [];
         added.forEach((n: Node) =>

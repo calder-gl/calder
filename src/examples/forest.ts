@@ -128,8 +128,7 @@ const tree = treeGen.generateSOSMC({
     sosmcDepth: 200,
     finalDepth: 200,
     samples: 500,
-    initialHeuristicScale: 0.02,
-    finalHeuristicScale: 0.02,
+    heuristicScale: 0.02,
     costFn: guidingVectors
 });
 

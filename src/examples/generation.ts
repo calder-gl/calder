@@ -128,17 +128,24 @@ result.style.display = 'none';
 
 const generationInstances: GeneratorInstance[][] = [];
 
+const start = new Date().getTime();
 const tree = treeGen.generateSOSMC({
     start: 'branch',
     sosmcDepth: 100,
     finalDepth: 100,
-    samples: 100,
+    samples: (generation: number) => 80 - generation / 100 * 70,
+    heuristicScale: (generation: number) => {
+        if (generation <= 50) {
+            return 0.01 - generation / 50 * 0.01;
+        } else {
+            return 0;
+        }
+    },
     costFn: guidingVectors,
-    initialHeuristicScale: 0.01,
-    finalHeuristicScale: 0,
-    finalHeuristicTime: 0.5,
     iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
 });
+
+const total = (new Date().getTime() - start) / 1000;
 
 result.innerText = '';
 
@@ -154,6 +161,10 @@ generationInstances.forEach((instances: GeneratorInstance[], index: number) => {
 });
 
 document.body.appendChild(result);
+
+const time = document.createElement('p');
+time.innerText = `Generated in ${total.toFixed(4)}s`;
+document.body.appendChild(time);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer

@@ -142,7 +142,7 @@ export class GuidingVectors implements CostFn {
         });
     }
 
-    public getCost(instance: GeneratorInstance, added: Node[]): Cost {
+    public getCost(instance: GeneratorInstance, added: Node[], useHeuristic: boolean): Cost {
         // Out of the added nodes, just get the structure nodes
         const addedStructure: Node[] = [];
         added.forEach((n: Node) =>
@@ -197,14 +197,16 @@ export class GuidingVectors implements CostFn {
         });
 
         let heuristicCost = 0;
-        if (lastClosest !== null) {
-            instance.getSpawnPoints().forEach((spawnPoint: SpawnPoint) => {
-                heuristicCost += this.computeCost(
-                    this.getOrCreateSpawnPointClosest(spawnPoint),
-                    this.getOrCreateSpawnPointVector(instance.generator, spawnPoint),
-                    <vec3>lastLocation
-                );
-            });
+        if (useHeuristic) {
+            if (lastClosest !== null) {
+                instance.getSpawnPoints().forEach((spawnPoint: SpawnPoint) => {
+                    heuristicCost += this.computeCost(
+                        this.getOrCreateSpawnPointClosest(spawnPoint),
+                        this.getOrCreateSpawnPointVector(instance.generator, spawnPoint),
+                        <vec3>lastLocation
+                    );
+                });
+            }
         }
 
         return { realCost: totalCost, heuristicCost };

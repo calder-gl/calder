@@ -164,7 +164,11 @@ export class GeneratorInstance {
     /**
      * Grows this instance, if possible, until a new shape is added.
      */
-    public growIfPossible(skeleton: boolean, useHeuristic: boolean = false, onAdded?: (nodes: Node[]) => void) {
+    public growIfPossible(
+        skeleton: boolean,
+        useHeuristic: boolean = false,
+        onAdded?: (nodes: Node[]) => void
+    ) {
         const originalLength = this.model.nodes.length;
 
         let choiceProbability = 1;

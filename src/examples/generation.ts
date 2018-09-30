@@ -3,8 +3,10 @@ import {
     CostFunction,
     Generator,
     GeneratorInstance,
+    GeneratorStats,
     Light,
     Material,
+    Model,
     Node,
     Point,
     Renderer,
@@ -131,23 +133,33 @@ result.style.display = 'none';
 
 const generationInstances: GeneratorInstance[][] = [];
 
-const start = new Date().getTime();
-const tree = treeGen.generateSOSMC({
-    start: 'branch',
-    sosmcDepth: 100,
-    samples: (generation: number) => 80 - generation / 100 * 70,
-    heuristicScale: (generation: number) => {
-        if (generation <= 50) {
-            return 0.01 - generation / 50 * 0.01;
-        } else {
-            return 0;
-        }
-    },
-    costFn: guidingVectors,
-    iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
-});
+const time = document.createElement('p');
 
-const total = (new Date().getTime() - start) / 1000;
+let tree: Model | null = null;
+treeGen
+    .generateSOSMC(
+        {
+            start: 'branch',
+            sosmcDepth: 100,
+            samples: (generation: number) => 80 - generation / 100 * 70,
+            heuristicScale: (generation: number) => {
+                if (generation <= 50) {
+                    return 0.01 - generation / 50 * 0.01;
+                } else {
+                    return 0;
+                }
+            },
+            costFn: guidingVectors,
+            iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
+        },
+        1 / 30
+    )
+    .then((model: Model, { realTime, cpuTime }: GeneratorStats) => {
+        tree = model;
+        time.innerText = `Generated in ${realTime.toFixed(4)}s real time, ${cpuTime.toFixed(
+            4
+        )}s CPU time`;
+    });
 
 result.innerText = '';
 
@@ -164,15 +176,12 @@ generationInstances.forEach((instances: GeneratorInstance[], index: number) => {
 
 document.body.appendChild(result);
 
-const time = document.createElement('p');
-time.innerText = `Generated in ${total.toFixed(4)}s`;
-document.body.appendChild(time);
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 document.body.appendChild(renderer.stage);
+document.body.appendChild(time);
 
 renderer.camera.lookAt({ x: 0, y: 1, z: 0 });
 
@@ -188,7 +197,7 @@ const draw = () => {
     //tree.root().setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 
     return {
-        objects: [tree],
+        objects: tree === null ? [] : [tree],
         debugParams: {
             drawAxes: true,
             drawArmatureBones: false,
@@ -208,6 +217,10 @@ renderer.eachFrame(draw);
 const exportBtn = document.createElement('button');
 exportBtn.innerText = 'Export .obj';
 exportBtn.addEventListener('click', () => {
+    if (tree === null) {
+        return;
+    }
+
     const obj = tree.exportOBJ('calderExport', ambientLightColor);
 
     const link = document.createElement('a');

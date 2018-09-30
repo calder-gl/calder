@@ -6,6 +6,7 @@ import {
     GuidingVectors,
     Light,
     Material,
+    Model,
     Node,
     Point,
     Renderer,
@@ -126,13 +127,16 @@ const guidingVectors = CostFunction.guidingVectors([
 const guidingCurve = guidingVectors.generateGuidingCurve();
 const vectorField = guidingVectors.generateVectorField(8, 2);
 
-const tree = treeGen.generateSOSMC({
-    start: 'forest',
-    sosmcDepth: 200,
-    samples: 500,
-    heuristicScale: 0.02,
-    costFn: guidingVectors
-});
+let tree: Model | null = null;
+treeGen
+    .generateSOSMC({
+        start: 'forest',
+        sosmcDepth: 200,
+        samples: 500,
+        heuristicScale: 0.02,
+        costFn: guidingVectors
+    })
+    .then((model: Model) => (tree = model));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer
@@ -153,7 +157,7 @@ const draw = () => {
     });
 
     return {
-        objects: [tree],
+        objects: tree === null ? [] : [tree],
         debugParams: {
             drawAxes: true,
             drawArmatureBones: false,

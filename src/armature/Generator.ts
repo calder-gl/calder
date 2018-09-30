@@ -274,6 +274,11 @@ export type GeneratorStats = {
     cpuTime: number;
 };
 
+/**
+ * A class that controls the generation of a model using SOSMC. It schedules the optimization
+ * to be broken up into chunks that run within a given time budget per frame, allowing the UI
+ * to update. It can also be cancelled.
+ */
 export class GeneratorTask {
     private result: Model | undefined;
     private cancelled: boolean = false;

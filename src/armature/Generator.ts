@@ -339,13 +339,15 @@ export class GeneratorTask {
     }
 
     private finish(model: Model) {
-        if (this.onComplete !== undefined && this.result !== undefined) {
-            const stats: GeneratorStats = {
-                realTime: (new Date().getTime() - this.startTime) / 1000,
-                cpuTime: this.cpuTime
-            };
-            this.onComplete(model, stats);
+        if (this.onComplete === undefined || this.result === undefined) {
+            return;
         }
+
+        const stats: GeneratorStats = {
+            realTime: (new Date().getTime() - this.startTime) / 1000,
+            cpuTime: this.cpuTime
+        };
+        this.onComplete(model, stats);
     }
 }
 
@@ -526,6 +528,9 @@ export class Generator {
     // The star here means this is actually a generator function that returns a coroutine. Every
     // `yield` is a point where we can pause execution and resume it in the next frame if we've
     // gone over our framely time budget.
+    //
+    // The returned iterator's `next()` will return a `Model` if the optimization is complete,
+    // or `undefined` if it is still underway.
     public *generateSOSMCIterator(params: SOSMCParams): IterableIterator<Model | undefined> {
         const {
             start,

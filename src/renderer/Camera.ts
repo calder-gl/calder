@@ -7,11 +7,11 @@ import { Mapper } from '../utils/mapper';
  * a target for the camera to look at.
  */
 export class Camera {
-    private static readonly up: vec3 = vec3.fromValues(0, 1, 0);
-    private static readonly defaultDirection: vec3 = vec3.fromValues(0, 0, -1);
+    public static readonly up: vec3 = vec3.fromValues(0, 1, 0);
+    public static readonly defaultDirection: vec3 = vec3.fromValues(0, 0, -1);
 
-    private position: vec3 = vec3.fromValues(0, 0, 0);
-    private target: vec3 = vec3.copy(vec3.create(), Camera.defaultDirection);
+    public readonly position: vec3 = vec3.fromValues(0, 0, 0);
+    public readonly target: vec3 = vec3.copy(vec3.create(), Camera.defaultDirection);
 
     // `transform` is only updated when getTransform is called. The `dirty` flag is used to signal
     // that an update has occurred and the cached transform value needs to be recomputed.
@@ -26,6 +26,18 @@ export class Camera {
         const direction = vec3.subtract(vec3.create(), position, this.position);
         vec3.add(this.target, this.target, direction);
         vec3.copy(this.position, position);
+        this.dirty = true;
+    }
+
+    /**
+     * @param {amount} A number to scale the (target - position) vector by, which will then be added
+     * to the camera's position. This should not be exactly 1, because then the camera will be
+     * at the same location as the target and will no longer have a direction vector.
+     */
+    public moveTowardsTarget(amount: number) {
+        const direction = vec3.sub(vec3.create(), this.target, this.position);
+        vec3.scale(direction, direction, amount);
+        vec3.add(this.position, this.position, direction);
         this.dirty = true;
     }
 
@@ -73,9 +85,19 @@ export class Camera {
      */
     public rotate(rotation: quat) {
         const direction = vec3.subtract(vec3.create(), this.target, this.position);
-        vec3.normalize(direction, direction);
         vec3.transformQuat(direction, direction, rotation);
         vec3.add(this.target, this.position, direction);
+        this.dirty = true;
+    }
+
+    /**
+     * @param {quat} rotation A quaternion that will be applied to the camera's current rotation
+     * about its target.
+     */
+    public rotateAboutTarget(rotation: quat) {
+        const direction = vec3.subtract(vec3.create(), this.position, this.target);
+        vec3.transformQuat(direction, direction, rotation);
+        vec3.add(this.position, this.target, direction);
         this.dirty = true;
     }
 

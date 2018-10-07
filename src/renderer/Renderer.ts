@@ -275,6 +275,12 @@ export class Renderer {
         return this.lights;
     }
 
+    /**
+     * @param {GuidingCurveInfo[]} curves The curves to check.
+     * @param {{x: number; y: number}} cursor The location in screen space of the mouse cursor.
+     * @returns {number | null} The index of the guiding curve under the mouse cursor, if there
+     * is one, or null otherwise.
+     */
     public findCurveUnderCursor(
         curves: GuidingCurveInfo[],
         cursor: { x: number; y: number }

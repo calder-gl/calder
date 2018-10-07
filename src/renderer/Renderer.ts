@@ -275,14 +275,16 @@ export class Renderer {
         return this.lights;
     }
 
-    public findCurveUnderCursor(curves: GuidingCurveInfo[], cursor: {x: number; y: number}): number | null {
+    public findCurveUnderCursor(
+        curves: GuidingCurveInfo[],
+        cursor: { x: number; y: number }
+    ): number | null {
         let selectedIndex: number | null = null;
 
         // Use an offscreen framebuffer so the user doesn't see any of this happening
         this.pickingFramebuffer.use(() => {
-
             // Clear the buffer to the highest index to represent no curve
-            this.regl.clear({ depth: 1, color: [1, 1, 1, 1] })
+            this.regl.clear({ depth: 1, color: [1, 1, 1, 1] });
 
             // Draw the curves indices to the screen, thicker than usual to increase the
             // size of the clickable region
@@ -306,7 +308,7 @@ export class Renderer {
                 })
             );
 
-            // Read the one pixel from under the 
+            // Read the one pixel from under the
             const data = this.regl.read({
                 x: cursor.x,
                 y: this.height - cursor.y,
@@ -351,9 +353,8 @@ export class Renderer {
         window.requestAnimationFrame(draw);
     }
 
-    public pointInScreenSpace(point: coord): {x: number; y: number} {
-        const point3 = <coord>point;
-        const vector = vec4.set(tmpVec4, point3.x, point3.y, point3.z, 1);
+    public pointInScreenSpace(point: coord): { x: number; y: number } {
+        const vector = vec4.set(tmpVec4, point.x, point.y, point.z, 1);
 
         // Bring the point into camera space
         vec4.transformMat4(vector, vector, this.camera.getTransform());
@@ -365,7 +366,7 @@ export class Renderer {
         const x = (vector[0] / vector[3] + 1) / 2 * this.width;
         const y = (-vector[1] / vector[3] + 1) / 2 * this.height;
 
-        return {x, y};
+        return { x, y };
     }
 
     private drawCurve(curves: GuidingCurveInfo[]) {
@@ -389,7 +390,9 @@ export class Renderer {
 
     private drawSelectedCurveControls(curve: GuidingCurveInfo) {
         const points = curve.bezier.points;
-        const screenSpacePoints = points.map((point: BezierJs.Point) => this.pointInScreenSpace(<coord>point));
+        const screenSpacePoints = points.map((point: BezierJs.Point) =>
+            this.pointInScreenSpace(<coord>point)
+        );
 
         this.ctx2D.fillStyle = '#FFF';
         this.ctx2D.strokeStyle = '#F0F';
@@ -403,10 +406,9 @@ export class Renderer {
             this.ctx2D.stroke();
         });
 
-
         // Draw a circle for the control point handle
         const radius = 3;
-        screenSpacePoints.forEach((point: {x: number; y: number}) => {
+        screenSpacePoints.forEach((point: { x: number; y: number }) => {
             this.ctx2D.beginPath();
             this.ctx2D.arc(point.x, point.y, radius, 0, Math.PI * 2);
             this.ctx2D.stroke();

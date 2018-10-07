@@ -128,23 +128,22 @@ const curves = [
 const guidingVectors = CostFunction.guidingVectors(curves);
 
 const vectorField = guidingVectors.generateVectorField();
-const guidingCurves = guidingVectors.generateGuidingCurve().map((path: [number, number, number][], index: number) => {
-    return {
-        path,
-        selected: false,
-        bezier: curves[index].bezier
-    };
-});
+const guidingCurves = guidingVectors
+    .generateGuidingCurve()
+    .map((path: [number, number, number][], index: number) => {
+        return {
+            path,
+            selected: false,
+            bezier: curves[index].bezier
+        };
+    });
 
 renderer.stage.addEventListener('click', (event: MouseEvent) => {
     const boundingRect = renderer.stage.getBoundingClientRect();
-    const selectedIndex = renderer.findCurveUnderCursor(
-        guidingCurves,
-        {
-            x: event.clientX - boundingRect.left,
-            y: event.clientY - boundingRect.top
-        }
-    );
+    const selectedIndex = renderer.findCurveUnderCursor(guidingCurves, {
+        x: event.clientX - boundingRect.left,
+        y: event.clientY - boundingRect.top
+    });
 
     guidingCurves.forEach((curve: GuidingCurveInfo, index: number) => {
         curve.selected = index === selectedIndex;

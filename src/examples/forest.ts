@@ -125,13 +125,15 @@ const curves = [
 ];
 const guidingVectors = CostFunction.guidingVectors(curves);
 
-const guidingCurve = guidingVectors.generateGuidingCurve().map((path: [number, number, number][], index: number) => {
-    return {
-        path,
-        selected: false,
-        bezier: curves[index].bezier
-    };
-});
+const guidingCurve = guidingVectors
+    .generateGuidingCurve()
+    .map((path: [number, number, number][], index: number) => {
+        return {
+            path,
+            selected: false,
+            bezier: curves[index].bezier
+        };
+    });
 const vectorField = guidingVectors.generateVectorField(8, 2);
 
 let tree: Model | null = null;

@@ -4,7 +4,7 @@ export type GuidingCurveInfo = {
     path: [number, number, number][];
     selected: boolean;
     bezier: BezierJs.Bezier;
-}
+};
 
 /*
  * A collection of behaviours in Renderer that enable easier visual debugging of

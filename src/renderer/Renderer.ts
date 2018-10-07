@@ -3,6 +3,7 @@ import { mat4, vec3, vec4 } from 'gl-matrix';
 import REGL = require('regl');
 import { NodeRenderObject } from '../armature/NodeRenderObject';
 import {
+    coord,
     createDrawAxes,
     createDrawGuidingCurve,
     createDrawObject,
@@ -39,6 +40,8 @@ export type RendererParams = {
 
 const selectedColor = vec3.fromValues(1, 0, 1);
 const unselectedColor = vec3.fromValues(1, 1, 1);
+
+const tmpVec4 = vec4.create();
 
 /**
  * Manages all scene information and is responsible for rendering it to the screen
@@ -348,6 +351,23 @@ export class Renderer {
         window.requestAnimationFrame(draw);
     }
 
+    public pointInScreenSpace(point: coord): {x: number; y: number} {
+        const point3 = <coord>point;
+        const vector = vec4.set(tmpVec4, point3.x, point3.y, point3.z, 1);
+
+        // Bring the point into camera space
+        vec4.transformMat4(vector, vector, this.camera.getTransform());
+
+        // Bring the point into screen space
+        vec4.transformMat4(vector, vector, this.projectionMatrix);
+
+        // Bring into device coordinates
+        const x = (vector[0] / vector[3] + 1) / 2 * this.width;
+        const y = (-vector[1] / vector[3] + 1) / 2 * this.height;
+
+        return {x, y};
+    }
+
     private drawCurve(curves: GuidingCurveInfo[]) {
         this.drawGuidingCurve(
             curves.map((curve: GuidingCurveInfo) => {
@@ -360,6 +380,38 @@ export class Renderer {
                 };
             })
         );
+
+        const selectedCurve = curves.find((curve: GuidingCurveInfo) => curve.selected);
+        if (selectedCurve !== undefined) {
+            this.drawSelectedCurveControls(selectedCurve);
+        }
+    }
+
+    private drawSelectedCurveControls(curve: GuidingCurveInfo) {
+        const points = curve.bezier.points;
+        const screenSpacePoints = points.map((point: BezierJs.Point) => this.pointInScreenSpace(<coord>point));
+
+        this.ctx2D.fillStyle = '#FFF';
+        this.ctx2D.strokeStyle = '#F0F';
+        this.ctx2D.lineWidth = 3;
+
+        // Draw a line between endpoints and control points
+        [1, screenSpacePoints.length - 1].forEach((i: number) => {
+            this.ctx2D.beginPath();
+            this.ctx2D.moveTo(screenSpacePoints[i].x, screenSpacePoints[i].y);
+            this.ctx2D.lineTo(screenSpacePoints[i - 1].x, screenSpacePoints[i - 1].y);
+            this.ctx2D.stroke();
+        });
+
+
+        // Draw a circle for the control point handle
+        const radius = 3;
+        screenSpacePoints.forEach((point: {x: number; y: number}) => {
+            this.ctx2D.beginPath();
+            this.ctx2D.arc(point.x, point.y, radius, 0, Math.PI * 2);
+            this.ctx2D.stroke();
+            this.ctx2D.fill();
+        });
     }
 
     private drawField(field: Float32Array) {

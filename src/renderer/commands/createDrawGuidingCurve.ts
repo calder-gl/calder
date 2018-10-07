@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 // tslint:disable-next-line:import-name
 import REGL = require('regl');
 
@@ -12,6 +12,7 @@ interface Uniforms {
     projection: mat4;
     view: mat4;
     thickness: number;
+    color: vec3;
     screenSize: [number, number];
 }
 
@@ -29,6 +30,8 @@ export interface DrawGuidingCurveProps {
     cameraTransform: mat4;
     projectionMatrix: mat4;
     positions: [number, number, number][];
+    thickness: number;
+    color: vec3;
 }
 
 /**
@@ -63,8 +66,10 @@ export function createDrawGuidingCurve(
         frag: `
             precision mediump float;
 
+            uniform vec3 color;
+
             void main() {
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                gl_FragColor = vec4(color, 1.0);
             }
         `,
         attributes: {
@@ -93,7 +98,8 @@ export function createDrawGuidingCurve(
                 'projectionMatrix'
             ),
             view: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('cameraTransform'),
-            thickness: 8,
+            thickness: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('thickness'),
+            color: regl.prop<DrawGuidingCurveProps, keyof DrawGuidingCurveProps>('color'),
             screenSize: (context: REGL.DefaultContext) => [
                 context.viewportWidth,
                 context.viewportHeight

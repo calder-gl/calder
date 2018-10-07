@@ -4,6 +4,7 @@ import {
     Generator,
     GeneratorInstance,
     GeneratorStats,
+    GuidingCurveInfo,
     Light,
     Material,
     Model,
@@ -100,7 +101,7 @@ treeGen
     .thenComplete(['leaf']);
 
 const scale: [number, number, number] = [0, 0, 100];
-const guidingVectors = CostFunction.guidingVectors([
+const curves = [
     {
         bezier: new Bezier([
             { x: 0, y: 0, z: 0 },
@@ -123,10 +124,32 @@ const guidingVectors = CostFunction.guidingVectors([
         alignmentMultiplier: 500,
         alignmentOffset: 0.6
     }
-]);
+];
+const guidingVectors = CostFunction.guidingVectors(curves);
 
 const vectorField = guidingVectors.generateVectorField();
-const guidingCurve = guidingVectors.generateGuidingCurve();
+const guidingCurves = guidingVectors.generateGuidingCurve().map((path: [number, number, number][], index: number) => {
+    return {
+        path,
+        selected: false,
+        bezier: curves[index].bezier
+    };
+});
+
+renderer.stage.addEventListener('click', (event: MouseEvent) => {
+    const boundingRect = renderer.stage.getBoundingClientRect();
+    const selectedIndex = renderer.findCurveUnderCursor(
+        guidingCurves,
+        {
+            x: event.clientX - boundingRect.left,
+            y: event.clientY - boundingRect.top
+        }
+    );
+
+    guidingCurves.forEach((curve: GuidingCurveInfo, index: number) => {
+        curve.selected = index === selectedIndex;
+    });
+});
 
 const result = document.createElement('p');
 result.style.display = 'none';
@@ -202,7 +225,7 @@ const draw = () => {
             drawAxes: true,
             drawArmatureBones: false,
             drawVectorField: vectorField,
-            drawGuidingCurve: guidingCurve
+            drawGuidingCurve: guidingCurves
         }
     };
 };

@@ -110,7 +110,7 @@ treeGen
     .wrapUpMany(['branch', 'maybeBranch', 'branchOrLeaf'], Generator.replaceWith('leaf'))
     .thenComplete(['leaf']);
 
-const guidingVectors = CostFunction.guidingVectors([
+const curves = [
     {
         bezier: new Bezier([
             { x: 2, y: -1, z: 0 },
@@ -122,9 +122,16 @@ const guidingVectors = CostFunction.guidingVectors([
         alignmentMultiplier: 100,
         alignmentOffset: 0.85
     }
-]);
+];
+const guidingVectors = CostFunction.guidingVectors(curves);
 
-const guidingCurve = guidingVectors.generateGuidingCurve();
+const guidingCurve = guidingVectors.generateGuidingCurve().map((path: [number, number, number][], index: number) => {
+    return {
+        path,
+        selected: false,
+        bezier: curves[index].bezier
+    };
+});
 const vectorField = guidingVectors.generateVectorField(8, 2);
 
 let tree: Model | null = null;

@@ -3,6 +3,7 @@ import { mat4, vec3, vec4 } from 'gl-matrix';
 import REGL = require('regl');
 import { NodeRenderObject } from '../armature/NodeRenderObject';
 import {
+    coord,
     createDrawAxes,
     createDrawGuidingCurve,
     createDrawObject,
@@ -17,6 +18,7 @@ import {
     DrawGuidingCurveProps,
     DrawObjectProps,
     DrawVectorFieldProps,
+    GuidingCurveInfo,
     Light,
     Model,
     Node,
@@ -35,6 +37,11 @@ export type RendererParams = {
     ambientLightColor: Color;
     backgroundColor: Color;
 };
+
+const selectedColor = vec3.fromValues(1, 0, 1);
+const unselectedColor = vec3.fromValues(1, 1, 1);
+
+const tmpVec4 = vec4.create();
 
 /**
  * Manages all scene information and is responsible for rendering it to the screen
@@ -57,6 +64,7 @@ export class Renderer {
     private drawGuidingCurve: REGL.DrawCommand<REGL.DefaultContext, DrawGuidingCurveProps>;
     private lights: Light[];
     private ambientLight: vec3;
+    private pickingFramebuffer: REGL.Framebuffer2D;
 
     // Length four array representing an RGBA color
     private backgroundColorArray: [number, number, number, number];
@@ -140,6 +148,8 @@ export class Renderer {
         this.drawAxes = createDrawAxes(this.regl);
         this.drawVectorField = createDrawVectorField(this.regl);
         this.drawGuidingCurve = createDrawGuidingCurve(this.regl);
+
+        this.pickingFramebuffer = this.regl.framebuffer({ width: this.width, height: this.height });
     }
 
     public destroy() {
@@ -266,6 +276,63 @@ export class Renderer {
     }
 
     /**
+     * @param {GuidingCurveInfo[]} curves The curves to check.
+     * @param {{x: number; y: number}} cursor The location in screen space of the mouse cursor.
+     * @returns {number | null} The index of the guiding curve under the mouse cursor, if there
+     * is one, or null otherwise.
+     */
+    public findCurveUnderCursor(
+        curves: GuidingCurveInfo[],
+        cursor: { x: number; y: number }
+    ): number | null {
+        let selectedIndex: number | null = null;
+
+        // Use an offscreen framebuffer so the user doesn't see any of this happening
+        this.pickingFramebuffer.use(() => {
+            // Clear the buffer to the highest index to represent no curve
+            this.regl.clear({ depth: 1, color: [1, 1, 1, 1] });
+
+            // Draw the curves indices to the screen, thicker than usual to increase the
+            // size of the clickable region
+            this.drawGuidingCurve(
+                curves.map((curve: GuidingCurveInfo, index: number) => {
+                    // We want to see which curve is under the mouse pointer, so rather than render
+                    // its actual colour, we want to render its index. This means we need to pack
+                    // the curve index into a colour.
+                    // tslint:disable:no-bitwise
+                    const r = (index & 0xff) / 255;
+                    const g = ((index >> 8) & 0xff) / 255;
+                    const b = ((index >> 16) & 0xff) / 255;
+
+                    return {
+                        cameraTransform: this.camera.getTransform(),
+                        projectionMatrix: this.projectionMatrix,
+                        positions: curve.path,
+                        thickness: 40,
+                        color: vec3.fromValues(r, g, b)
+                    };
+                })
+            );
+
+            // Read the one pixel from under the
+            const data = this.regl.read({
+                x: cursor.x,
+                y: this.height - cursor.y,
+                width: 1,
+                height: 1
+            });
+
+            // Unpack the colour data from the selected pixel to get an index
+            const readIndex = data[0] + (data[1] << 8) + (data[2] << 16);
+            if (readIndex < curves.length) {
+                selectedIndex = readIndex;
+            }
+        });
+
+        return selectedIndex;
+    }
+
+    /**
      * For each frame, the draw callback applies all constraints, and calls
      * `draw` on the objects returned by the callback.
      *
@@ -292,16 +359,67 @@ export class Renderer {
         window.requestAnimationFrame(draw);
     }
 
-    private drawCurve(curves: [number, number, number][][]) {
+    public pointInScreenSpace(point: coord): { x: number; y: number } {
+        const vector = vec4.set(tmpVec4, point.x, point.y, point.z, 1);
+
+        // Bring the point into camera space
+        vec4.transformMat4(vector, vector, this.camera.getTransform());
+
+        // Bring the point into screen space
+        vec4.transformMat4(vector, vector, this.projectionMatrix);
+
+        // Bring into device coordinates
+        const x = (vector[0] / vector[3] + 1) / 2 * this.width;
+        const y = (-vector[1] / vector[3] + 1) / 2 * this.height;
+
+        return { x, y };
+    }
+
+    private drawCurve(curves: GuidingCurveInfo[]) {
         this.drawGuidingCurve(
-            curves.map((curve: [number, number, number][]) => {
+            curves.map((curve: GuidingCurveInfo) => {
                 return {
                     cameraTransform: this.camera.getTransform(),
                     projectionMatrix: this.projectionMatrix,
-                    positions: curve
+                    positions: curve.path,
+                    thickness: 8,
+                    color: curve.selected ? selectedColor : unselectedColor
                 };
             })
         );
+
+        const selectedCurve = curves.find((curve: GuidingCurveInfo) => curve.selected);
+        if (selectedCurve !== undefined) {
+            this.drawSelectedCurveControls(selectedCurve);
+        }
+    }
+
+    private drawSelectedCurveControls(curve: GuidingCurveInfo) {
+        const points = curve.bezier.points;
+        const screenSpacePoints = points.map((point: BezierJs.Point) =>
+            this.pointInScreenSpace(<coord>point)
+        );
+
+        this.ctx2D.fillStyle = '#FFF';
+        this.ctx2D.strokeStyle = '#F0F';
+        this.ctx2D.lineWidth = 3;
+
+        // Draw a line between endpoints and control points
+        [1, screenSpacePoints.length - 1].forEach((i: number) => {
+            this.ctx2D.beginPath();
+            this.ctx2D.moveTo(screenSpacePoints[i].x, screenSpacePoints[i].y);
+            this.ctx2D.lineTo(screenSpacePoints[i - 1].x, screenSpacePoints[i - 1].y);
+            this.ctx2D.stroke();
+        });
+
+        // Draw a circle for the control point handle
+        const radius = 3;
+        screenSpacePoints.forEach((point: { x: number; y: number }) => {
+            this.ctx2D.beginPath();
+            this.ctx2D.arc(point.x, point.y, radius, 0, Math.PI * 2);
+            this.ctx2D.stroke();
+            this.ctx2D.fill();
+        });
     }
 
     private drawField(field: Float32Array) {

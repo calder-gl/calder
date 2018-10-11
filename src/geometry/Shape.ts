@@ -8,7 +8,7 @@ import { ScalarField } from './ScalarField';
 export namespace Shape {
     export function sphere(material: Material = defaultMaterial): WorkingGeometry {
         const RADIUS = 1;
-        const DIM = 25;
+        const DIM = 10;
         const LENGTH = 2.5;
 
         function sphereSignedDistFunc(coord: vec3): number {

@@ -425,7 +425,7 @@ export class Renderer {
         });
     }
 
-    private drawPencilLine(polyline: {x: number; y: number}[]) {
+    private drawPencilLine(polyline: { x: number; y: number }[]) {
         if (polyline.length === 0) {
             return;
         }

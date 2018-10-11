@@ -37,5 +37,5 @@ export type DebugParams = {
     /**
      * Draw a line on the screen, represented as a polyline.
      */
-    drawPencilLine?: {x: number; y: number}[];
+    drawPencilLine?: { x: number; y: number }[];
 };

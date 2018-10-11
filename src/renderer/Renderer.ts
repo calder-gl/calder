@@ -207,6 +207,9 @@ export class Renderer {
         if (debug.drawGuidingCurve !== undefined) {
             this.drawCurve(debug.drawGuidingCurve);
         }
+        if (debug.drawPencilLine !== undefined) {
+            this.drawPencilLine(debug.drawPencilLine);
+        }
         if (debug.drawAxes === true) {
             this.drawCrosshairs();
         }
@@ -420,6 +423,24 @@ export class Renderer {
             this.ctx2D.stroke();
             this.ctx2D.fill();
         });
+    }
+
+    private drawPencilLine(polyline: { x: number; y: number }[]) {
+        if (polyline.length === 0) {
+            return;
+        }
+
+        this.ctx2D.strokeStyle = '#F0F';
+        this.ctx2D.lineWidth = 2;
+
+        this.ctx2D.beginPath();
+        this.ctx2D.moveTo(polyline[0].x, polyline[0].y);
+
+        for (let i = 1; i < polyline.length; i += 1) {
+            this.ctx2D.lineTo(polyline[i].x, polyline[i].y);
+        }
+
+        this.ctx2D.stroke();
     }
 
     private drawField(field: Float32Array) {

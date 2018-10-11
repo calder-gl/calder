@@ -33,4 +33,9 @@ export type DebugParams = {
      * Draw a guiding curve, represented as an array of points along the curve.
      */
     drawGuidingCurve?: GuidingCurveInfo[];
+
+    /**
+     * Draw a line on the screen, represented as a polyline.
+     */
+    drawPencilLine?: { x: number; y: number }[];
 };

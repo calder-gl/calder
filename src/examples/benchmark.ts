@@ -108,7 +108,9 @@ enum SampleType {
 
 function runBenchmark() {
     const SAMPLES = 500;
-    const samples: SampleType[] = range(SAMPLES * SampleType.SIZE).map((i: number) => Math.floor(i / SAMPLES));
+    const samples: SampleType[] = range(SAMPLES * SampleType.SIZE).map((i: number) =>
+        Math.floor(i / SAMPLES)
+    );
     const results: number[][] = [[], [], []];
     const averages: number[] = [0, 0, 0];
     const labels = ['No heuristic', 'No heuristic with funnel', 'Heuristic with funnel'];
@@ -117,9 +119,13 @@ function runBenchmark() {
 
     function reportResults() {
         resultsElement.innerText = 'Times:\n';
-        range(SampleType.SIZE).forEach((i: number) => resultsElement.innerText += `${labels[i]}: ${averages[i].toFixed(4)}\n`);
+        range(SampleType.SIZE).forEach(
+            (i: number) => (resultsElement.innerText += `${labels[i]}: ${averages[i].toFixed(4)}\n`)
+        );
         resultsElement.innerText += '\n';
-        range(SampleType.SIZE).forEach((i: number) => resultsElement.innerText += `${results[i].join(',')}\n`);
+        range(SampleType.SIZE).forEach(
+            (i: number) => (resultsElement.innerText += `${results[i].join(',')}\n`)
+        );
     }
 
     function onComplete(_: Model, { cpuTime }: GeneratorStats) {
@@ -130,10 +136,10 @@ function runBenchmark() {
         if (samples.length > 0) {
             nextIteration();
         } else {
-            range(SampleType.SIZE).forEach((i: number) => averages[i] /= SAMPLES);
+            range(SampleType.SIZE).forEach((i: number) => (averages[i] /= SAMPLES));
             reportResults();
         }
-    };
+    }
 
     function nextIteration() {
         treeGen
@@ -168,8 +174,14 @@ function runBenchmark() {
                         // Keep track of the lowest cost model. This will be overwritten each iteration,
                         // and then when the whole model is done, the last value will be the final
                         // real cost of the model for this sample.
-                        lastCost = Math.min(...instances.map((instance: GeneratorInstance) => instance.getCost().realCost));
-                        resultsElement.innerText = `${samples.length} samples left (currently in group ${samples[0]})`;
+                        lastCost = Math.min(
+                            ...instances.map(
+                                (instance: GeneratorInstance) => instance.getCost().realCost
+                            )
+                        );
+                        resultsElement.innerText = `${
+                            samples.length
+                        } samples left (currently in group ${samples[0]})`;
                     }
                 },
                 1 / 30

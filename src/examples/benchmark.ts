@@ -83,8 +83,8 @@ const curves = [
             { x: 2, y: 2, z: 1 }
         ]),
         distanceMultiplier: scale,
-        alignmentMultiplier: 500,
-        alignmentOffset: 0.7
+        alignmentMultiplier: 400,
+        alignmentOffset: 0.4
     },
     {
         bezier: new Bezier([
@@ -94,8 +94,8 @@ const curves = [
             { x: 0, y: 3, z: 2 }
         ]),
         distanceMultiplier: scale,
-        alignmentMultiplier: 500,
-        alignmentOffset: 0.6
+        alignmentMultiplier: 400,
+        alignmentOffset: 0.4
     }
 ];
 
@@ -108,9 +108,7 @@ enum SampleType {
 
 function runBenchmark() {
     const SAMPLES = 500;
-    const samples: SampleType[] = range(SAMPLES * SampleType.SIZE).map((i: number) =>
-        Math.floor(i / SAMPLES)
-    );
+    const samples: SampleType[] = range(SAMPLES * SampleType.SIZE).map((i: number) => Math.floor(i / SAMPLES));
     const results: number[][] = [[], [], []];
     const averages: number[] = [0, 0, 0];
     const labels = ['No heuristic', 'No heuristic with funnel', 'Heuristic with funnel'];
@@ -119,13 +117,9 @@ function runBenchmark() {
 
     function reportResults() {
         resultsElement.innerText = 'Times:\n';
-        range(SampleType.SIZE).forEach(
-            (i: number) => (resultsElement.innerText += `${labels[i]}: ${averages[i].toFixed(4)}\n`)
-        );
+        range(SampleType.SIZE).forEach((i: number) => resultsElement.innerText += `${labels[i]}: ${averages[i].toFixed(4)}\n`);
         resultsElement.innerText += '\n';
-        range(SampleType.SIZE).forEach(
-            (i: number) => (resultsElement.innerText += `${results[i].join(',')}\n`)
-        );
+        range(SampleType.SIZE).forEach((i: number) => resultsElement.innerText += `${results[i].join(',')}\n`);
     }
 
     function onComplete(_: Model, { cpuTime }: GeneratorStats) {
@@ -136,10 +130,10 @@ function runBenchmark() {
         if (samples.length > 0) {
             nextIteration();
         } else {
-            range(SampleType.SIZE).forEach((i: number) => (averages[i] /= SAMPLES));
+            range(SampleType.SIZE).forEach((i: number) => averages[i] /= SAMPLES);
             reportResults();
         }
-    }
+    };
 
     function nextIteration() {
         treeGen
@@ -150,18 +144,18 @@ function runBenchmark() {
                     samples: (generation: number) => {
                         // Use a different funnel with/without the heuristic to fit into 200ms
                         if (samples[0] === SampleType.Heuristic) {
-                            return 100 - generation / 100 * 50;
+                            return 100 - generation / 100 * 85;
                         } else if (samples[0] === SampleType.NoHeuristicFunneled) {
-                            return 55 - generation / 100 * 35;
+                            return 110 - generation / 100 * 40;
                         } else {
-                            return 40;
+                            return 85;
                         }
                     },
                     heuristicScale: (generation: number) => {
                         if (samples[0] === SampleType.Heuristic) {
                             // Ramp the heuristic scale down as we get to the final generation
-                            if (generation <= 80) {
-                                return 0.02 - generation / 80 * 0.02;
+                            if (generation <= 60) {
+                                return 0.013 - generation / 40 * 0.013;
                             } else {
                                 return 0;
                             }
@@ -174,14 +168,8 @@ function runBenchmark() {
                         // Keep track of the lowest cost model. This will be overwritten each iteration,
                         // and then when the whole model is done, the last value will be the final
                         // real cost of the model for this sample.
-                        lastCost = Math.min(
-                            ...instances.map(
-                                (instance: GeneratorInstance) => instance.getCost().realCost
-                            )
-                        );
-                        resultsElement.innerText = `${
-                            samples.length
-                        } samples left (currently in group ${samples[0]})`;
+                        lastCost = Math.min(...instances.map((instance: GeneratorInstance) => instance.getCost().realCost));
+                        resultsElement.innerText = `${samples.length} samples left (currently in group ${samples[0]})`;
                     }
                 },
                 1 / 30

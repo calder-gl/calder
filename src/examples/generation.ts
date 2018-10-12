@@ -100,7 +100,7 @@ treeGen
     .wrapUpMany(['branch', 'branchOrLeaf', 'maybeBranch'], Generator.replaceWith('leaf'))
     .thenComplete(['leaf']);
 
-const scale: [number, number, number] = [0, 0, 100];
+const scale: [number, number, number] = [0, 0, 200];
 const curves = [
     {
         bezier: new Bezier([
@@ -111,7 +111,7 @@ const curves = [
         ]),
         distanceMultiplier: scale,
         alignmentMultiplier: 500,
-        alignmentOffset: 0.7
+        alignmentOffset: 0.6
     },
     {
         bezier: new Bezier([
@@ -166,7 +166,7 @@ treeGen
             samples: (generation: number) => 100 - generation / 100 * 50,
             heuristicScale: (generation: number) => {
                 if (generation <= 50) {
-                    return 0.02 - generation / 80 * 0.02;
+                    return 0.01 - generation / 50 * 0.01;
                 } else {
                     return 0;
                 }

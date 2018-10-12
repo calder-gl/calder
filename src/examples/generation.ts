@@ -163,10 +163,10 @@ treeGen
         {
             start: 'branch',
             sosmcDepth: 100,
-            samples: (generation: number) => 80 - generation / 100 * 70,
+            samples: (generation: number) => 100 - generation / 100 * 50,
             heuristicScale: (generation: number) => {
                 if (generation <= 50) {
-                    return 0.01 - generation / 50 * 0.01;
+                    return 0.02 - generation / 80 * 0.02;
                 } else {
                     return 0;
                 }

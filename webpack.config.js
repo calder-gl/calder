@@ -4,7 +4,8 @@ module.exports = {
   entry: {
       app: './src/examples/render.ts',
       generation: './src/examples/generation.ts',
-      forest: './src/examples/forest.ts'
+      forest: './src/examples/forest.ts',
+      benchmark: './src/examples/benchmark.ts'
   },
   output: {
     path: __dirname + '/public',

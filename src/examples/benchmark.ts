@@ -84,7 +84,7 @@ const curves = [
         ]),
         distanceMultiplier: scale,
         alignmentMultiplier: 400,
-        alignmentOffset: 0.4
+        alignmentOffset: 0.6
     },
     {
         bezier: new Bezier([
@@ -95,7 +95,7 @@ const curves = [
         ]),
         distanceMultiplier: scale,
         alignmentMultiplier: 400,
-        alignmentOffset: 0.4
+        alignmentOffset: 0.6
     }
 ];
 
@@ -144,7 +144,7 @@ function runBenchmark() {
                     samples: (generation: number) => {
                         // Use a different funnel with/without the heuristic to fit into 200ms
                         if (samples[0] === SampleType.Heuristic) {
-                            return 100 - generation / 100 * 85;
+                            return 100 - generation / 100 * 90;
                         } else if (samples[0] === SampleType.NoHeuristicFunneled) {
                             return 110 - generation / 100 * 40;
                         } else {
@@ -154,8 +154,8 @@ function runBenchmark() {
                     heuristicScale: (generation: number) => {
                         if (samples[0] === SampleType.Heuristic) {
                             // Ramp the heuristic scale down as we get to the final generation
-                            if (generation <= 60) {
-                                return 0.013 - generation / 40 * 0.013;
+                            if (generation <= 50) {
+                                return 0.016 - generation / 50 * 0.016;
                             } else {
                                 return 0;
                             }

@@ -100,7 +100,7 @@ treeGen
     .wrapUpMany(['branch', 'branchOrLeaf', 'maybeBranch'], Generator.replaceWith('leaf'))
     .thenComplete(['leaf']);
 
-const scale: [number, number, number] = [0, 0, 200];
+const scale: [number, number, number] = [0, 0, 100];
 const curves = [
     {
         bezier: new Bezier([
@@ -110,7 +110,7 @@ const curves = [
             { x: 2, y: 2, z: 1 }
         ]),
         distanceMultiplier: scale,
-        alignmentMultiplier: 500,
+        alignmentMultiplier: 400,
         alignmentOffset: 0.6
     },
     {
@@ -121,7 +121,7 @@ const curves = [
             { x: 0, y: 3, z: 2 }
         ]),
         distanceMultiplier: scale,
-        alignmentMultiplier: 500,
+        alignmentMultiplier: 400,
         alignmentOffset: 0.6
     }
 ];

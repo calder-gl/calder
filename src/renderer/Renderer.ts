@@ -9,6 +9,7 @@ import {
     createDrawObject,
     createDrawVectorField,
     Animation,
+    BakedGeometry,
     BakedLight,
     Camera,
     Color,
@@ -65,6 +66,9 @@ export class Renderer {
     private lights: Light[];
     private ambientLight: vec3;
     private pickingFramebuffer: REGL.Framebuffer2D;
+
+    // Record all the BakedGeometry seen so that the buffers can be later cleared
+    private seenBakedGeometry: Set<BakedGeometry> = new Set<BakedGeometry>();
 
     // Length four array representing an RGBA color
     private backgroundColorArray: [number, number, number, number];
@@ -153,8 +157,28 @@ export class Renderer {
     }
 
     public destroy() {
+        this.cleanBakedGeometryBuffers();
         this.regl.destroy();
         Node.invalidateBuffers();
+    }
+
+    public cleanBakedGeometryBuffers() {
+        this.seenBakedGeometry.forEach((geometry: BakedGeometry) => {
+            if (geometry.verticesBuffer !== undefined) {
+                geometry.verticesBuffer.destroy();
+                delete geometry.verticesBuffer;
+            }
+            if (geometry.normalsBuffer !== undefined) {
+                geometry.normalsBuffer.destroy();
+                delete geometry.normalsBuffer;
+            }
+            if (geometry.indicesBuffer !== undefined) {
+                geometry.indicesBuffer.destroy();
+                delete geometry.indicesBuffer;
+            }
+        });
+
+        this.seenBakedGeometry.clear();
     }
 
     public draw(
@@ -172,6 +196,8 @@ export class Renderer {
                 const childObjects = model.computeRenderInfo(debug.drawArmatureBones === true);
 
                 [...childObjects.geometry, ...childObjects.bones].forEach((o: RenderObject) => {
+                    this.seenBakedGeometry.add(o.geometry);
+
                     if (o.geometry.verticesBuffer === undefined) {
                         o.geometry.verticesBuffer = this.regl.buffer(o.geometry.vertices);
                     }

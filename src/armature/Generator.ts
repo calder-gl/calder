@@ -321,7 +321,7 @@ export class GeneratorTask {
             }
         };
 
-        incrementalWork();
+        requestAnimationFrame(incrementalWork);
     }
 
     public then(onComplete: (mode: Model, stats: GeneratorStats) => void): GeneratorTask {
@@ -339,7 +339,7 @@ export class GeneratorTask {
     }
 
     private finish(model: Model) {
-        if (this.onComplete === undefined || this.result === undefined) {
+        if (this.cancelled || this.onComplete === undefined || this.result === undefined) {
             return;
         }
 
@@ -537,7 +537,7 @@ export class Generator {
             sosmcDepth = 10,
             samples = 50,
             costFn,
-            heuristicScale,
+            heuristicScale = 0,
             iterationHook
         } = params;
         const getSamples = (generation: number) =>
@@ -553,7 +553,7 @@ export class Generator {
         for (let iteration = 0; iteration < sosmcDepth; iteration += 1) {
             // Linearly interpolate between the initial and final scale values
             const currentHeuristicScale = getHeuristicScale(iteration);
-            const useHeuristic = currentHeuristicScale === 0;
+            const useHeuristic = currentHeuristicScale > 0;
 
             // Step 1: grow samples
             for (const instance of instances) {

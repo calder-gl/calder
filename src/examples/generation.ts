@@ -110,8 +110,8 @@ const curves = [
             { x: 2, y: 2, z: 1 }
         ]),
         distanceMultiplier: scale,
-        alignmentMultiplier: 500,
-        alignmentOffset: 0.7
+        alignmentMultiplier: 400,
+        alignmentOffset: 0.6
     },
     {
         bezier: new Bezier([
@@ -121,7 +121,7 @@ const curves = [
             { x: 0, y: 3, z: 2 }
         ]),
         distanceMultiplier: scale,
-        alignmentMultiplier: 500,
+        alignmentMultiplier: 400,
         alignmentOffset: 0.6
     }
 ];
@@ -163,7 +163,7 @@ treeGen
         {
             start: 'branch',
             sosmcDepth: 100,
-            samples: (generation: number) => 80 - generation / 100 * 70,
+            samples: (generation: number) => 100 - generation / 100 * 50,
             heuristicScale: (generation: number) => {
                 if (generation <= 50) {
                     return 0.01 - generation / 50 * 0.01;

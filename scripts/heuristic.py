@@ -10,5 +10,16 @@ with open(sys.argv[1], 'r') as myfile:
 
     tests = [ [ float(cost) for cost in line.split(',') ] for line in data.split('\n') ]
 
-    plt.boxplot(tests)
+    bp = plt.boxplot(tests)
+
+    for plot, line in enumerate(bp['medians']):
+        linedata = line.get_ydata()
+        for value in linedata:
+            print("Median " + str(plot) + ": " + str(value))
+
+    for plot, line in enumerate(bp['whiskers']):
+        linedata = line.get_ydata()
+        for value in linedata:
+            print("Box " + str(int(plot/2)) + " whisker " + str(plot % 2) + ": " + str(value))
+
     plt.show()

@@ -253,6 +253,104 @@ export class GeneratorInstance {
     }
 }
 
+type SOSMCParams = {
+    start: string;
+    sosmcDepth?: number;
+    samples?: number | ((generation: number) => number);
+    costFn: CostFn;
+    heuristicScale?: number | ((generation: number) => number);
+
+    /**
+     * For debugging, a callback can be passed in so that every sample in the final
+     * generation can be examined.
+     */
+    iterationHook?: (instances: GeneratorInstance[]) => void;
+
+    timeBudget?: number;
+};
+
+export type GeneratorStats = {
+    realTime: number;
+    cpuTime: number;
+};
+
+/**
+ * A class that controls the generation of a model using SOSMC. It schedules the optimization
+ * to be broken up into chunks that run within a given time budget per frame, allowing the UI
+ * to update. It can also be cancelled.
+ */
+export class GeneratorTask {
+    private result: Model | undefined;
+    private cancelled: boolean = false;
+    private onComplete: ((model: Model, stats: GeneratorStats) => void) | undefined;
+    private timeBudget: number = Infinity;
+    private startTime: number = new Date().getTime();
+    private cpuTime: number = 0;
+
+    /**
+     * @param {number} timeBudget How much time in seconds can be spent per frame before the rest
+     * of the work is deferred to the next frame. Note that it will only stop once it has gone OVER
+     * this time budget (hopefully just by a little bit) so it is not a hard limit.
+     */
+    constructor(iterator: IterableIterator<Model | undefined>, timeBudget?: number) {
+        if (timeBudget !== undefined) {
+            this.timeBudget = timeBudget;
+        }
+
+        // This will continue running the `iterator` coroutine to continue the optimization process until
+        // either it finishes or we spent too long in the current frame, in which case, we schedule this
+        // function again in another `requestAnimationFrame` callback to continue it after the UI gets a
+        // chance to update.
+        const incrementalWork = () => {
+            const incrementalStartTime = new Date().getTime();
+
+            const existsTimeRemaining = () =>
+                (new Date().getTime() - incrementalStartTime) / 1000 < this.timeBudget;
+
+            while (!this.cancelled && this.result === undefined && existsTimeRemaining()) {
+                const { value } = iterator.next();
+                this.result = value;
+            }
+
+            this.cpuTime += (new Date().getTime() - incrementalStartTime) / 1000;
+
+            if (!this.cancelled && this.result !== undefined) {
+                this.finish(this.result);
+            } else if (!this.cancelled) {
+                requestAnimationFrame(incrementalWork);
+            }
+        };
+
+        requestAnimationFrame(incrementalWork);
+    }
+
+    public then(onComplete: (mode: Model, stats: GeneratorStats) => void): GeneratorTask {
+        this.onComplete = onComplete;
+
+        if (this.result !== undefined) {
+            this.finish(this.result);
+        }
+
+        return this;
+    }
+
+    public cancel() {
+        this.cancelled = true;
+    }
+
+    private finish(model: Model) {
+        if (this.cancelled || this.onComplete === undefined || this.result === undefined) {
+            return;
+        }
+
+        const stats: GeneratorStats = {
+            realTime: (new Date().getTime() - this.startTime) / 1000,
+            cpuTime: this.cpuTime
+        };
+        this.onComplete(model, stats);
+    }
+}
+
 /**
  * A way of representing a structure made of connected components, facilitating procedural
  * generation of instances of these structures.
@@ -420,26 +518,26 @@ export class Generator {
      * @param {CostFn} costFn A function used to measure the cost of each sample.
      * @param {number | ((generation: number) => number)} heuristicScale A multiplier for the
      * heuristic in each generation.
-     * @returns {Model} The model that was generated.
+     * @returns {GeneratorTask} A task to keep track of progress and get the result from.
      */
-    public generateSOSMC(params: {
-        start: string;
-        sosmcDepth?: number;
-        samples?: number | ((generation: number) => number);
-        costFn: CostFn;
-        heuristicScale?: number | ((generation: number) => number);
-        /**
-         * For debugging, a callback can be passed in so that every sample in the final
-         * generation can be examined.
-         */
-        iterationHook?: (instances: GeneratorInstance[]) => void;
-    }): Model {
+    public generateSOSMC(params: SOSMCParams, timeBudget: number = 1 / 60): GeneratorTask {
+        return new GeneratorTask(this.generateSOSMCIterator(params), timeBudget);
+    }
+
+    // https://i.imgur.com/1ebOP1Y.jpg
+    // The star here means this is actually a generator function that returns a coroutine. Every
+    // `yield` is a point where we can pause execution and resume it in the next frame if we've
+    // gone over our framely time budget.
+    //
+    // The returned iterator's `next()` will return a `Model` if the optimization is complete,
+    // or `undefined` if it is still underway.
+    public *generateSOSMCIterator(params: SOSMCParams): IterableIterator<Model | undefined> {
         const {
             start,
             sosmcDepth = 10,
             samples = 50,
             costFn,
-            heuristicScale,
+            heuristicScale = 0,
             iterationHook
         } = params;
         const getSamples = (generation: number) =>
@@ -452,15 +550,16 @@ export class Generator {
         // Seed instances with starting state
         instances.forEach((instance: GeneratorInstance) => instance.initialize(start));
 
-        range(sosmcDepth).forEach((iteration: number) => {
+        for (let iteration = 0; iteration < sosmcDepth; iteration += 1) {
             // Linearly interpolate between the initial and final scale values
             const currentHeuristicScale = getHeuristicScale(iteration);
-            const useHeuristic = currentHeuristicScale === 0;
+            const useHeuristic = currentHeuristicScale > 0;
 
             // Step 1: grow samples
-            instances.forEach((instance: GeneratorInstance) =>
-                instance.growIfPossible(true, useHeuristic)
-            );
+            for (const instance of instances) {
+                instance.growIfPossible(true, useHeuristic);
+                yield undefined;
+            }
 
             // Step 2: if there will be more iterations, do a weighted resample
             if (iteration + 1 !== sosmcDepth) {
@@ -500,7 +599,7 @@ export class Generator {
             if (iterationHook !== undefined) {
                 iterationHook(instances);
             }
-        });
+        }
 
         // From the last generation, pick the one with the lowest cost.
         const finalInstance = <GeneratorInstance>minBy(instances, (instance: GeneratorInstance) =>
@@ -510,12 +609,14 @@ export class Generator {
         while (finalInstance.getSpawnPoints().length > 0) {
             const spawnPoint: SpawnPoint = <SpawnPoint>finalInstance.getSpawnPoints().pop();
             this.wrapUpRules[spawnPoint.component](spawnPoint.at, finalInstance);
+            yield undefined;
         }
         while (finalInstance.getPostSkeletonSpawnPoints().length > 0) {
             finalInstance.growIfPossible(false, false);
+            yield undefined;
         }
 
-        return finalInstance.getModel();
+        yield finalInstance.getModel();
     }
 
     /**

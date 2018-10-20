@@ -1,3 +1,11 @@
+import 'bezier-js';
+
+export type GuidingCurveInfo = {
+    path: [number, number, number][];
+    selected: boolean;
+    bezier: BezierJs.Bezier;
+};
+
 /*
  * A collection of behaviours in Renderer that enable easier visual debugging of
  * geometry and armatures.
@@ -24,5 +32,10 @@ export type DebugParams = {
     /**
      * Draw a guiding curve, represented as an array of points along the curve.
      */
-    drawGuidingCurve?: [number, number, number][][];
+    drawGuidingCurve?: GuidingCurveInfo[];
+
+    /**
+     * Draw a line on the screen, represented as a polyline.
+     */
+    drawPencilLine?: { x: number; y: number }[];
 };

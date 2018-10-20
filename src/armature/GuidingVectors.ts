@@ -92,16 +92,21 @@ export class GuidingVectors implements CostFn {
      * For debugging/visualization purposes, generates a buffer that is used to render lines in
      * the vector field.
      *
-     * @param {number} radius To what distance from the origin field lines should be generated for
-     * @param {number} step The space between field lines
+     * @param {number} radius To what distance from the origin field lines should be generated for.
+     * @param {number} step The space between field lines.
+     * @param {coord} offset The offset from the origin to generate the vector field at.
      * @returns {Float32Array} A buffer of vertices for the vector field lines.
      */
-    public generateVectorField(radius: number = 3, step: number = 0.5): Float32Array {
+    public generateVectorField(
+        radius: number = 3,
+        step: number = 0.5,
+        offset: coord = { x: 0, y: 0, z: 0 }
+    ): Float32Array {
         const field: number[] = [];
 
-        range(-radius, radius, step).forEach((x: number) => {
-            range(-radius, radius, step).forEach((y: number) => {
-                range(-radius, radius, step).forEach((z: number) => {
+        range(offset.x - radius, offset.x + radius, step).forEach((x: number) => {
+            range(offset.y - radius, offset.y + radius, step).forEach((y: number) => {
+                range(offset.z - radius, offset.z + radius, step).forEach((z: number) => {
                     // Add first point
                     field.push(x, y, z);
 
@@ -269,6 +274,7 @@ export class GuidingVectors implements CostFn {
             const expectedVector = this.getOrCreateExpectedVector(generator, spawnPoint.component);
             const localToGlobalTransform = spawnPoint.at.node.localToGlobalTransform();
             vector = vec4.transformMat4(vec4.create(), expectedVector, localToGlobalTransform);
+            vec4.normalize(vector, vector);
 
             // Cache spawn point direction vector
             this.spawnPointVectors.set(spawnPoint, vector);

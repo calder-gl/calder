@@ -3,8 +3,11 @@ import {
     CostFunction,
     Generator,
     GeneratorInstance,
+    GeneratorStats,
+    GuidingCurveInfo,
     Light,
     Material,
+    Model,
     Node,
     Point,
     Renderer,
@@ -98,7 +101,7 @@ treeGen
     .thenComplete(['leaf']);
 
 const scale: [number, number, number] = [0, 0, 100];
-const guidingVectors = CostFunction.guidingVectors([
+const curves = [
     {
         bezier: new Bezier([
             { x: 0, y: 0, z: 0 },
@@ -107,8 +110,8 @@ const guidingVectors = CostFunction.guidingVectors([
             { x: 2, y: 2, z: 1 }
         ]),
         distanceMultiplier: scale,
-        alignmentMultiplier: 500,
-        alignmentOffset: 0.7
+        alignmentMultiplier: 400,
+        alignmentOffset: 0.6
     },
     {
         bezier: new Bezier([
@@ -118,36 +121,67 @@ const guidingVectors = CostFunction.guidingVectors([
             { x: 0, y: 3, z: 2 }
         ]),
         distanceMultiplier: scale,
-        alignmentMultiplier: 500,
+        alignmentMultiplier: 400,
         alignmentOffset: 0.6
     }
-]);
+];
+const guidingVectors = CostFunction.guidingVectors(curves);
 
 const vectorField = guidingVectors.generateVectorField();
-const guidingCurve = guidingVectors.generateGuidingCurve();
+const guidingCurves = guidingVectors
+    .generateGuidingCurve()
+    .map((path: [number, number, number][], index: number) => {
+        return {
+            path,
+            selected: false,
+            bezier: curves[index].bezier
+        };
+    });
+
+renderer.stage.addEventListener('click', (event: MouseEvent) => {
+    const boundingRect = renderer.stage.getBoundingClientRect();
+    const selectedIndex = renderer.findCurveUnderCursor(guidingCurves, {
+        x: event.clientX - boundingRect.left,
+        y: event.clientY - boundingRect.top
+    });
+
+    guidingCurves.forEach((curve: GuidingCurveInfo, index: number) => {
+        curve.selected = index === selectedIndex;
+    });
+});
 
 const result = document.createElement('p');
 result.style.display = 'none';
 
 const generationInstances: GeneratorInstance[][] = [];
 
-const start = new Date().getTime();
-const tree = treeGen.generateSOSMC({
-    start: 'branch',
-    sosmcDepth: 100,
-    samples: (generation: number) => 80 - generation / 100 * 70,
-    heuristicScale: (generation: number) => {
-        if (generation <= 50) {
-            return 0.01 - generation / 50 * 0.01;
-        } else {
-            return 0;
-        }
-    },
-    costFn: guidingVectors,
-    iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
-});
+const time = document.createElement('p');
 
-const total = (new Date().getTime() - start) / 1000;
+let tree: Model | null = null;
+treeGen
+    .generateSOSMC(
+        {
+            start: 'branch',
+            sosmcDepth: 100,
+            samples: (generation: number) => 100 - generation / 100 * 50,
+            heuristicScale: (generation: number) => {
+                if (generation <= 50) {
+                    return 0.01 - generation / 50 * 0.01;
+                } else {
+                    return 0;
+                }
+            },
+            costFn: guidingVectors,
+            iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
+        },
+        1 / 30
+    )
+    .then((model: Model, { realTime, cpuTime }: GeneratorStats) => {
+        tree = model;
+        time.innerText = `Generated in ${realTime.toFixed(4)}s real time, ${cpuTime.toFixed(
+            4
+        )}s CPU time`;
+    });
 
 result.innerText = '';
 
@@ -164,15 +198,12 @@ generationInstances.forEach((instances: GeneratorInstance[], index: number) => {
 
 document.body.appendChild(result);
 
-const time = document.createElement('p');
-time.innerText = `Generated in ${total.toFixed(4)}s`;
-document.body.appendChild(time);
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 document.body.appendChild(renderer.stage);
+document.body.appendChild(time);
 
 renderer.camera.lookAt({ x: 0, y: 1, z: 0 });
 
@@ -188,12 +219,12 @@ const draw = () => {
     //tree.root().setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 
     return {
-        objects: [tree],
+        objects: tree === null ? [] : [tree],
         debugParams: {
             drawAxes: true,
             drawArmatureBones: false,
             drawVectorField: vectorField,
-            drawGuidingCurve: guidingCurve
+            drawGuidingCurve: guidingCurves
         }
     };
 };
@@ -208,6 +239,10 @@ renderer.eachFrame(draw);
 const exportBtn = document.createElement('button');
 exportBtn.innerText = 'Export .obj';
 exportBtn.addEventListener('click', () => {
+    if (tree === null) {
+        return;
+    }
+
     const obj = tree.exportOBJ('calderExport', ambientLightColor);
 
     const link = document.createElement('a');

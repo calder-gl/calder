@@ -112,9 +112,9 @@ class TriMesh:
     minpt = None
     maxpt = None
     for v in self.vertices:
-      if minpt == None:
+      if minpt is None:
         minpt = v.copy()
-      if maxpt == None:
+      if maxpt is None:
         maxpt = v.copy()
       for (i, x) in enumerate(v):
         minpt[i] = min(minpt[i], x)

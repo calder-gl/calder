@@ -20,6 +20,6 @@ module.exports = {
   ],
   coveragePathIgnorePatterns: [
     'examples/',
-    'src/import_dir/*',
+    'src/import_dir/',
   ]
 };

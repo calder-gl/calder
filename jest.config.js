@@ -19,5 +19,6 @@ module.exports = {
   ],
   coveragePathIgnorePatterns: [
     'examples/',
+    'src/input_data/',
   ]
 };

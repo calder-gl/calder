@@ -896,9 +896,10 @@ export class GeometryNode extends Node {
         scale: matrix4 = mat4.create()
     ) {
         super(parent, position, rotation, scale);
-        this.geometry = geometry;
         if (geometry instanceof WorkingGeometry) {
             this.geometry = geometry.bake();
+        } else {
+            this.geometry = geometry;
         }
     }
 

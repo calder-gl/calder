@@ -44,8 +44,8 @@ renderer.addLight(light1);
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Setup leaf
-let leafColor = RGBColor.fromRGB(204, 255, 204);
-let leafSphere: Node = new GeometryNode(
+const leafColor = RGBColor.fromRGB(204, 255, 204);
+const leafSphere: Node = new GeometryNode(
     Shape.sphere(Material.create({ color: leafColor, shininess: 100 }))
 );
 let leafModel = new Model([leafSphere]);
@@ -98,7 +98,7 @@ treeGen
         const clonedModel = leafModel.cloneDeep();
         const leaf = clonedModel.root();
         const nodesToAdd = root.attachModel(leaf, clonedModel.nodes);
-        nodesToAdd.forEach(node => {
+        nodesToAdd.forEach((node: Node) => {
             instance.add(node);
         });
         leaf.scale(Math.random() * 0.5 + 0.5);
@@ -248,15 +248,16 @@ renderer.eachFrame(draw);
 const importBtn = document.createElement('button');
 importBtn.innerText = 'Import';
 importBtn.addEventListener('click', () => {
-    leafModel = Model.importOBJ();
-    tree = treeGen.generateSOSMC({
-        start: 'branch',
-        sosmcDepth: 100,
-        finalDepth: 100,
-        samples: 100,
-        costFn: guidingVectors,
-        iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
-    });
+    tree = Model.importObj();
+    // leafModel = Model.importObj();
+    // tree = treeGen.generateSOSMC({
+    //     start: 'branch',
+    //     sosmcDepth: 100,
+    //     finalDepth: 100,
+    //     samples: 100,
+    //     costFn: guidingVectors,
+    //     iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
+    // });
 });
 document.body.appendChild(importBtn);
 

@@ -6,25 +6,63 @@ import { Material } from '../renderer/Material';
 import { GeometryNode, Node } from './Node';
 
 /**
- * Read data from the import_dir and produce a new model.
- *
- * @return {Model} model A model representing that described in .obj and .mtl format in the
- * import_dir directory.
+ * A helper class that specifies a group as stored in the obj files
  */
-export function importOBJ(OBJData, MTLData) {
-    const data: Data = {lines: OBJData.split('\n')};
+class Group {
+    public groupName: string;
+    public materialName: string;
+    public faces: Face[];
+}
+
+/**
+ * A class to store the string and read information of a multiline string.
+ */
+class Data {
+    public lines: string[];
+
+    constructor(rawData: string) {
+        this.lines = rawData.split('\n');
+    }
+
+    public readLine() {
+        let line = this.lines[0].split(' ');
+        this.lines.shift();
+        // Skip comments and empty lines.
+        while (line.length < 1 || line[0].startsWith('#')) {
+            line = this.lines[0].split(' ');
+            this.lines.shift();
+        }
+
+        return line
+    }
+
+    public getLinesWithPrefix(prefix: string) {
+        const lines: string[][] = [];
+        while (this.lines[0].startsWith(prefix)) {
+            lines.push(this.readLine());
+        }
+
+        return lines;
+    }
+}
+
+/**
+ * Convert raw OBJData and MTLData from .obj and .mtl files into an array of nodes.
+ *
+ * @return {Node[]} nodes An array of nodes representing the nodes in a modle
+ * as described in the OBJData and MTLData.
+ */
+export function importObj(objData: string, mtlData: string) {
+    const materials = readMaterials(mtlData);
+    const data = new Data(objData);
 
     readPreamble(data)
-
     const vertices = readVertices(data);
     const normals = readNormals(data);
     const groups = readGroups(data);
 
     const parent = new Node();
     parent.setAnchor(vec3.fromValues(0, 0, 0));
-
-    const materials = readMaterials(MTLData);
-
     const geoNodes: GeometryNode[] = groups.map(
         (group: Group) =>
             new GeometryNode(
@@ -40,56 +78,35 @@ export function importOBJ(OBJData, MTLData) {
     );
     geoNodes.forEach((node: Node) => node.setAnchor(vec3.fromValues(0, 0, 0)));
 
+    console.log(groups);
     return [parent, ...geoNodes]
 }
 
-/**
- * A helper class that specifies a group as stored in the obj files
- */
-class Group {
-    public groupName: string;
-    public materialName: string;
-    public faces: Face[];
-}
-
-class Data {
-    public lines: string[];
-}
-
 function readPreamble(data: Data) {
-    data.lines[0].split(' '); // [1] is the file name
-    data.lines = data.lines.slice(1);
-    data.lines[0].split(' '); // [1] is the mtlFileName
-    data.lines = data.lines.slice(1);
+    data.readLine(); // Read the obj file name
+    data.readLine(); // Read the mtl file name
+
     return data;
 }
 
 function readVertices(data: Data) {
     const vertices: vec3[] = [];
-    while (data.lines[0].startsWith('v ')) {
-        const vecLine = data.lines[0]
-            .split(' ')
-            .slice(1)
-            .map(parseFloat);
+    data.getLinesWithPrefix('v ').map((line: string[]) => {
+        const vecLine = line.map(parseFloat).slice(1);
         const vec = vec3.fromValues(vecLine[0], vecLine[1], vecLine[2]);
         vertices.push(vec);
-        data.lines.shift();
-    }
+    });
 
     return vertices;
 }
 
 function readNormals(data: Data) {
     const normals: vec3[] = [];
-    while (data.lines[0].startsWith('vn')) {
-        const vecLine = data.lines[0]
-            .split(' ')
-            .slice(1)
-            .map(parseFloat);
+    data.getLinesWithPrefix('vn ').map((line: string[]) => {
+        const vecLine = line.map(parseFloat).slice(1);
         const vec = vec3.fromValues(vecLine[0], vecLine[1], vecLine[2]);
         normals.push(vec);
-        data.lines.shift();
-    }
+    });
 
     return normals;
 }
@@ -127,7 +144,7 @@ function readGroups(data: Data) {
     return groups;
 }
 
-function readMaterials(mtlData) {
+function readMaterials(mtlData: string) {
     let lines = mtlData.split('\n');
     const materials: Map<string, Material> = new Map<string, Material>();
     while (lines.length > 0 && lines[0].startsWith('newmtl')) {

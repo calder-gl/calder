@@ -33,7 +33,7 @@ class Data {
             this.lines.shift();
         }
 
-        return line
+        return line;
     }
 
     public getLinesWithPrefix(prefix: string) {
@@ -56,7 +56,7 @@ export function importObj(objData: string, mtlData: string) {
     const materials = readMaterials(mtlData);
     const data = new Data(objData);
 
-    readPreamble(data)
+    readPreamble(data);
     const vertices = readVertices(data);
     const normals = readNormals(data);
     const groups = readGroups(data);
@@ -78,7 +78,7 @@ export function importObj(objData: string, mtlData: string) {
     );
     geoNodes.forEach((node: Node) => node.setAnchor(vec3.fromValues(0, 0, 0)));
 
-    return [parent, ...geoNodes]
+    return [parent, ...geoNodes];
 }
 
 function readPreamble(data: Data) {
@@ -109,7 +109,6 @@ function readNormals(data: Data) {
 
     return normals;
 }
-
 
 function readGroups(data: Data) {
     const groups: Group[] = [];

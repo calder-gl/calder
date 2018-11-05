@@ -78,7 +78,6 @@ export function importObj(objData: string, mtlData: string) {
     );
     geoNodes.forEach((node: Node) => node.setAnchor(vec3.fromValues(0, 0, 0)));
 
-    console.log(groups);
     return [parent, ...geoNodes]
 }
 

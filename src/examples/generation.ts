@@ -48,7 +48,7 @@ const leafColor = RGBColor.fromRGB(204, 255, 204);
 const leafSphere: Node = new GeometryNode(
     Shape.sphere(Material.create({ color: leafColor, shininess: 100 }))
 );
-let leafModel = new Model([leafSphere]);
+const leafModel = new Model([leafSphere]);
 
 // Setup branch
 const branchColor = RGBColor.fromRGB(102, 76.5, 76.5);

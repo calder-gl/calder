@@ -59,10 +59,7 @@ export class Model {
     public static importObj(): Model {
         const nodes = importObj(objData, mtlData);
 
-        const model = new Model(nodes);
-        console.log(model);
-
-        return model;
+        return new Model(nodes);
     }
 
     /**

@@ -4,8 +4,8 @@ import {
     Generator,
     GeneratorInstance,
     GeneratorStats,
-    GuidingCurveInfo,
     GeometryNode,
+    GuidingCurveInfo,
     Light,
     Material,
     Model,
@@ -285,6 +285,10 @@ document.body.appendChild(exportBtn);
 const exportMTLBtn = document.createElement('button');
 exportMTLBtn.innerText = 'Export .mtl';
 exportMTLBtn.addEventListener('click', () => {
+    if (tree === null) {
+        return;
+    }
+
     const obj = tree.exportOBJ('calderExport', ambientLightColor);
 
     const mtlLink = document.createElement('a');

@@ -29,7 +29,7 @@
     "fix-format": "prettier --write '**/*.ts'",
     "lint": "tslint -t stylish --project \"tsconfig.json\"",
     "test": "npm run test-only",
-    "test-only": "jest --coverage",
+    "test-only": "jest",
     "watch": "tsc -w -p tsconfig.build.json",
     "webpack": "webpack"
   },

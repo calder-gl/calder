@@ -5,6 +5,8 @@ import { Face, WorkingGeometry } from '../geometry/WorkingGeometry';
 import { Material } from '../renderer/Material';
 import { GeometryNode, Node } from './Node';
 
+import { flatten } from 'lodash';
+
 /**
  * A helper class that specifies a group as stored in the obj files
  */
@@ -123,10 +125,7 @@ function readGroups(data: Data) {
                 .split(' ')
                 .slice(1)
                 .map((s: string) => s.split('//'));
-            // FIXME(pbardea): How to concat three arrays without needing empty array hack.
-            const empty: string[] = [];
-            const face: number[] = empty
-                .concat(...index)
+            const face: number[] = flatten([...index])
                 .filter((_: string, idx: number) => idx % 2 === 0)
                 .map((s: string) => parseInt(s, 10) - 1);
             faces.push(new Face(face));

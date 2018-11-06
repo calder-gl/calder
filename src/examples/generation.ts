@@ -4,6 +4,7 @@ import {
     Generator,
     GeneratorInstance,
     GeneratorStats,
+    GeometryNode,
     GuidingCurveInfo,
     Light,
     Material,
@@ -44,7 +45,10 @@ renderer.addLight(light1);
 
 // Setup leaf
 const leafColor = RGBColor.fromRGB(204, 255, 204);
-const leafSphere = Shape.sphere(Material.create({ color: leafColor, shininess: 100 }));
+const leafSphere: Node = new GeometryNode(
+    Shape.sphere(Material.create({ color: leafColor, shininess: 100 }))
+);
+const leafModel = new Model([leafSphere]);
 
 // Setup branch
 const branchColor = RGBColor.fromRGB(102, 76.5, 76.5);
@@ -91,7 +95,12 @@ treeGen
         instance.addDetail({ component: 'maybeBranch', at: root });
     })
     .define('leaf', (root: Point, instance: GeneratorInstance) => {
-        const leaf = instance.add(root.attach(leafSphere));
+        const clonedModel = leafModel.cloneDeep();
+        const leaf = clonedModel.root();
+        const nodesToAdd = root.attachModel(leaf, clonedModel.nodes);
+        nodesToAdd.forEach((node: Node) => {
+            instance.add(node);
+        });
         leaf.scale(Math.random() * 0.5 + 0.5);
     })
     .maybe('maybeBranch', (root: Point, instance: GeneratorInstance) => {
@@ -236,6 +245,22 @@ renderer.eachFrame(draw);
 // Step 4: add .obj export
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+const importBtn = document.createElement('button');
+importBtn.innerText = 'Import';
+importBtn.addEventListener('click', () => {
+    tree = Model.importObj();
+    // leafModel = Model.importObj();
+    // tree = treeGen.generateSOSMC({
+    //     start: 'branch',
+    //     sosmcDepth: 100,
+    //     finalDepth: 100,
+    //     samples: 100,
+    //     costFn: guidingVectors,
+    //     iterationHook: (instances: GeneratorInstance[]) => generationInstances.push(instances)
+    // });
+});
+document.body.appendChild(importBtn);
+
 const exportBtn = document.createElement('button');
 exportBtn.innerText = 'Export .obj';
 exportBtn.addEventListener('click', () => {
@@ -245,20 +270,35 @@ exportBtn.addEventListener('click', () => {
 
     const obj = tree.exportOBJ('calderExport', ambientLightColor);
 
-    const link = document.createElement('a');
-    link.style.display = 'none';
-    document.body.appendChild(link);
+    const objLink = document.createElement('a');
+    objLink.style.display = 'none';
+    document.body.appendChild(objLink);
 
     // Download obj
-    link.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(obj.obj)}`);
-    link.setAttribute('download', 'calderExport.obj');
-    link.click();
-
-    // Download mtl
-    link.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(obj.mtl)}`);
-    link.setAttribute('download', 'calderExport.mtl');
-    link.click();
-
-    document.body.removeChild(link);
+    objLink.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(obj.obj)}`);
+    objLink.setAttribute('download', 'calderExport.obj');
+    objLink.click();
+    document.body.removeChild(objLink);
 });
 document.body.appendChild(exportBtn);
+
+const exportMTLBtn = document.createElement('button');
+exportMTLBtn.innerText = 'Export .mtl';
+exportMTLBtn.addEventListener('click', () => {
+    if (tree === null) {
+        return;
+    }
+
+    const obj = tree.exportOBJ('calderExport', ambientLightColor);
+
+    const mtlLink = document.createElement('a');
+    mtlLink.style.display = 'non';
+    document.body.appendChild(mtlLink);
+
+    // Download mtl
+    mtlLink.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(obj.mtl)}`);
+    mtlLink.setAttribute('download', 'calderExport.mtl');
+    mtlLink.click();
+    document.body.removeChild(mtlLink);
+});
+document.body.appendChild(exportMTLBtn);

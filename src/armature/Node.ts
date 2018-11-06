@@ -889,14 +889,18 @@ export class GeometryNode extends Node {
      * @param {matrix4} scale
      */
     constructor(
-        geometry: WorkingGeometry,
+        geometry: WorkingGeometry | BakedGeometry,
         parent: Node | null = null,
         position: vector3 = vec3.fromValues(0, 0, 0),
         rotation: matrix4 = mat4.create(),
         scale: matrix4 = mat4.create()
     ) {
         super(parent, position, rotation, scale);
-        this.geometry = geometry.bake();
+        if (geometry instanceof WorkingGeometry) {
+            this.geometry = geometry.bake();
+        } else {
+            this.geometry = geometry;
+        }
     }
 
     /**
@@ -929,6 +933,22 @@ export class GeometryNode extends Node {
 
     public geometryCallback(callback: (node: GeometryNode) => void) {
         callback(this);
+    }
+
+    public clone(): GeometryNode {
+        const cloned = new GeometryNode(
+            this.geometry,
+            this.parent,
+            this.getPosition(),
+            this.getRotation(),
+            this.getScale()
+        );
+        Object.keys(this.points).forEach((key: string) => {
+            cloned.createPoint(key, Mapper.vectorToCoord(this.points[key].position));
+        });
+        cloned.anchor = this.anchor;
+
+        return cloned;
     }
 
     public structureCallback(_: (node: Node) => void) {}
@@ -981,5 +1001,13 @@ export class Point {
         this.node.addChild(geometryNode);
 
         return geometryNode;
+    }
+
+    public attachModel(modelRoot: Node, targetModelNodes: Node[]): Node[] {
+        modelRoot.setAnchor(vec3.fromValues(0, 0, 0));
+        modelRoot.setPosition(Mapper.vectorToCoord(this.position));
+        this.node.addChild(modelRoot);
+
+        return targetModelNodes;
     }
 }

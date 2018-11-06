@@ -2,9 +2,11 @@ import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
 
 import { Color } from '../colors/Color';
 import { AABB } from '../geometry/BakedGeometry';
+import { mtlData, objData } from '../import_dir/ImportData';
 import { BakedMaterial } from '../renderer/Material';
 import { RenderObject } from '../types/RenderObject';
 import { worldSpaceAABB } from '../utils/aabb';
+import { importObj } from './Import';
 import { GeometryNode, Node } from './Node';
 import { NodeRenderObject } from './NodeRenderObject';
 
@@ -49,6 +51,18 @@ export class Model {
     }
 
     /**
+     * Read data from the import_dir and produce a new model.
+     *
+     * @return {Model} model A model representing that described in .obj and .mtl format in the
+     * import_dir directory.
+     */
+    public static importObj(): Model {
+        const nodes = importObj(objData, mtlData);
+
+        return new Model(nodes);
+    }
+
+    /**
      * Creates a new model.
      *
      * @param {Node[]} nodes A set of nodes which, if passed in, are used to initialize the model.
@@ -63,6 +77,37 @@ export class Model {
      */
     public clone() {
         return new Model([...this.nodes]);
+    }
+
+    /**
+     * @returns A deep copy of the current model that has all the same nodes, but can be added to.
+     */
+    public cloneDeep() {
+        const parentToChildren: Map<Node, Node[]> = new Map<Node, Node[]>();
+        const nodeToClone: Map<Node, Node> = new Map<Node, Node>();
+        this.nodes.forEach((node: Node) => nodeToClone.set(node, node.clone()));
+        this.nodes.forEach((node: Node) => {
+            if (node.parent == null) {
+                return;
+            }
+            let children = parentToChildren.get(node.parent);
+            if (children == null) {
+                children = [];
+            }
+            children.push(<Node>nodeToClone.get(node));
+            parentToChildren.set(node.parent, children);
+        });
+        const nodeClones = this.nodes.map((node: Node) => {
+            const children = parentToChildren.get(node);
+            const clone = <Node>nodeToClone.get(node);
+            if (children != null) {
+                children.forEach((child: Node) => clone.addChild(child));
+            }
+
+            return clone;
+        });
+
+        return new Model([...nodeClones]);
     }
 
     /**

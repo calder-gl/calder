@@ -38,6 +38,8 @@ class Data {
         return line;
     }
 
+    // TODO: Refactor to handle each line type individually and multipblex
+    // (so we're not reliant on a particular order)
     public getLinesWithPrefix(prefix: string) {
         const lines: string[][] = [];
         while (this.lines[0].startsWith(prefix)) {

@@ -35,7 +35,7 @@ export namespace TestHelper {
             vec3.fromValues(0, 0, -1),
             vec3.fromValues(0, 0, -1)
         ];
-        const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
+        const faces = [new Face([0, 1, 2], [0, 1, 2]), new Face([0, 2, 3], [0, 2, 3])];
         const controlPoints = [start];
 
         const vertices = unitVertices.map((vertex: vec3) => {
@@ -139,8 +139,8 @@ export namespace TestHelper {
         const faces: Face[] = [];
         for (let i = 0; i < 6; i += 1) {
             const base = i * 4;
-            faces.push(new Face([base, base + 1, base + 2]));
-            faces.push(new Face([base, base + 2, base + 3]));
+            faces.push(new Face([base, base + 1, base + 2], [base, base + 1, base + 2]));
+            faces.push(new Face([base, base + 2, base + 3], [base, base + 2, base + 3]));
         }
         const controlPoints = [start];
 

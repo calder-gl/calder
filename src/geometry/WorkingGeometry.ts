@@ -1,7 +1,8 @@
 import { mat4, quat, vec3, vec4 } from 'gl-matrix';
-import { flatMap } from 'lodash';
 import { defaultMaterial, Bakeable, BakedGeometry, Material } from '../calder';
 import { Affine } from '../utils/affine';
+
+import { zip } from 'lodash';
 
 /**
  * A representation of a surface on an object.
@@ -11,14 +12,17 @@ export class Face {
      * References indices of vertices in a WorkingGeometry that make up a polygon. This polygon is
      * the object's surface. This should be of length 3 for a triangle or 4 or a quad.
      */
-    public indices: number[];
+    public vertexIndices: number[];
+    public normalIndices: number[];
 
     /**
-     * @param {number[]} indices: Reference indices of vertices in a WorkingGeometry.
+     * @param {number[]} vertexIndices: Reference indices of vertices in a WorkingGeometry.
+     * @param {number[]} normalIndices: Reference indices of vertices in a WorkingGeometry.
      * @return {Face}
      */
-    constructor(indices: number[]) {
-        this.indices = indices;
+    constructor(vertexIndices: number[], normalIndices: number[]) {
+        this.vertexIndices = vertexIndices;
+        this.normalIndices = normalIndices;
     }
 }
 
@@ -133,6 +137,8 @@ export class WorkingGeometry implements Bakeable {
         if (this.updateCache) {
             this.combine();
 
+            const vertexNormalPairs: {[pair: string]: number} = {};
+
             const min = vec4.fromValues(Infinity, Infinity, Infinity, 1);
             const max = vec4.fromValues(-Infinity, -Infinity, -Infinity, 1);
             this.vertices.forEach((vertex: vec4) => {
@@ -145,19 +151,38 @@ export class WorkingGeometry implements Bakeable {
                 max[2] = Math.max(max[2], vertex[2]);
             });
 
-            const bakedVertices = flatMap(this.vertices, (workingVec: vec4) => [
-                workingVec[0],
-                workingVec[1],
-                workingVec[2]
-            ]);
-            const bakedIndices = this.faces.reduce((accum: number[], face: Face) => {
-                return accum.concat(face.indices);
-            }, []);
-            const bakedNormals = flatMap(this.normals, (workingVec: vec4) => [
-                workingVec[0],
-                workingVec[1],
-                workingVec[2]
-            ]);
+            const bakedVertices: number[] = [];
+            const bakedNormals: number[] = [];
+            const bakedIndices: number[] = [];
+            let nextNewIndex = 0;
+
+            this.faces.forEach((face: Face) => {
+                zip(face.vertexIndices, face.normalIndices).forEach(([vertexIndex, normalIndex]: [number | undefined, number | undefined]) => {
+                    if (vertexIndex === undefined || normalIndex === undefined) {
+                        throw new Error('Mismatched normals and vertices found');
+                    }
+                    if (vertexIndex >= this.vertices.length) {
+                        throw new Error(`Vertex index ${vertexIndex} can't be found.`);
+                    }
+                    if (normalIndex >= this.normals.length) {
+                        throw new Error(`Vertex normal index ${normalIndex} can't be found.`);
+                    }
+
+                    const vertexNormalPair = `${vertexIndex},${normalIndex}`;
+                    if (vertexNormalPairs[vertexNormalPair] !== undefined) {
+                        bakedIndices.push(vertexNormalPairs[vertexNormalPair]);
+                    } else {
+                        bakedIndices.push(nextNewIndex);
+                        vertexNormalPairs[vertexNormalPair] = nextNewIndex;
+                        nextNewIndex += 1;
+
+                        const vertex = this.vertices[vertexIndex];
+                        const normal = this.normals[normalIndex];
+                        bakedVertices.push(vertex[0], vertex[1], vertex[2]);
+                        bakedNormals.push(normal[0], normal[1], normal[2]);
+                    }
+                });
+            });
 
             this.bakedRepresentation = {
                 vertices: Float32Array.from(bakedVertices),
@@ -303,16 +328,20 @@ export class WorkingGeometry implements Bakeable {
             child.combine();
         });
         let vertexCount = this.vertices.length;
+        let normalCount = this.normals.length;
         for (const child of this.mergedObjects) {
             this.vertices = this.vertices.concat(child.vertices);
             this.normals = this.normals.concat(child.normals);
             child.faces.forEach((face: Face) => {
-                const newIndices = face.indices.map((i: number) => i + vertexCount);
-                face.indices = newIndices;
+                const newVertexIndices = face.vertexIndices.map((i: number) => i + vertexCount);
+                const newNormalIndices = face.normalIndices.map((i: number) => i + normalCount);
+                face.vertexIndices = newVertexIndices;
+                face.normalIndices = newNormalIndices;
             });
             this.faces = this.faces.concat(child.faces);
             this.controlPoints = this.controlPoints.concat(child.controlPoints);
             vertexCount += child.vertices.length;
+            normalCount += child.normals.length;
         }
     }
 

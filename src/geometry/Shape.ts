@@ -19,9 +19,10 @@ export namespace Shape {
 
         const sphereField = new ScalarField(DIM, LENGTH, sphereSignedDistFunc);
         const vertices = genIsoSurface(sphereField);
-        const faces = range(vertices.length / 3).map(
-            (i: number) => new Face(range(i * 3, (i + 1) * 3))
-        );
+        const faces = range(vertices.length / 3).map((i: number) => {
+            const indices = range(i * 3, (i + 1) * 3);
+            return new Face(indices, indices);
+        });
 
         return new WorkingGeometry({
             vertices: vertices,
@@ -99,8 +100,10 @@ export namespace Shape {
         const faces: Face[] = [];
         for (let i = 0; i < 6; i += 1) {
             const base = i * 4;
-            faces.push(new Face([base, base + 1, base + 2]));
-            faces.push(new Face([base, base + 2, base + 3]));
+            const indicesSide1 = [base, base + 1, base + 2];
+            const indicesSide2 = [base, base + 2, base + 3];
+            faces.push(new Face(indicesSide1, indicesSide1));
+            faces.push(new Face(indicesSide2, indicesSide2));
         }
 
         return new WorkingGeometry({
@@ -177,7 +180,7 @@ export namespace Shape {
                     face.reverse();
                 }
 
-                faces.push(new Face(face));
+                faces.push(new Face(face, face));
             });
         });
 
@@ -197,9 +200,8 @@ export namespace Shape {
             //        |/
             // -----p+i-----p+i+1--
             // (p = PRECISION, which is # vertices in the ring)
-            faces.push(
-                new Face([offset + i, offset + (i + 1) % PRECISION, offset + PRECISION + i])
-            );
+            const indices = [offset + i, offset + (i + 1) % PRECISION, offset + PRECISION + i];
+            faces.push(new Face(indices, indices));
 
             // Triangle 2:
             // -------i-----i+1----
@@ -208,13 +210,12 @@ export namespace Shape {
             //         /    |
             // -----p+i-----p+i+1--
             // (p = PRECISION, which is # vertices in the ring)
-            faces.push(
-                new Face([
-                    offset + (i + 1) % PRECISION,
-                    offset + PRECISION + (i + 1) % PRECISION,
-                    offset + PRECISION + i
-                ])
-            );
+            const indices2 = [
+                offset + (i + 1) % PRECISION,
+                offset + PRECISION + (i + 1) % PRECISION,
+                offset + PRECISION + i
+            ];
+            faces.push(new Face(indices2, indices2));
         });
 
         return new WorkingGeometry({

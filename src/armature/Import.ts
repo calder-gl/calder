@@ -35,6 +35,7 @@ class Data {
         while (this.lines.length > 0) {
             const [command, ...args] = (<string>this.lines.shift()).split(/\s+/);
 
+            // TODO(davepagurek): turn this into an enum
             if (command === 'v') {
                 const vecLine = args.map(parseFloat)
                 const vec = vec3.fromValues(vecLine[0], vecLine[1], vecLine[2]);

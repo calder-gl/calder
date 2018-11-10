@@ -154,7 +154,7 @@ describe('Node', () => {
             const geometry: WorkingGeometry = new WorkingGeometry({
                 vertices: [vec3.create()],
                 normals: [vec3.create()],
-                faces: [new Face([])],
+                faces: [new Face([], [])],
                 controlPoints: [vec3.create()],
                 material: defaultMaterial
             });
@@ -521,7 +521,7 @@ describe('Node', () => {
             const geometry: WorkingGeometry = new WorkingGeometry({
                 vertices: [vec3.create()],
                 normals: [vec3.create()],
-                faces: [new Face([])],
+                faces: [new Face([], [])],
                 controlPoints: [vec3.create()],
                 material: defaultMaterial
             });
@@ -562,7 +562,7 @@ describe('Node', () => {
             const geometry: WorkingGeometry = new WorkingGeometry({
                 vertices: [vec3.create()],
                 normals: [vec3.create()],
-                faces: [new Face([])],
+                faces: [new Face([], [])],
                 controlPoints: [vec3.create()],
                 material: defaultMaterial
             });

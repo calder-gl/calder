@@ -16,6 +16,8 @@ import {
     Shape
 } from '../calder';
 
+import { mtlData, objData } from '../import_dir/ImportDataMonkey';
+
 // tslint:disable-next-line:import-name
 import Bezier = require('bezier-js');
 
@@ -248,7 +250,7 @@ renderer.eachFrame(draw);
 const importBtn = document.createElement('button');
 importBtn.innerText = 'Import';
 importBtn.addEventListener('click', () => {
-    tree = Model.importObj();
+    tree = Model.importObj(objData, mtlData);
     // leafModel = Model.importObj();
     // tree = treeGen.generateSOSMC({
     //     start: 'branch',

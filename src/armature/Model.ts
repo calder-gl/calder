@@ -2,7 +2,6 @@ import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
 
 import { Color } from '../colors/Color';
 import { AABB } from '../geometry/BakedGeometry';
-import { mtlData, objData } from '../import_dir/ImportData';
 import { BakedMaterial } from '../renderer/Material';
 import { RenderObject } from '../types/RenderObject';
 import { worldSpaceAABB } from '../utils/aabb';
@@ -56,7 +55,7 @@ export class Model {
      * @return {Model} model A model representing that described in .obj and .mtl format in the
      * import_dir directory.
      */
-    public static importObj(): Model {
+    public static importObj(objData: string, mtlData: string): Model {
         const nodes = importObj(objData, mtlData);
 
         return new Model(nodes);

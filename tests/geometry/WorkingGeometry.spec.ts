@@ -18,9 +18,10 @@ describe('Face', () => {
         it('can create an object as specified', () => {
             const indices = [0, 1, 2];
 
-            const face = new Face(indices);
+            const face = new Face(indices, indices);
 
-            expect(face.indices).toEqual(indices);
+            expect(face.vertexIndices).toEqual(indices);
+            expect(face.normalIndices).toEqual(indices);
         });
     });
 });
@@ -48,7 +49,7 @@ describe('WorkingGeometry', () => {
                 vec3.fromValues(0, 0, -1),
                 vec3.fromValues(0, 0, -1)
             ];
-            const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
+            const faces = [new Face([0, 1, 2], [0, 1, 2]), new Face([0, 2, 3], [0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
             const geo = new WorkingGeometry({
                 vertices: vertices,
@@ -82,7 +83,7 @@ describe('WorkingGeometry', () => {
                 vec3.fromValues(0, 0, -1),
                 vec3.fromValues(0, 0, -1)
             ];
-            const faces = [new Face([0, 1, 2]), new Face([0, 2, 3])];
+            const faces = [new Face([0, 1, 2], [0, 1, 2]), new Face([0, 2, 3], [0, 2, 3])];
             const controlPoints = [vec3.fromValues(0, 0, 0)];
             const square = new WorkingGeometry({
                 vertices: vertices,

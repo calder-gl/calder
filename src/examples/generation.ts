@@ -16,7 +16,6 @@ import {
     Shape
 } from '../calder';
 
-
 import { mtlData, objData } from '../import_dir/ImportDataMonkey';
 
 // tslint:disable-next-line:import-name

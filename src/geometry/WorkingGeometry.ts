@@ -137,7 +137,7 @@ export class WorkingGeometry implements Bakeable {
         if (this.updateCache) {
             this.combine();
 
-            const vertexNormalPairs: {[pair: string]: number} = {};
+            const vertexNormalPairs: { [pair: string]: number } = {};
 
             const min = vec4.fromValues(Infinity, Infinity, Infinity, 1);
             const max = vec4.fromValues(-Infinity, -Infinity, -Infinity, 1);
@@ -157,31 +157,33 @@ export class WorkingGeometry implements Bakeable {
             let nextNewIndex = 0;
 
             this.faces.forEach((face: Face) => {
-                zip(face.vertexIndices, face.normalIndices).forEach(([vertexIndex, normalIndex]: [number | undefined, number | undefined]) => {
-                    if (vertexIndex === undefined || normalIndex === undefined) {
-                        throw new Error('Mismatched normals and vertices found');
-                    }
-                    if (vertexIndex >= this.vertices.length) {
-                        throw new Error(`Vertex index ${vertexIndex} can't be found.`);
-                    }
-                    if (normalIndex >= this.normals.length) {
-                        throw new Error(`Vertex normal index ${normalIndex} can't be found.`);
-                    }
+                zip(face.vertexIndices, face.normalIndices).forEach(
+                    ([vertexIndex, normalIndex]: [number | undefined, number | undefined]) => {
+                        if (vertexIndex === undefined || normalIndex === undefined) {
+                            throw new Error('Mismatched normals and vertices found');
+                        }
+                        if (vertexIndex >= this.vertices.length) {
+                            throw new Error(`Vertex index ${vertexIndex} can't be found.`);
+                        }
+                        if (normalIndex >= this.normals.length) {
+                            throw new Error(`Vertex normal index ${normalIndex} can't be found.`);
+                        }
 
-                    const vertexNormalPair = `${vertexIndex},${normalIndex}`;
-                    if (vertexNormalPairs[vertexNormalPair] !== undefined) {
-                        bakedIndices.push(vertexNormalPairs[vertexNormalPair]);
-                    } else {
-                        bakedIndices.push(nextNewIndex);
-                        vertexNormalPairs[vertexNormalPair] = nextNewIndex;
-                        nextNewIndex += 1;
+                        const vertexNormalPair = `${vertexIndex},${normalIndex}`;
+                        if (vertexNormalPairs[vertexNormalPair] !== undefined) {
+                            bakedIndices.push(vertexNormalPairs[vertexNormalPair]);
+                        } else {
+                            bakedIndices.push(nextNewIndex);
+                            vertexNormalPairs[vertexNormalPair] = nextNewIndex;
+                            nextNewIndex += 1;
 
-                        const vertex = this.vertices[vertexIndex];
-                        const normal = this.normals[normalIndex];
-                        bakedVertices.push(vertex[0], vertex[1], vertex[2]);
-                        bakedNormals.push(normal[0], normal[1], normal[2]);
+                            const vertex = this.vertices[vertexIndex];
+                            const normal = this.normals[normalIndex];
+                            bakedVertices.push(vertex[0], vertex[1], vertex[2]);
+                            bakedNormals.push(normal[0], normal[1], normal[2]);
+                        }
                     }
-                });
+                );
             });
 
             this.bakedRepresentation = {

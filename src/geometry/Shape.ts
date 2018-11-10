@@ -21,6 +21,7 @@ export namespace Shape {
         const vertices = genIsoSurface(sphereField);
         const faces = range(vertices.length / 3).map((i: number) => {
             const indices = range(i * 3, (i + 1) * 3);
+
             return new Face(indices, indices);
         });
 

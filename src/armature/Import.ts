@@ -26,7 +26,7 @@ class Data {
         this.lines = rawData.split('\n');
     }
 
-    public read() {
+    public parse() {
         const vertices: vec3[] = [];
         const normals: vec3[] = [];
         const groups: Group[] = [];
@@ -81,7 +81,7 @@ export function importObj(objData: string, mtlData: string) {
     const materials = readMaterials(mtlData);
     const data = new Data(objData);
 
-    const {vertices, normals, groups} = data.read();
+    const {vertices, normals, groups} = data.parse();
 
     const parent = new Node();
     parent.setAnchor(vec3.fromValues(0, 0, 0));
@@ -92,7 +92,7 @@ export function importObj(objData: string, mtlData: string) {
                     vertices: vertices,
                     normals: normals,
                     faces: group.faces,
-                    material: <Material>materials[group.materialName],
+                    material: materials[group.materialName],
                     controlPoints: []
                 }),
                 parent

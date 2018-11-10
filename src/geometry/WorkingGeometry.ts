@@ -333,10 +333,8 @@ export class WorkingGeometry implements Bakeable {
             this.vertices = this.vertices.concat(child.vertices);
             this.normals = this.normals.concat(child.normals);
             child.faces.forEach((face: Face) => {
-                const newVertexIndices = face.vertexIndices.map((i: number) => i + vertexCount);
-                const newNormalIndices = face.normalIndices.map((i: number) => i + normalCount);
-                face.vertexIndices = newVertexIndices;
-                face.normalIndices = newNormalIndices;
+                face.vertexIndices = face.vertexIndices.map((i: number) => i + vertexCount);
+                face.normalIndices = face.normalIndices.map((i: number) => i + normalCount);
             });
             this.faces = this.faces.concat(child.faces);
             this.controlPoints = this.controlPoints.concat(child.controlPoints);

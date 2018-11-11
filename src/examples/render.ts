@@ -78,7 +78,7 @@ const test = Model.create(bone());
 test.root().setPosition({ x: 3, y: 0, z: 0 });
 
 test.root().setScale(Matrix.fromScaling({ x: 1, y: 3, z: 1 }));
-const testChild = test.add(bone());
+const testChild = bone();
 testChild.point('base').stickTo(test.root().point('tip'));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

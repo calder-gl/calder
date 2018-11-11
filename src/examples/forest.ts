@@ -2,7 +2,6 @@ import {
     Armature,
     CostFunction,
     Generator,
-    GeneratorInstance,
     GuidingVectors,
     Light,
     Material,
@@ -63,18 +62,18 @@ const bone = Armature.define((root: Node) => {
 
 const treeGen = Armature.generator();
 treeGen
-    .define('forest', (_: Point, instance: GeneratorInstance) => {
+    .define('forest', (_: Point) => {
         range(15).forEach(() => {
-            const node = instance.add(bone());
+            const node = bone();
             node
                 // Move to random spot in [-8, 8] x [-8, 8] on the ground
                 .moveTo({ x: Math.random() * 16 - 8, y: 0, z: Math.random() * 16 - 8 });
 
-            instance.addDetail({ component: 'branch', at: node.point('base') });
+            Generator.addDetail({ component: 'branch', at: node.point('base') });
         });
     })
-    .define('branch', (root: Point, instance: GeneratorInstance) => {
-        const node = instance.add(bone());
+    .define('branch', (root: Point) => {
+        const node = bone();
         node.point('base').stickTo(root);
         node.scale(Math.random() * 0.4 + 0.9);
         node
@@ -87,25 +86,25 @@ treeGen
             .release();
         node.scale(0.8); // Shrink a bit
 
-        const trunk = instance.add(node.point('mid').attach(branchShape));
+        const trunk = node.point('mid').attach(branchShape);
         trunk.scale({ x: 0.2, y: 1, z: 0.2 });
 
-        instance.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
+        Generator.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
     })
-    .defineWeighted('branchOrLeaf', 1, (root: Point, instance: GeneratorInstance) => {
-        instance.addDetail({ component: 'leaf', at: root });
+    .defineWeighted('branchOrLeaf', 1, (root: Point) => {
+        Generator.addDetail({ component: 'leaf', at: root });
     })
-    .defineWeighted('branchOrLeaf', 4, (root: Point, instance: GeneratorInstance) => {
-        instance.addDetail({ component: 'branch', at: root });
-        instance.addDetail({ component: 'maybeBranch', at: root });
-        instance.addDetail({ component: 'maybeBranch', at: root });
+    .defineWeighted('branchOrLeaf', 4, (root: Point) => {
+        Generator.addDetail({ component: 'branch', at: root });
+        Generator.addDetail({ component: 'maybeBranch', at: root });
+        Generator.addDetail({ component: 'maybeBranch', at: root });
     })
-    .define('leaf', (root: Point, instance: GeneratorInstance) => {
-        const leaf = instance.add(root.attach(leafSphere));
+    .define('leaf', (root: Point) => {
+        const leaf = root.attach(leafSphere);
         leaf.scale(Math.random() * 0.5 + 0.5);
     })
-    .maybe('maybeBranch', (root: Point, instance: GeneratorInstance) => {
-        instance.addDetail({ component: 'branch', at: root });
+    .maybe('maybeBranch', (root: Point) => {
+        Generator.addDetail({ component: 'branch', at: root });
     })
     .wrapUpMany(['branch', 'maybeBranch', 'branchOrLeaf'], Generator.replaceWith('leaf'))
     .thenComplete(['leaf']);

@@ -4,10 +4,12 @@ import { Node, Point } from './Node';
 
 import { minBy, range } from 'lodash';
 
+// tslint:disable no-use-before-declare
+
 /**
  * A function to generate a component from a spawn point. These are the body of rule definitions.
  */
-type GeneratorFn = (root: Point, instance: GeneratorInstance) => void;
+type GeneratorFn = (root: Point) => void;
 
 type Definition = {
     weight: number;
@@ -169,40 +171,42 @@ export class GeneratorInstance {
         useHeuristic: boolean = false,
         onAdded?: (nodes: Node[]) => void
     ) {
-        const originalLength = this.model.nodes.length;
+        Generator.withContext(this, () => {
+            const originalLength = this.model.nodes.length;
 
-        let choiceProbability = 1;
+            let choiceProbability = 1;
 
-        const spawnPoints = skeleton ? this.skeletonSpawnPoints : this.postSkeletonSpawnPoints;
+            const spawnPoints = skeleton ? this.skeletonSpawnPoints : this.postSkeletonSpawnPoints;
 
-        while (this.model.nodes.length === originalLength && spawnPoints.length > 0) {
-            // Remove a random spawn point from the list of active points, updating the probability
-            // given the number of choices we have
-            choiceProbability /= spawnPoints.length;
-            const spawnPoint = spawnPoints.splice(
-                Math.floor(this.random() * spawnPoints.length),
-                1
-            )[0];
+            while (this.model.nodes.length === originalLength && spawnPoints.length > 0) {
+                // Remove a random spawn point from the list of active points, updating the probability
+                // given the number of choices we have
+                choiceProbability /= spawnPoints.length;
+                const spawnPoint = spawnPoints.splice(
+                    Math.floor(this.random() * spawnPoints.length),
+                    1
+                )[0];
 
-            // Get a definition for the rule at the picked spawn point
-            const generator = this.generator.getGenerator(spawnPoint.component);
+                // Get a definition for the rule at the picked spawn point
+                const generator = this.generator.getGenerator(spawnPoint.component);
 
-            // Add things to the model using the rule definition
-            generator(spawnPoint.at, this);
-        }
+                // Add things to the model using the rule definition
+                generator(spawnPoint.at);
+            }
 
-        // Get the new nodes that were added
-        const added = this.model.nodes.slice(originalLength);
+            // Get the new nodes that were added
+            const added = this.model.nodes.slice(originalLength);
 
-        if (onAdded !== undefined) {
-            onAdded(added);
-        }
+            if (onAdded !== undefined) {
+                onAdded(added);
+            }
 
-        // Recompute the cost
-        this.cost = this.costFn.getCost(this, added, useHeuristic);
+            // Recompute the cost
+            this.cost = this.costFn.getCost(this, added, useHeuristic);
 
-        // Update probability
-        this.probability *= choiceProbability;
+            // Update probability
+            this.probability *= choiceProbability;
+        });
     }
 
     /**
@@ -226,7 +230,7 @@ export class GeneratorInstance {
         while (this.skeletonSpawnPoints.length > 0) {
             const spawnPoint: SpawnPoint = <SpawnPoint>this.skeletonSpawnPoints.pop();
             // TODO: Throw an error if generator function not found in `wrapUpRules`
-            this.generator.wrapUpRules[spawnPoint.component](spawnPoint.at, this);
+            this.generator.wrapUpRules[spawnPoint.component](spawnPoint.at);
         }
 
         while (this.postSkeletonSpawnPoints.length > 0) {
@@ -286,6 +290,7 @@ export class GeneratorTask {
     private timeBudget: number = Infinity;
     private startTime: number = new Date().getTime();
     private cpuTime: number = 0;
+    private lastContext: GeneratorInstance | null = Generator.maybeContext();
 
     /**
      * @param {number} timeBudget How much time in seconds can be spent per frame before the rest
@@ -307,10 +312,16 @@ export class GeneratorTask {
             const existsTimeRemaining = () =>
                 (new Date().getTime() - incrementalStartTime) / 1000 < this.timeBudget;
 
-            while (!this.cancelled && this.result === undefined && existsTimeRemaining()) {
-                const { value } = iterator.next();
-                this.result = value;
-            }
+            // We restore the last known context before letting the coroutine run in case it stopped
+            // in the middle of another Generator.withContext block.
+            Generator.withContext(this.lastContext, () => {
+                while (!this.cancelled && this.result === undefined && existsTimeRemaining()) {
+                    const { value } = iterator.next();
+                    this.result = value;
+                }
+
+                this.lastContext = Generator.maybeContext();
+            });
 
             this.cpuTime += (new Date().getTime() - incrementalStartTime) / 1000;
 
@@ -361,10 +372,61 @@ export class GeneratorTask {
  * definition for the same rule.
  */
 export class Generator {
+    private static currentContext: GeneratorInstance | null = null;
+
     public readonly wrapUpRules: { [name: string]: GeneratorFn } = {};
     public readonly postSkeletonComponentNames: Set<string> = new Set<string>();
     private rules: { [name: string]: RuleInfo } = {};
     private random: RandomGenerator = Math.random;
+
+    /**
+     * @returns {GeneratorInstance} The instance currently being operated on.
+     * @throws {Error} if there is no current context (i.e. if this is called outside of
+     * a rule definition.)
+     */
+    public static context(): GeneratorInstance {
+        const context = Generator.currentContext;
+        if (context === null) {
+            throw new Error('Generator context has not been set!');
+        }
+
+        return context;
+    }
+
+    /**
+     * @returns {GeneratorInstance | null} The instance currently being operated on, if it
+     * exists, or null if there is no active context.
+     */
+    public static maybeContext(): GeneratorInstance | null {
+        return Generator.currentContext;
+    }
+
+    /**
+     * @param {SpawnPoint} spawnPoint A spawn point to add to the current instance.
+     * @throws {Error} if there is no current context (i.e. if this is called outside of
+     * a rule definition.)
+     */
+    public static addDetail(spawnPoint: SpawnPoint) {
+        Generator.context().addDetail(spawnPoint);
+    }
+
+    /**
+     * Calls within the callback passed to `withContext` will be able to refer to `instance` using
+     * `Generator.context()` or `Generator.maybeContext()` without needing to reference the
+     * instance directly. Nested calls work like a stack, where the previous state is restored
+     * after each call finishes.
+     *
+     * @param {GeneratorInstance | null} instance The instance to use as the context for some work.
+     * @param {() => void} callback Work to do on the given instance.
+     */
+    public static withContext(instance: GeneratorInstance | null, callback: () => void) {
+        const lastContext = Generator.currentContext;
+        Generator.currentContext = instance;
+
+        callback();
+
+        Generator.currentContext = lastContext;
+    }
 
     /**
      * Defines a generator function that adds a component with `name` at the root of the spawn
@@ -374,8 +436,8 @@ export class Generator {
      * @returns {Generator} The current generator, so that more methods can be chained.
      */
     public static replaceWith(name: string): GeneratorFn {
-        return (root: Point, instance: GeneratorInstance) => {
-            instance.addDetail({ component: name, at: root });
+        return (root: Point) => {
+            Generator.context().addDetail({ component: name, at: root });
         };
     }
 
@@ -607,8 +669,10 @@ export class Generator {
         );
 
         while (finalInstance.getSpawnPoints().length > 0) {
-            const spawnPoint: SpawnPoint = <SpawnPoint>finalInstance.getSpawnPoints().pop();
-            this.wrapUpRules[spawnPoint.component](spawnPoint.at, finalInstance);
+            Generator.withContext(finalInstance, () => {
+                const spawnPoint: SpawnPoint = <SpawnPoint>finalInstance.getSpawnPoints().pop();
+                this.wrapUpRules[spawnPoint.component](spawnPoint.at);
+            });
             yield undefined;
         }
         while (finalInstance.getPostSkeletonSpawnPoints().length > 0) {

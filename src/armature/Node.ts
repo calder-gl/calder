@@ -13,6 +13,8 @@ import { defaultMaterial } from '../renderer/Material';
 import { matrix4, vector3 } from '../types/InternalVectorTypes';
 import { Mapper } from '../utils/mapper';
 import { zeroVec4 } from '../utils/vectors';
+import { Generator } from './Generator';
+import { Model } from './Model';
 import { NodeRenderObject } from './NodeRenderObject';
 import { Transformation } from './Transformation';
 
@@ -73,7 +75,8 @@ export class Node {
     private currentNormalMatrixCache: mat3 = mat3.create();
 
     /**
-     * Instantiates a new `Node`.
+     * Instantiates a new `Node`. If this is called inside of a generator definition, the node
+     * will automatically be added to the instance model in context.
      *
      * @param {Node[]} children
      */
@@ -85,6 +88,11 @@ export class Node {
     ) {
         this.parent = parent;
         this.transformation = new Transformation(position, rotation, scale);
+
+        const context = Generator.maybeContext();
+        if (context !== null) {
+            context.getModel().add(this);
+        }
     }
 
     public static invalidateBuffers() {
@@ -1003,11 +1011,12 @@ export class Point {
         return geometryNode;
     }
 
-    public attachModel(modelRoot: Node, targetModelNodes: Node[]): Node[] {
-        modelRoot.setAnchor(vec3.fromValues(0, 0, 0));
-        modelRoot.setPosition(Mapper.vectorToCoord(this.position));
-        this.node.addChild(modelRoot);
+    public attachModel(model: Model): Model {
+        const clone = model.cloneDeep();
+        clone.root().setAnchor(vec3.fromValues(0, 0, 0));
+        clone.root().setPosition(Mapper.vectorToCoord(this.position));
+        this.node.addChild(clone.root());
 
-        return targetModelNodes;
+        return clone;
     }
 }

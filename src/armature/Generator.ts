@@ -256,12 +256,14 @@ export class GeneratorInstance {
             });
         }
 
-        while (this.postSkeletonSpawnPoints.length > 0) {
-            this.growIfPossible(false);
-        }
+        while (this.postSkeletonSpawnPoints.length > 0 || this.hasDecorateCallbacks()) {
+            while (this.postSkeletonSpawnPoints.length > 0) {
+                this.growIfPossible(false);
+            }
 
-        while (this.hasDecorateCallbacks()) {
-            this.runDecorateCallback();
+            while (this.hasDecorateCallbacks()) {
+                this.runDecorateCallback();
+            }
         }
     }
 
@@ -706,14 +708,21 @@ export class Generator {
             });
             yield undefined;
         }
-        while (finalInstance.getPostSkeletonSpawnPoints().length > 0) {
-            finalInstance.growIfPossible(false, false);
-            yield undefined;
-        }
 
-        while (finalInstance.hasDecorateCallbacks()) {
-            finalInstance.runDecorateCallback();
-            yield undefined;
+        // Run this in a loop because decoration callbacks may add post skeleton spawn points
+        while (
+            finalInstance.getPostSkeletonSpawnPoints().length > 0 ||
+            finalInstance.hasDecorateCallbacks()
+        ) {
+            while (finalInstance.getPostSkeletonSpawnPoints().length > 0) {
+                finalInstance.growIfPossible(false, false);
+                yield undefined;
+            }
+
+            while (finalInstance.hasDecorateCallbacks()) {
+                finalInstance.runDecorateCallback();
+                yield undefined;
+            }
         }
 
         yield finalInstance.getModel();

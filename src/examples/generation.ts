@@ -83,8 +83,10 @@ treeGen
             .release();
         node.scale(0.8); // Shrink a bit
 
-        const trunk = node.point('mid').attach(branchShape);
-        trunk.scale({ x: 0.2, y: 1, z: 0.2 });
+        Generator.decorate(() => {
+            const trunk = node.point('mid').attach(branchShape);
+            trunk.scale({ x: 0.2, y: 1, z: 0.2 });
+        });
 
         Generator.addDetail({ component: 'branchOrLeaf', at: node.point('tip') });
     })

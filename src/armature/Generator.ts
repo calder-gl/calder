@@ -58,6 +58,7 @@ export class GeneratorInstance {
     private probability: number = 1;
     private skeletonSpawnPoints: SpawnPoint[] = [];
     private postSkeletonSpawnPoints: SpawnPoint[] = [];
+    private decorateCallbacks: (() => void)[] = [];
     private random: RandomGenerator = Math.random;
 
     /**
@@ -83,6 +84,25 @@ export class GeneratorInstance {
     }
 
     /**
+     * Allows a callback to be run after optimization is done, allowing it
+     * to not affect on optimization.
+     */
+    public decorate(callback: () => void) {
+        this.decorateCallbacks.push(callback);
+    }
+
+    public hasDecorateCallbacks() {
+        return this.decorateCallbacks.length > 0;
+    }
+
+    public runDecorateCallback() {
+        const callback = this.decorateCallbacks.pop();
+        if (callback !== undefined) {
+            Generator.withContext(this, callback);
+        }
+    }
+
+    /**
      * @returns {GeneratorInstance} A flat copy of this generator instance.
      */
     public clone(): GeneratorInstance {
@@ -92,6 +112,7 @@ export class GeneratorInstance {
         cloned.probability = this.probability;
         cloned.skeletonSpawnPoints = [...this.skeletonSpawnPoints];
         cloned.postSkeletonSpawnPoints = [...this.postSkeletonSpawnPoints];
+        cloned.decorateCallbacks = [...this.decorateCallbacks];
 
         return cloned;
     }
@@ -230,11 +251,17 @@ export class GeneratorInstance {
         while (this.skeletonSpawnPoints.length > 0) {
             const spawnPoint: SpawnPoint = <SpawnPoint>this.skeletonSpawnPoints.pop();
             // TODO: Throw an error if generator function not found in `wrapUpRules`
-            this.generator.wrapUpRules[spawnPoint.component](spawnPoint.at);
+            Generator.withContext(this, () => {
+                this.generator.wrapUpRules[spawnPoint.component](spawnPoint.at);
+            });
         }
 
         while (this.postSkeletonSpawnPoints.length > 0) {
             this.growIfPossible(false);
+        }
+
+        while (this.hasDecorateCallbacks()) {
+            this.runDecorateCallback();
         }
     }
 
@@ -408,6 +435,10 @@ export class Generator {
      */
     public static addDetail(spawnPoint: SpawnPoint) {
         Generator.context().addDetail(spawnPoint);
+    }
+
+    public static decorate(callback: () => void) {
+        Generator.context().decorate(callback);
     }
 
     /**
@@ -677,6 +708,11 @@ export class Generator {
         }
         while (finalInstance.getPostSkeletonSpawnPoints().length > 0) {
             finalInstance.growIfPossible(false, false);
+            yield undefined;
+        }
+
+        while (finalInstance.hasDecorateCallbacks()) {
+            finalInstance.runDecorateCallback();
             yield undefined;
         }
 

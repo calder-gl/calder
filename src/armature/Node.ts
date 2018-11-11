@@ -1011,12 +1011,12 @@ export class Point {
         return geometryNode;
     }
 
-    public attachModel(model: Model): Model {
+    public attachModel(model: Model): Node {
         const clone = model.cloneDeep();
         clone.root().setAnchor(vec3.fromValues(0, 0, 0));
         clone.root().setPosition(Mapper.vectorToCoord(this.position));
         this.node.addChild(clone.root());
 
-        return clone;
+        return clone.root();
     }
 }

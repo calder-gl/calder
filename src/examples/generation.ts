@@ -98,7 +98,7 @@ treeGen
     })
     .define('leaf', (root: Point) => {
         const leaf = root.attachModel(leafModel);
-        leaf.root().scale(Math.random() * 0.5 + 0.5);
+        leaf.scale(Math.random() * 0.5 + 0.5);
     })
     .maybe('maybeBranch', (root: Point) => {
         Generator.addDetail({ component: 'branch', at: root });

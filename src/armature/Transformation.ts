@@ -17,9 +17,9 @@ export class Transformation {
         rotation: matrix4 = mat4.create(),
         scale: matrix4 = mat4.create()
     ) {
-        this.position = position;
-        this.rotation = rotation;
-        this.scale = scale;
+        this.position = position instanceof Function ? position : vec3.clone(position);
+        this.rotation = rotation instanceof Function ? rotation : mat4.clone(rotation);
+        this.scale = scale instanceof Function ? scale : mat4.clone(scale);
 
         this.matrix = Cache.create(() => {
             const transform = mat4.fromTranslation(mat4.create(), this.getPosition());

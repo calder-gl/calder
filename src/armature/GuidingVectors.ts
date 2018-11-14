@@ -192,7 +192,9 @@ export class GuidingVectors implements CostFn {
 
             // Get the vector between the parent position and the current position
             const vector = vec4.sub(vec4.create(), globalPosition, parentPosition);
-            vec4.normalize(vector, vector);
+            if (vec4.squaredLength(vector) > 0) {
+                vec4.normalize(vector, vector);
+            }
 
             // Find the closest point on a guiding curve
             const closest = this.closest(parentPosition);
@@ -236,9 +238,13 @@ export class GuidingVectors implements CostFn {
         }
 
         // Add cost for vector alignment
-        const alignmentCost =
-            (-vec3.dot(closest.guidingVector, vec3From4(added)) + closest.curve.alignmentOffset) *
-            closest.curve.alignmentMultiplier;
+        let alignmentCost = 0;
+        if (vec4.squaredLength(added) > 0) {
+            alignmentCost =
+                (-vec3.dot(closest.guidingVector, vec3From4(added)) +
+                    closest.curve.alignmentOffset) *
+                closest.curve.alignmentMultiplier;
+        }
 
         return alignmentCost + distanceCost;
     }
@@ -274,7 +280,9 @@ export class GuidingVectors implements CostFn {
             const expectedVector = this.getOrCreateExpectedVector(generator, spawnPoint.component);
             const localToGlobalTransform = spawnPoint.at.node.localToGlobalTransform();
             vector = vec4.transformMat4(vec4.create(), expectedVector, localToGlobalTransform);
-            vec4.normalize(vector, vector);
+            if (vec4.squaredLength(vector) > 0) {
+                vec4.normalize(vector, vector);
+            }
 
             // Cache spawn point direction vector
             this.spawnPointVectors.set(spawnPoint, vector);

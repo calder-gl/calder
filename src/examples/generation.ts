@@ -3,13 +3,13 @@ import {
     CostFunction,
     Generator,
     GeneratorInstance,
-    GeneratorStats,
     GeometryNode,
     GuidingCurveInfo,
     Light,
     Material,
     Model,
     Node,
+    PerfStats,
     Point,
     Renderer,
     RGBColor,
@@ -184,7 +184,7 @@ treeGen
         },
         1 / 30
     )
-    .then((model: Model, { realTime, cpuTime }: GeneratorStats) => {
+    .then((model: Model, { realTime, cpuTime }: PerfStats) => {
         tree = model;
         time.innerText = `Generated in ${realTime.toFixed(4)}s real time, ${cpuTime.toFixed(
             4

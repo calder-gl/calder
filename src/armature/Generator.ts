@@ -3,6 +3,7 @@ import { Model } from './Model';
 import { Node, Point } from './Node';
 
 import { minBy, range } from 'lodash';
+import { Task } from '../utils/Task';
 
 // tslint:disable no-use-before-declare
 
@@ -302,95 +303,6 @@ type SOSMCParams = {
     timeBudget?: number;
 };
 
-export type GeneratorStats = {
-    realTime: number;
-    cpuTime: number;
-};
-
-/**
- * A class that controls the generation of a model using SOSMC. It schedules the optimization
- * to be broken up into chunks that run within a given time budget per frame, allowing the UI
- * to update. It can also be cancelled.
- */
-export class GeneratorTask {
-    private result: Model | undefined;
-    private cancelled: boolean = false;
-    private onComplete: ((model: Model, stats: GeneratorStats) => void) | undefined;
-    private timeBudget: number = Infinity;
-    private startTime: number = new Date().getTime();
-    private cpuTime: number = 0;
-    private lastContext: GeneratorInstance | null = Generator.maybeContext();
-
-    /**
-     * @param {number} timeBudget How much time in seconds can be spent per frame before the rest
-     * of the work is deferred to the next frame. Note that it will only stop once it has gone OVER
-     * this time budget (hopefully just by a little bit) so it is not a hard limit.
-     */
-    constructor(iterator: IterableIterator<Model | undefined>, timeBudget?: number) {
-        if (timeBudget !== undefined) {
-            this.timeBudget = timeBudget;
-        }
-
-        // This will continue running the `iterator` coroutine to continue the optimization process until
-        // either it finishes or we spent too long in the current frame, in which case, we schedule this
-        // function again in another `requestAnimationFrame` callback to continue it after the UI gets a
-        // chance to update.
-        const incrementalWork = () => {
-            const incrementalStartTime = new Date().getTime();
-
-            const existsTimeRemaining = () =>
-                (new Date().getTime() - incrementalStartTime) / 1000 < this.timeBudget;
-
-            // We restore the last known context before letting the coroutine run in case it stopped
-            // in the middle of another Generator.withContext block.
-            Generator.withContext(this.lastContext, () => {
-                while (!this.cancelled && this.result === undefined && existsTimeRemaining()) {
-                    const { value } = iterator.next();
-                    this.result = value;
-                }
-
-                this.lastContext = Generator.maybeContext();
-            });
-
-            this.cpuTime += (new Date().getTime() - incrementalStartTime) / 1000;
-
-            if (!this.cancelled && this.result !== undefined) {
-                this.finish(this.result);
-            } else if (!this.cancelled) {
-                requestAnimationFrame(incrementalWork);
-            }
-        };
-
-        requestAnimationFrame(incrementalWork);
-    }
-
-    public then(onComplete: (mode: Model, stats: GeneratorStats) => void): GeneratorTask {
-        this.onComplete = onComplete;
-
-        if (this.result !== undefined) {
-            this.finish(this.result);
-        }
-
-        return this;
-    }
-
-    public cancel() {
-        this.cancelled = true;
-    }
-
-    private finish(model: Model) {
-        if (this.cancelled || this.onComplete === undefined || this.result === undefined) {
-            return;
-        }
-
-        const stats: GeneratorStats = {
-            realTime: (new Date().getTime() - this.startTime) / 1000,
-            cpuTime: this.cpuTime
-        };
-        this.onComplete(model, stats);
-    }
-}
-
 /**
  * A way of representing a structure made of connected components, facilitating procedural
  * generation of instances of these structures.
@@ -615,8 +527,17 @@ export class Generator {
      * heuristic in each generation.
      * @returns {GeneratorTask} A task to keep track of progress and get the result from.
      */
-    public generateSOSMC(params: SOSMCParams, timeBudget: number = 1 / 60): GeneratorTask {
-        return new GeneratorTask(this.generateSOSMCIterator(params), timeBudget);
+    public generateSOSMC(
+        params: SOSMCParams,
+        timeBudget: number = 1 / 60
+    ): Task<Model, GeneratorInstance> {
+        return new Task<Model, GeneratorInstance>(
+            this.generateSOSMCIterator(params),
+            timeBudget,
+            requestAnimationFrame,
+            Generator.withContext,
+            Generator.maybeContext
+        );
     }
 
     // https://i.imgur.com/1ebOP1Y.jpg

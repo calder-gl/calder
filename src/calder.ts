@@ -93,5 +93,6 @@ export * from './types/RenderObject';
  * Utils
  *****************************/
 
+export * from './utils/Task';
 export * from './utils/quaternion';
 export * from './utils/matrix';

@@ -534,7 +534,6 @@ export class Generator {
         return new Task<Model, GeneratorInstance>(
             this.generateSOSMCIterator(params),
             timeBudget,
-            requestAnimationFrame,
             Generator.withContext,
             Generator.maybeContext
         );

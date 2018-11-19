@@ -4,11 +4,6 @@ export type PerfStats = {
 };
 
 type IncrementalFunc = (() => void);
-type Activator = ((incrementalWork: IncrementalFunc) => void);
-
-const DEFAULT_ACTIVATOR = (work: IncrementalFunc) => {
-    work();
-};
 
 /**
  * A class that can break down work into chunks that run within a given time budget per
@@ -17,7 +12,7 @@ const DEFAULT_ACTIVATOR = (work: IncrementalFunc) => {
 export class Task<T, S = {}> {
     private result: T | undefined;
     private cancelled: boolean = false;
-    private onComplete: ((thing: T, stats: PerfStats) => void) | undefined;
+    private onComplete: ((res: T, stats: PerfStats) => void) | undefined;
     private timeBudget: number = Infinity;
     private startTime: number = new Date().getTime();
     private cpuTime: number = 0;
@@ -31,11 +26,10 @@ export class Task<T, S = {}> {
     constructor(
         iterator: IterableIterator<T | undefined>,
         timeBudget: number,
-        activator: Activator = DEFAULT_ACTIVATOR,
         withContext: ((instance: S | null, callback: IncrementalFunc) => void) = () => {},
         maybeContext: (() => S | null) = () => {
             return null;
-        },
+        }
     ) {
         this.timeBudget = timeBudget;
 
@@ -63,14 +57,14 @@ export class Task<T, S = {}> {
             if (!this.cancelled && this.result !== undefined) {
                 this.finish(this.result);
             } else if (!this.cancelled) {
-                activator(incrementalWork);
+                requestAnimationFrame(incrementalWork);
             }
         };
 
-        activator(incrementalWork);
+        requestAnimationFrame(incrementalWork);
     }
 
-    public then(onComplete: (thing: T, stats: PerfStats) => void): Task<T, S> {
+    public then(onComplete: (res: T, stats: PerfStats) => void): Task<T, S> {
         this.onComplete = onComplete;
 
         if (this.result !== undefined) {
@@ -84,7 +78,7 @@ export class Task<T, S = {}> {
         this.cancelled = true;
     }
 
-    private finish(thing: T) {
+    private finish(res: T) {
         if (this.cancelled || this.onComplete === undefined || this.result === undefined) {
             return;
         }
@@ -93,6 +87,6 @@ export class Task<T, S = {}> {
             realTime: (new Date().getTime() - this.startTime) / 1000,
             cpuTime: this.cpuTime
         };
-        this.onComplete(thing, stats);
+        this.onComplete(res, stats);
     }
 }

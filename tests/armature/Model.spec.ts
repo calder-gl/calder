@@ -1,4 +1,4 @@
-import { Armature, Model, Node, RGBColor, Shape } from '../../src/calder';
+import { Armature, Export, Model, Node, RGBColor, Shape } from '../../src/calder';
 
 const bone = Armature.define((root: Node) => {
     root.createPoint('base', { x: 0, y: 0, z: 0 });
@@ -15,7 +15,15 @@ describe('Model', () => {
                     .point('base')
                     .attach(Shape.sphere())
             );
-            const exported = model.exportOBJ('model', RGBColor.fromHex('#000000'));
+
+            let exported: Export | undefined;
+            const iter = model.exportOBJIterator('model', RGBColor.fromHex('#000000'));
+            for (;;) {
+                exported = iter.next().value;
+                if (exported !== undefined) {
+                    break;
+                }
+            }
 
             // Assert that the given name was used for the model and material
             expect(exported.obj).toEqual(expect.stringMatching(new RegExp('^o model', 'm')));

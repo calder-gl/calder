@@ -3,13 +3,18 @@ import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
 import { Color } from '../colors/Color';
 import { AABB } from '../geometry/BakedGeometry';
 import { BakedMaterial } from '../renderer/Material';
-import { RenderObject } from '../types/RenderObject';
 import { worldSpaceAABB } from '../utils/aabb';
+import { Task } from '../utils/Task';
 import { importObj } from './Import';
 import { GeometryNode, Node } from './Node';
 import { NodeRenderObject } from './NodeRenderObject';
 
 import { chunk, flatMap } from 'lodash';
+
+export interface Export {
+    obj: string;
+    mtl: string;
+}
 
 type RenderInfo = {
     /**
@@ -228,17 +233,29 @@ export class Model {
      *
      * @param {string} name The name of the model, onto which .obj and .mtl will be appended.
      * @param {Color} ambientLightColor The scene's ambient component, added to materials.
+     * @param {number} timeBudget The interval of time to update the UI for long exports.
      * @returns {{obj: string; mtl: string}} The source code for the .obj file for geometry and
      * the corresponding .mtl file for materials.
      */
-    public exportOBJ(name: string, ambientLightColor: Color): { obj: string; mtl: string } {
+    public exportOBJ(
+        name: string,
+        ambientLightColor: Color,
+        timeBudget: number = 1 / 60
+    ): Task<Export> {
+        return new Task<Export>(this.exportOBJIterator(name, ambientLightColor), timeBudget);
+    }
+
+    public *exportOBJIterator(
+        name: string,
+        ambientLightColor: Color
+    ): IterableIterator<Export | undefined> {
         const vertices: vec4[] = [];
         const normals: vec3[] = [];
         const groups: { indices: number[][]; material: number }[] = [];
         const materialIndices: Map<BakedMaterial, number> = new Map<BakedMaterial, number>();
         const materials: BakedMaterial[] = [];
 
-        this.computeRenderInfo(false).geometry.forEach((r: RenderObject) => {
+        for (const r of this.computeRenderInfo(false).geometry) {
             // Give each material a unique number representing it. If a material has already been
             // given a number, don't add it again, ensuring there are no duplicates.
             if (!materialIndices.has(r.geometry.material)) {
@@ -255,6 +272,7 @@ export class Model {
                 ),
                 material: <number>materialIndices.get(r.geometry.material)
             });
+            yield undefined;
 
             // Add vertex and normals, transformed into world space
             vertices.push(
@@ -262,12 +280,15 @@ export class Model {
                     vec4.transformMat4(vec4.create(), vec4.fromValues(x, y, z, 1), r.transform)
                 )
             );
+            yield undefined;
+
             normals.push(
                 ...chunk(r.geometry.normals, 3).map(([x, y, z]: number[]) =>
                     vec3.transformMat3(vec3.create(), vec3.fromValues(x, y, z), r.normalTransform)
                 )
             );
-        });
+            yield undefined;
+        }
 
         const obj = [
             `o ${name}`,
@@ -294,6 +315,7 @@ export class Model {
                 )
             ])
         ].join('\n');
+        yield undefined;
 
         const ambient = ambientLightColor.asVec();
         const mtl = flatMap(materials, (m: BakedMaterial, i: number) => [
@@ -314,6 +336,6 @@ export class Model {
             'illum 2'
         ]).join('\n');
 
-        return { obj, mtl };
+        yield { obj, mtl };
     }
 }

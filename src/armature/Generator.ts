@@ -364,7 +364,7 @@ export class GeneratorTask {
         requestAnimationFrame(incrementalWork);
     }
 
-    public then(onComplete: (mode: Model, stats: GeneratorStats) => void): GeneratorTask {
+    public then(onComplete: (model: Model, stats: GeneratorStats) => void): GeneratorTask {
         this.onComplete = onComplete;
 
         if (this.result !== undefined) {

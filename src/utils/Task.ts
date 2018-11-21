@@ -3,20 +3,17 @@ export type PerfStats = {
     cpuTime: number;
 };
 
-type IncrementalFunc = (() => void);
-
 /**
  * A class that can break down work into chunks that run within a given time budget per
  * iteration. It allows the UI to update. It can also be cancelled.
  */
-export class Task<T, S = {}> {
+export class Task<T> {
     private result: T | undefined;
     private cancelled: boolean = false;
     private onComplete: ((res: T, stats: PerfStats) => void) | undefined;
     private timeBudget: number = Infinity;
     private startTime: number = new Date().getTime();
     private cpuTime: number = 0;
-    private lastContext: S | null;
 
     /**
      * @param {number} timeBudget How much time in seconds can be spent per frame before the rest
@@ -26,10 +23,6 @@ export class Task<T, S = {}> {
     constructor(
         iterator: IterableIterator<T | undefined>,
         timeBudget: number,
-        withContext: ((instance: S | null, callback: IncrementalFunc) => void) = () => {},
-        maybeContext: (() => S | null) = () => {
-            return null;
-        }
     ) {
         this.timeBudget = timeBudget;
 
@@ -43,14 +36,9 @@ export class Task<T, S = {}> {
             const existsTimeRemaining = () =>
                 (new Date().getTime() - incrementalStartTime) / 1000 < this.timeBudget;
 
-            withContext(this.lastContext, () => {
-                while (!this.cancelled && this.result === undefined && existsTimeRemaining()) {
-                    const { value } = iterator.next();
-                    this.result = value;
-                }
-
-                this.lastContext = maybeContext();
-            });
+            while (!this.cancelled && this.result === undefined && existsTimeRemaining()) {
+                this.result = iterator.next().value;
+            }
 
             this.cpuTime += (new Date().getTime() - incrementalStartTime) / 1000;
 
@@ -64,7 +52,7 @@ export class Task<T, S = {}> {
         requestAnimationFrame(incrementalWork);
     }
 
-    public then(onComplete: (res: T, stats: PerfStats) => void): Task<T, S> {
+    public then(onComplete: (res: T, stats: PerfStats) => void): Task<T> {
         this.onComplete = onComplete;
 
         if (this.result !== undefined) {

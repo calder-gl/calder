@@ -303,6 +303,30 @@ type SOSMCParams = {
     timeBudget?: number;
 };
 
+class GenerationIterator implements IterableIterator<Model | undefined> {
+    private lastContext: GeneratorInstance | null;
+    private iterator: IterableIterator<Model | undefined>;
+    constructor(iterator: IterableIterator<Model | undefined>) {
+        this.iterator = iterator;
+    }
+
+    public next(): IteratorResult<Model | undefined> {
+        let res;
+        Generator.withContext(this.lastContext, () => {
+            res = this.iterator.next();
+            this.lastContext = Generator.maybeContext();
+
+            return res;
+        });
+
+        return res;
+    }
+
+    public [Symbol.iterator](): IterableIterator<Model | undefined> {
+        return this;
+    }
+}
+
 /**
  * A way of representing a structure made of connected components, facilitating procedural
  * generation of instances of these structures.
@@ -530,12 +554,10 @@ export class Generator {
     public generateSOSMC(
         params: SOSMCParams,
         timeBudget: number = 1 / 60
-    ): Task<Model, GeneratorInstance> {
-        return new Task<Model, GeneratorInstance>(
-            this.generateSOSMCIterator(params),
+    ): Task<Model> {
+        return new Task<Model>(
+            new GenerationIterator(this.generateSOSMCIterator(params)),
             timeBudget,
-            Generator.withContext,
-            Generator.maybeContext
         );
     }
 

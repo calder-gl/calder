@@ -20,10 +20,7 @@ export class Task<T> {
      * of the work is deferred to the next frame. Note that it will only stop once it has gone OVER
      * this time budget (hopefully just by a little bit) so it is not a hard limit.
      */
-    constructor(
-        iterator: IterableIterator<T | undefined>,
-        timeBudget: number,
-    ) {
+    constructor(iterator: IterableIterator<T | undefined>, timeBudget: number) {
         this.timeBudget = timeBudget;
 
         // This will continue running the `iterator` coroutine to continue the optimization process until

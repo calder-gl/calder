@@ -303,6 +303,10 @@ type SOSMCParams = {
     timeBudget?: number;
 };
 
+/**
+ * A wrapper class used for the generateSOSMC generator
+ * to maintain and reload context. Used to pass into tasks.
+ */
 class GenerationIterator implements IterableIterator<Model | undefined> {
     private lastContext: GeneratorInstance | null;
     private iterator: IterableIterator<Model | undefined>;
@@ -311,7 +315,7 @@ class GenerationIterator implements IterableIterator<Model | undefined> {
     }
 
     public next(): IteratorResult<Model | undefined> {
-        let res;
+        let res: IteratorResult<Model | undefined> = { value: undefined, done: false };
         Generator.withContext(this.lastContext, () => {
             res = this.iterator.next();
             this.lastContext = Generator.maybeContext();
@@ -551,13 +555,10 @@ export class Generator {
      * heuristic in each generation.
      * @returns {GeneratorTask} A task to keep track of progress and get the result from.
      */
-    public generateSOSMC(
-        params: SOSMCParams,
-        timeBudget: number = 1 / 60
-    ): Task<Model> {
+    public generateSOSMC(params: SOSMCParams, timeBudget: number = 1 / 60): Task<Model> {
         return new Task<Model>(
             new GenerationIterator(this.generateSOSMCIterator(params)),
-            timeBudget,
+            timeBudget
         );
     }
 

@@ -3,10 +3,10 @@ import {
     CostFunction,
     Generator,
     GeneratorInstance,
-    GeneratorStats,
     Material,
     Model,
     Node,
+    PerfStats,
     Point,
     RGBColor,
     Shape
@@ -128,7 +128,7 @@ function runBenchmark() {
         );
     }
 
-    function onComplete(_: Model, { cpuTime }: GeneratorStats) {
+    function onComplete(_: Model, { cpuTime }: PerfStats) {
         results[samples[0]].push(lastCost);
         averages[samples[0]] += cpuTime;
 

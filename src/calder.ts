@@ -36,6 +36,7 @@ export * from './armature/Generator';
 export * from './armature/GuidingVectors';
 export * from './armature/Model';
 export * from './armature/Node';
+export * from './armature/Silhouette';
 
 /*****************************
  * Colors

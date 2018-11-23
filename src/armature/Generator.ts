@@ -308,7 +308,7 @@ type SOSMCParams = {
  * to maintain and reload context. Used to pass into tasks.
  */
 class GenerationIterator implements IterableIterator<Model | undefined> {
-    private lastContext: GeneratorInstance | null;
+    private lastContext: GeneratorInstance | null = null;
     private iterator: IterableIterator<Model | undefined>;
     constructor(iterator: IterableIterator<Model | undefined>) {
         this.iterator = iterator;

@@ -66,6 +66,10 @@ function createRenderSilhouette(regl: REGL.Regl) {
     });
 }
 
+/**
+ * A cost function where instances incur cost when their silhouette does not overlap
+ * with a specified target image.
+ */
 export class Silhouette implements CostFn {
     private regl: REGL.Regl;
     private target: ImageData;
@@ -157,7 +161,7 @@ export class Silhouette implements CostFn {
             for (let y = 0; y < this.target.height; y += 1) {
                 const index = y * this.target.width * 4 + x * 4;
 
-                if (parentImage) {
+                if (parentImage !== undefined) {
                     data[index] = Math.min(data[index], parentImage[index]);
                 }
 

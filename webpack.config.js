@@ -4,6 +4,7 @@ module.exports = {
   entry: {
       app: './src/examples/render.ts',
       generation: './src/examples/generation.ts',
+      silhouette: './src/examples/silhouette.ts',
       forest: './src/examples/forest.ts',
       benchmark: './src/examples/benchmark.ts'
   },

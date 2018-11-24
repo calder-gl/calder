@@ -6,7 +6,8 @@ module.exports = {
       generation: './src/examples/generation.ts',
       silhouette: './src/examples/silhouette.ts',
       forest: './src/examples/forest.ts',
-      benchmark: './src/examples/benchmark.ts'
+      benchmark: './src/examples/benchmark.ts',
+      mutation: './src/examples/mutation.ts'
   },
   output: {
     path: __dirname + '/public',

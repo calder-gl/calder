@@ -1,0 +1,101 @@
+<html>
+  <head>
+    <title>Distance comparison</title>
+      <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" />
+<style>
+body {
+  font-family: 'Roboto', sans-serif;
+}
+.model {
+  width: 150px;
+  height: 150px;
+  min-width: 150px;
+  background-position: 60% 50%;
+  background-size: 300px;
+}
+table {
+  padding: 0;
+  border: 0;
+  border-collapse: collapse;
+}
+th {
+  width: 100px;
+  font-weight: normal;
+}
+th, td {
+  text-align: center;
+  padding: 10px;
+}
+</style>
+  </head>
+  <body>
+<script type='text/javascript'>
+const raw = `0,60,15
+1,55,6
+2,50,7
+3,45,10
+4,40,9
+5,35,5
+6,30,3
+7,25,6
+8,20,6
+9,15,4
+10,10,4
+11,5,3
+12,0,2`;
+
+const data = raw.split('\n').map(line => line.split(',').map(n => parseInt(n)));
+const table = document.createElement('table');
+const headerRow = document.createElement('tr');
+
+table.appendChild(headerRow);
+document.body.appendChild(table);
+
+const targetHeader = document.createElement('th');
+targetHeader.innerText = 'Target Model';
+headerRow.appendChild(targetHeader);
+
+const imgHeader = document.createElement('th');
+imgHeader.innerText = 'Model';
+headerRow.appendChild(imgHeader);
+
+const distanceHeader = document.createElement('th');
+distanceHeader.innerText = 'Median Kolmogorov-Smirnov Distance';
+headerRow.appendChild(distanceHeader);
+
+const mutationHeader = document.createElement('th');
+mutationHeader.innerText = 'Grammar Mutation Distance';
+headerRow.appendChild(mutationHeader);
+
+const toShow = new Set([60, 45, 35, 5]);
+
+data.forEach(([filenum, mutationDistance, distance]) => {
+  if (!toShow.has(mutationDistance)) {
+    return;
+  }
+
+  const row = document.createElement('tr');
+
+  const targetCell = document.createElement('td');
+  targetCell.style.backgroundImage = `url(12.png)`;
+  targetCell.classList.add('model');
+  row.appendChild(targetCell);
+
+  const modelCell = document.createElement('td');
+  modelCell.style.backgroundImage = `url(${filenum}.png)`;
+  modelCell.classList.add('model');
+  row.appendChild(modelCell);
+
+  const distanceCell = document.createElement('td');
+  distanceCell.innerText = distance;
+  row.appendChild(distanceCell);
+
+  const mutationCell = document.createElement('td');
+  mutationCell.innerText = mutationDistance;
+  row.appendChild(mutationCell);
+
+  table.appendChild(row);
+});
+</script>
+  </body>
+</html>

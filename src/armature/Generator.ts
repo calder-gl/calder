@@ -248,6 +248,13 @@ export class GeneratorInstance {
             this.growIfPossible(true);
         });
 
+        this.finishGeneration();
+    }
+
+    /*
+     * After generating a skeleton, adds geometry to the instance.
+     */
+    public finishGeneration() {
         // Grow all non-skeleton spawn points
         while (this.skeletonSpawnPoints.length > 0) {
             const spawnPoint: SpawnPoint = <SpawnPoint>this.skeletonSpawnPoints.pop();
@@ -533,7 +540,6 @@ export class Generator {
      *
      * @param {string} start The name of the rule to start generating from.
      * @param {number} depth How many iterations to run before stopping.
-     * @returns {Model} The model that was generated.
      */
     public generate(params: { start: string; depth?: number }): Model {
         const instance = new GeneratorInstance(this, { getCost: () => emptyCost });

@@ -4,6 +4,7 @@ import os
 import sys
 import random
 from pprint import pprint
+import matplotlib.pyplot as plt
 
 N = 4
 BINS = 10
@@ -263,21 +264,57 @@ best fit test like chi-squared, and so on. At the very least, this test has
 shown that two models created from different guiding curves are significantly
 different compared to two models created from the same guiding curves.
 
-vec1 = buildFeatureVector('examples/curves/1/calderExport.obj')
-vec2 = buildFeatureVector('examples/curves/2/calderExport.obj')
-ks_dists = []
-for x in range(N):
-  for y in range(N):
-    for z in range(N):
-      ks_dist = 0
-      cdf1 = 0
-      cdf2 = 0
-      for i in range(BINS):
-        cdf1 += vec1[x][y][z][i]
-        cdf2 += vec2[x][y][z][i]
-        ks_dist = max(ks_dist, abs(cdf1 - cdf2))
-      print('{} {} {} KS-dist: {}'. format(x, y, z, ks_dist))
-      ks_dists.append(ks_dist)
-ks_dists.sort()
-print('median ks_dist: {}'.format(ks_dists[int(N**3 / 2)]))
+NOTE: I worked on top of the "example" to compare two histograms from a model
+created with guiding curves to a model created with silhouette matching.
+
+v1 = buildFeatureVector('examples/curves/1/calderExport.obj')
+v2 = buildFeatureVector('examples/curves/2/calderExport.obj')
+
+v3 = buildFeatureVector('silhouette/silhouette 1/1/calderExport.obj')
+v4 = buildFeatureVector('silhouette/silhouette 1/2/calderExport.obj')
+
+def ksDist(hist1, hist2):
+  ks_dist = 0
+  cdf1 = 0
+  cdf2 = 0
+  for i in range(len(hist1)):
+    cdf1 += hist1[i]
+    cdf2 += hist2[i]
+    ks_dist = max(ks_dist, abs(cdf1 - cdf2))
+  return ks_dist
+
+def getDist(vec1, vec2):
+  ks_dists = []
+  for x in range(N):
+    for y in range(N):
+      for z in range(N):
+        ks_dist = ksDist(vec1[x][y][z], vec2[x][y][z]) / NUM_MEASUREMENTS
+        print('{} {} {} KS-dist: {}'. format(x, y, z, ks_dist))
+        ks_dists.append(ks_dist)
+  ks_dists.sort()
+  median_ks_dist = ks_dists[int(N**3 / 2)]
+  ks_hist, edges = np.histogram(ks_dists, bins=10, range=(0, 1))
+  print('median ks_dist: {}'.format(ks_dists[int(N**3 / 2)]))
+  return (median_ks_dist, ks_hist, ks_dists)
+
+m1, hist1, dists1 = getDist(v1, v2)
+m2, hist2, dists2 = getDist(v3, v4)
+
+ks_dist_final = ksDist(hist1, hist2) / float(N**3)
+print('median1: {}, median 2: {}, ks dist: {}'.format(m1, m2, ks_dist_final))
+props = plt.boxplot([dists1, dists2], vert=False)
+colours = ['blue', 'red']
+for i in range(2):
+  box = props['boxes'][i]
+  whisker_left = props['whiskers'][2*i]
+  whisker_right = props['whiskers'][2*i+1]
+  cap_left = props['caps'][2*i]
+  cap_right = props['caps'][2*i+1]
+
+  box.set(color=colours[i])
+  whisker_left.set(color=colours[i])
+  whisker_right.set(color=colours[i])
+  cap_left.set(color=colours[i])
+  cap_right.set(color=colours[i])
+plt.show()
 """

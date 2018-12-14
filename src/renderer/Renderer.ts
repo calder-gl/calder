@@ -37,6 +37,7 @@ export type RendererParams = {
     maxLights: number;
     ambientLightColor: Color;
     backgroundColor: Color;
+    willReadPixels?: boolean;
 };
 
 const selectedColor = vec3.fromValues(1, 0, 1);
@@ -82,7 +83,8 @@ export class Renderer {
             height: 0,
             maxLights: 0,
             ambientLightColor: RGBColor.fromHex('#000000'),
-            backgroundColor: RGBColor.fromHex('#000000')
+            backgroundColor: RGBColor.fromHex('#000000'),
+            willReadPixels: false
         }
     ) {
         this.width = params.width;
@@ -90,6 +92,7 @@ export class Renderer {
         this.maxLights = params.maxLights;
         this.lights = [];
         this.ambientLight = params.ambientLightColor.asVec();
+        const willReadPixels = !!params.willReadPixels;
 
         // Yeah, this is kinda sketchy, but REGL requires a [number, number, number, number] array instead of a number[] array
         const backgroundColorArray = params.backgroundColor.asArray();
@@ -133,7 +136,10 @@ export class Renderer {
         mat4.perspective(this.projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
         // Set up drawing commands
-        this.regl = REGL(canvas3D);
+        this.regl = REGL({
+            canvas: canvas3D,
+            attributes: { preserveDrawingBuffer: willReadPixels }
+        });
 
         this.clearAll = () => {
             this.ctx2D.clearRect(0, 0, this.width, this.height);
@@ -402,6 +408,14 @@ export class Renderer {
         const y = (-vector[1] / vector[3] + 1) / 2 * this.height;
 
         return { x, y };
+    }
+
+    /**
+     * @returns {Uint8Array} Pixel data for the current scene.
+     * @throws {Error} When this method is called after the render event exits.
+     */
+    public getPixelData() {
+        return this.regl.read();
     }
 
     private drawCurve(curves: GuidingCurveInfo[]) {

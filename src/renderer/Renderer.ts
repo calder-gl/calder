@@ -92,7 +92,7 @@ export class Renderer {
         this.maxLights = params.maxLights;
         this.lights = [];
         this.ambientLight = params.ambientLightColor.asVec();
-        const willReadPixels = !!params.willReadPixels;
+        const { willReadPixels = false } = params;
 
         // Yeah, this is kinda sketchy, but REGL requires a [number, number, number, number] array instead of a number[] array
         const backgroundColorArray = params.backgroundColor.asArray();

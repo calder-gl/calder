@@ -218,10 +218,10 @@ function runBenchmark() {
 }
 
 function combineAndShowModels(modelsForLabels: ModelAndCost[][], n: number) {
-    while (imageRow.firstChild) {
+    while (imageRow.firstChild !== null) {
         imageRow.removeChild(imageRow.firstChild);
     }
-    while (labelsRow.firstChild) {
+    while (labelsRow.firstChild !== null) {
         labelsRow.removeChild(labelsRow.firstChild);
     }
 

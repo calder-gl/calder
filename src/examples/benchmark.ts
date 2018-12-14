@@ -3,11 +3,13 @@ import {
     CostFunction,
     Generator,
     GeneratorInstance,
+    Light,
     Material,
     Model,
     Node,
     PerfStats,
     Point,
+    Renderer,
     RGBColor,
     Shape
 } from '../calder';
@@ -18,6 +20,11 @@ import { range } from 'lodash';
 import Bezier = require('bezier-js');
 
 const resultsElement = document.createElement('pre');
+const images = document.createElement('table');
+const imageRow = document.createElement('tr');
+images.appendChild(imageRow);
+const labelsRow = document.createElement('tr');
+images.appendChild(labelsRow);
 
 // Setup leaf
 const leafColor = RGBColor.fromRGB(204, 255, 204);
@@ -106,6 +113,16 @@ enum SampleType {
     SIZE
 }
 
+const generateImage = true;
+
+type ModelAndCost = {
+    model: Model;
+    cost: number;
+};
+
+let lastRun: ModelAndCost[][] = [[], [], []];
+const labels = ['No heuristic', 'No heuristic with funnel', 'Heuristic with funnel'];
+
 function runBenchmark() {
     const SAMPLES = 500;
     const samples: SampleType[] = range(SAMPLES * SampleType.SIZE).map((i: number) =>
@@ -113,7 +130,8 @@ function runBenchmark() {
     );
     const results: number[][] = [[], [], []];
     const averages: number[] = [0, 0, 0];
-    const labels = ['No heuristic', 'No heuristic with funnel', 'Heuristic with funnel'];
+
+    const models: ModelAndCost[][] = [[], [], []];
 
     let lastCost: number = 0;
 
@@ -126,11 +144,18 @@ function runBenchmark() {
         range(SampleType.SIZE).forEach(
             (i: number) => (resultsElement.innerText += `${results[i].join(',')}\n`)
         );
+
+        if (generateImage) {
+            lastRun = models;
+        }
     }
 
-    function onComplete(_: Model, { cpuTime }: PerfStats) {
+    function onComplete(model: Model, { cpuTime }: PerfStats) {
         results[samples[0]].push(lastCost);
         averages[samples[0]] += cpuTime;
+        if (generateImage) {
+            models[samples[0]].push({ model, cost: lastCost });
+        }
 
         samples.shift();
         if (samples.length > 0) {
@@ -192,9 +217,134 @@ function runBenchmark() {
     nextIteration();
 }
 
+function combineAndShowModels(modelsForLabels: ModelAndCost[][], n: number) {
+    while (imageRow.firstChild !== null) {
+        imageRow.removeChild(imageRow.firstChild);
+    }
+    while (labelsRow.firstChild !== null) {
+        labelsRow.removeChild(labelsRow.firstChild);
+    }
+
+    combineModels(modelsForLabels, n).forEach((canvas: HTMLCanvasElement, i: number) => {
+        const imageCell = document.createElement('td');
+        imageCell.appendChild(canvas);
+        imageRow.appendChild(imageCell);
+
+        const labelCell = document.createElement('td');
+        labelCell.innerText = labels[i];
+        labelsRow.appendChild(labelCell);
+    });
+}
+
+function blendImageData(ctx: CanvasRenderingContext2D, data: ImageData) {
+    const scratch: HTMLCanvasElement = document.createElement('canvas');
+    scratch.width = data.width;
+    scratch.height = data.height;
+    const ctx2 = <CanvasRenderingContext2D>scratch.getContext('2d');
+    ctx2.putImageData(data, 0, 0);
+    ctx.drawImage(scratch, 0, 0);
+}
+
+function combineModels(modelsForLabels: ModelAndCost[][], n: number) {
+    const ambientLightColor = RGBColor.fromRGB(90, 90, 90);
+    const renderer: Renderer = new Renderer({
+        width: 400,
+        height: 400,
+        maxLights: 2,
+        ambientLightColor,
+        backgroundColor: RGBColor.fromHex('#FFDDFF'),
+        willReadPixels: true
+    });
+
+    // Create light sources for the renderer
+    const light1: Light = Light.create({
+        position: { x: 10, y: 10, z: 10 },
+        color: RGBColor.fromHex('#FFFFFF'),
+        strength: 200
+    });
+    renderer.addLight(light1);
+
+    renderer.camera.lookAt({ x: 0, y: 0, z: -1 });
+    renderer.camera.moveToWithFixedTarget({ x: 0, y: 0, z: 0 });
+    renderer.camera.moveTo({ x: 0, y: 2, z: 10 });
+
+    const guidingCurves = CostFunction.guidingVectors(curves)
+        .generateGuidingCurve()
+        .map((path: [number, number, number][], index: number) => {
+            return {
+                path,
+                selected: true,
+                bezier: curves[index].bezier
+            };
+        });
+
+    const results = modelsForLabels.map((models: ModelAndCost[]) => {
+        const avg =
+            models.reduce((sum: number, m: ModelAndCost) => {
+                return sum + m.cost;
+            }, 0) / models.length;
+
+        models.sort(
+            (a: ModelAndCost, b: ModelAndCost) => Math.abs(a.cost - avg) - Math.abs(b.cost - avg)
+        );
+        const middle = models.slice(0, n);
+
+        const combined: HTMLCanvasElement = document.createElement('canvas');
+        combined.width = 400;
+        combined.height = 400;
+        const ctx = <CanvasRenderingContext2D>combined.getContext('2d');
+        ctx.globalCompositeOperation = 'lighter';
+
+        middle.forEach((modelAndCost: ModelAndCost) => {
+            renderer.draw([modelAndCost.model], { drawGuidingCurve: guidingCurves });
+            const rawPixels = renderer.getPixelData();
+            const pixels = new Uint8ClampedArray(rawPixels.length);
+
+            // Give each image an alpha such that they all sum to opaque
+            for (let x = 0; x < renderer.width; x += 1) {
+                for (let y = 0; y < renderer.height; y += 1) {
+                    const flippedY = renderer.height - 1 - y;
+                    [0, 1, 2].forEach(
+                        (channel: number) =>
+                            (pixels[(flippedY * renderer.width + x) * 4 + channel] =
+                                rawPixels[(y * renderer.width + x) * 4 + channel])
+                    );
+
+                    // Give each image an alpha such that they all sum to opaque
+                    pixels[(flippedY * renderer.width + x) * 4 + 3] = 255 / middle.length;
+                }
+            }
+
+            const imageData = new ImageData(pixels, renderer.width, renderer.height);
+
+            blendImageData(ctx, imageData);
+        });
+
+        return combined;
+    });
+
+    renderer.destroy();
+
+    return results;
+}
+
 const perfButton = document.createElement('button');
 perfButton.innerText = 'Benchmark heuristic';
 perfButton.addEventListener('click', runBenchmark);
 
+const numImages = document.createElement('input');
+numImages.setAttribute('type', 'number');
+numImages.setAttribute('step', '1');
+numImages.value = '5';
+
+const combineButton = document.createElement('button');
+combineButton.innerText = 'Combine images';
+combineButton.addEventListener('click', () => {
+    combineAndShowModels(lastRun, parseInt(numImages.value, 10));
+});
+
 document.body.appendChild(perfButton);
+document.body.appendChild(combineButton);
+document.body.appendChild(numImages);
 document.body.appendChild(resultsElement);
+document.body.appendChild(images);

@@ -1,9 +1,58 @@
 <html>
   <head>
-    <script src="https://pomax.github.io/bezierjs/bezier.js"></script>
+    <script src="../node_modules/bezier-js/bezier.js"></script>
+<style type="text/css">
+#container {
+    position: relative;
+}
+#legend {
+    position: absolute;
+    left: 20px;
+    bottom: 20px;
+    background-color: #FFF;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    padding: 10px;
+    align-items: stretch;
+}
+
+#row {
+    display: flex;
+    align-items: stretch;
+}
+
+#gradient {
+    height: 20px;
+    background: linear-gradient(to right, rgba(0,220,0,1), rgba(255,255,0,1), rgba(255,0,0,1));
+}
+
+#labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 5px;
+}
+
+h4 {
+    margin: 0 0 10px 0;
+}
+
+</style>
   </head>
   <body>
-    <p>Open this page in Chrome. Right-click on the canvas to download the image.</p>
+    <div id="container">
+      <svg></svg>
+      <div id="legend">
+        <h4>Distance cost</h4>
+        <div id="gradient"></div>
+        <div id="labels">
+          <span>0</span>
+          <span>4&times;10<sup>4</sup></span>
+        </div>
+      </div>
+    </div>
   </body>
   <script src="vectorfield.js"></script>
 </html>

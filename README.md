@@ -103,7 +103,7 @@ yarn fix-format
 
 ## About
 
-Calder was named in honor of Alexander Calder, the American sculptor who is best
+Calder was named in honor of Alexander Calder, the American sculptor who is
 known for using wire to construct three-dimensional abstract line drawings of
 various kinds of objects. The organization's image is an illustration of
 Calder's 1934 piece titled _Red and Yellow Vane_.

@@ -36,7 +36,7 @@ const done = () => {
  * Importantly, this reuses vectors in each call, so it assumes the vectors have been read and
  * processed and can be reused by the time this function is called again.
  *
- * TODO(https://github.com/calder-gl/calder/issues/151): Move this to a better location
+ * TODO(#151): Move this to a better location
  *
  * @returns {vec4[]} A set of generated, scaled vectors.
  */

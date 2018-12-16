@@ -109,7 +109,7 @@ export class WorkingGeometry implements Bakeable {
             material: defaultMaterial
         }
     ) {
-        // TODO(pbardea): Check if max(indices) of all faces is <= the len(vertices)
+        // TODO: Check if max(indices) of all faces is <= the len(vertices)
         this.vertices = params.vertices.map(Affine.createPoint);
         this.normals = params.normals.map(Affine.createVector);
         this.faces = params.faces;

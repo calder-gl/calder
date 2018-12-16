@@ -66,7 +66,7 @@ export namespace TestHelper {
         start: vec3 = vec3.fromValues(0, 0, 0),
         size: number = 1
     ): WorkingGeometry {
-        // TODO(pbardea): This is currently just used by tests, but this should be exposed as
+        // TODO: This is currently just used by tests, but this should be exposed as
         // basic geometrical structures for the user.
         /**
          *      5-------6

@@ -2,8 +2,7 @@
  * Calder - A library for sculpting and manipulating complex 3D structures for
  * the web.
  *
- * Copyright (c) 2018 Paul Bardea, Tammy Liu, Abhishek Madan, Andrew McBurney,
- *                    and Dave Pagurek van Mossel
+ * Copyright (c) 2018 The Paper Authors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

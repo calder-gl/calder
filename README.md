@@ -100,3 +100,13 @@ Run the autoformatter on your code:
 ```bash
 yarn fix-format
 ```
+
+## About
+
+Calder was named in honor of Alexander Calder, the American sculptor who is
+known for using wire to construct three-dimensional abstract line drawings of
+various kinds of objects. The organization's image is an illustration of
+Calder's 1934 piece titled _Red and Yellow Vane_.
+
+> "To an engineer, good enough means perfect. With an artist, there's no such
+> thing as perfect." — Alexander Calder

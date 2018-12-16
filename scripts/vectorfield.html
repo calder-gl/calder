@@ -4,7 +4,22 @@
 <style type="text/css">
 #container {
     position: relative;
+    float: left;
 }
+
+#scale {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    background-color: #FFF;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    padding: 10px;
+    align-items: center;
+}
+
 #legend {
     position: absolute;
     left: 20px;
@@ -49,8 +64,14 @@ h4 {
         <div id="gradient"></div>
         <div id="labels">
           <span>0</span>
-          <span>4&times;10<sup>4</sup></span>
+          <span>400</span>
         </div>
+      </div>
+      <div id="scale">
+        <svg width="200" height="20">
+          <path style="stroke: #000; stroke-width: 2;" d="M1,0 L1,20 M199,0 L199,20 M1,10 L199,10"></path>
+        </svg>
+        <span>Distance: 20</span>
       </div>
     </div>
   </body>

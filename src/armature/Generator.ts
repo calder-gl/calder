@@ -217,7 +217,8 @@ export class GeneratorInstance {
             }
 
             // Get the new nodes that were added
-            const added = this.model.nodes.slice(originalLength);
+            const numAdded = this.model.nodes.length - originalLength;
+            const added: Node[] = this.model.nodes.nMostRecent(numAdded);
 
             if (onAdded !== undefined) {
                 onAdded(added);
@@ -288,7 +289,7 @@ export class GeneratorInstance {
         this.postSkeletonSpawnPoints.length = 0;
 
         // Create initial spawn point
-        this.model = new Model([new Node()]);
+        this.model = new Model();
         this.model.root().createPoint('spawn', { x: 0, y: 0, z: 0 });
         this.addDetail({ component: start, at: this.model.root().point('spawn') });
     }

@@ -62,9 +62,10 @@ const bone = Armature.define((root: Node) => {
     root.createPoint('tip', { x: 0, y: 1, z: 0 });
 });
 
-const tower = Model.create(bone());
+const tower = Model.create();
 
-let top = tower.root();
+const towerRoot = tower.add(bone());
+let top = towerRoot;
 
 for (let i = 0; i < 5; i += 1) {
     const nextPiece = tower.add(bone());
@@ -74,12 +75,13 @@ for (let i = 0; i < 5; i += 1) {
     top = nextPiece;
 }
 
-const test = Model.create(bone());
-test.root().setPosition({ x: 3, y: 0, z: 0 });
+const test = Model.create();
+const testRoot = test.add(bone());
+testRoot.setPosition({ x: 3, y: 0, z: 0 });
 
-test.root().setScale(Matrix.fromScaling({ x: 1, y: 3, z: 1 }));
+testRoot.setScale(Matrix.fromScaling({ x: 1, y: 3, z: 1 }));
 const testChild = bone();
-testChild.point('base').stickTo(test.root().point('tip'));
+testChild.point('base').stickTo(testRoot.point('tip'));
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Step 3: set up renderer
@@ -94,16 +96,16 @@ renderer.camera.lookAt({ x: 2, y: 2, z: -4 });
 
 // Create a new constraint to be applied to the `test` Node.
 const constraints = Constraints.getInstance();
-constraints.add(test.root(), (node: Node) => {
+constraints.add(testRoot, (node: Node) => {
     node
         .hold(node.point('base'))
         .grab(node.point('tip'))
-        .stretchTo(tower.root().point('tip'))
+        .stretchTo(towerRoot.point('tip'))
         .release();
 });
 
 Animation.create({
-    node: tower.root(),
+    node: towerRoot,
     to: (node: Node) => {
         const theta = Math.random() * 90;
         const phi = Math.random() * 360;

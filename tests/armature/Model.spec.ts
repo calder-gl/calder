@@ -1,14 +1,10 @@
-import { Armature, Model, Node, RGBColor, Shape } from '../../src/calder';
-
-const bone = Armature.define((root: Node) => {
-    root.createPoint('base', { x: 0, y: 0, z: 0 });
-    root.createPoint('tip', { x: 0, y: 1, z: 0 });
-});
+import { Model, RGBColor, Shape } from '../../src/calder';
 
 describe('Model', () => {
     describe('exportOBJ', () => {
         it('generates the expected file for a simple shape', () => {
-            const model = Model.create(bone());
+            const model = Model.create();
+            model.root().createPoint('base', { x: 0, y: 0, z: 0 });
             model.add(
                 model
                     .root()

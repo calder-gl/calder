@@ -28,6 +28,114 @@ type RenderInfo = {
     objects: NodeRenderObject;
 };
 
+type NodeLink = {
+    node: Node;
+    next: NodeLink | null;
+};
+
+class Nodes {
+    private root: Node;
+    private last: NodeLink;
+    private _length: number;
+
+    constructor() {
+        this.root = new Node();
+        this.last = { node: this.root, next: null };
+        this._length = 1;
+    }
+
+    get length(): number {
+        return this._length;
+    }
+
+    public getRoot(): Node {
+        return this.root;
+    }
+
+    public getLatest(): Node {
+        return this.last.node;
+    }
+
+    public add(node: Node) {
+        this.last = { node, next: this.last };
+        this._length += 1;
+    }
+
+    public forEach(callback: (node: Node, i: number) => void) {
+        let i = 0;
+        let nodeLink: NodeLink | null = this.last;
+        while (nodeLink !== null) {
+            callback(nodeLink.node, i);
+            i += 1;
+            nodeLink = nodeLink.next;
+        }
+    }
+
+    public nMostRecent(n: number): Node[] {
+        const list: Node[] = [];
+
+        let i = 0;
+        let nodeLink: NodeLink | null = this.last;
+        while (nodeLink !== null && i < n) {
+            list.push(nodeLink.node);
+            i += 1;
+            nodeLink = nodeLink.next;
+        }
+
+        return list;
+    }
+
+    public clone(): Nodes {
+        const cloned = new Nodes();
+        cloned.root = this.root;
+        cloned.last = this.last;
+        cloned._length = this._length;
+
+        return cloned;
+    }
+
+    public cloneDeep(): Nodes {
+        const parentToChildren: Map<Node, Node[]> = new Map<Node, Node[]>();
+        const nodeToClone: Map<Node, Node> = new Map<Node, Node>();
+        const nodesInOrder: Node[] = [];
+        this.forEach((node: Node) => {
+            const clone = node.clone();
+            nodeToClone.set(node, clone);
+            nodesInOrder.unshift(node);
+
+            if (node.parent === null) {
+                return;
+            }
+            let children = parentToChildren.get(node.parent);
+            if (children === undefined) {
+                children = [];
+                parentToChildren.set(node.parent, children);
+            }
+            children.push(clone);
+        });
+
+        this.forEach((node: Node) => {
+            const children = parentToChildren.get(node);
+            const clone = <Node>nodeToClone.get(node);
+            if (children !== undefined) {
+                children.forEach((child: Node) => clone.addChild(child));
+            }
+        });
+
+        const deepClone = new Nodes();
+        deepClone.root = <Node>nodeToClone.get(this.root);
+        deepClone.last = { node: deepClone.root, next: null };
+
+        // We already set the root, now add the rest
+        nodesInOrder.slice(1).forEach((node: Node) => {
+            const clone = <Node>nodeToClone.get(node);
+            deepClone.add(clone);
+        });
+
+        return deepClone;
+    }
+}
+
 /**
  * A set of connected armature nodes, enabling efficient creation of a copy that one can add to
  * without modifying the original. Nodes have connections to the parent that they are connected
@@ -38,14 +146,14 @@ export class Model {
     /**
      * The collection of connected nodes.
      */
-    public readonly nodes: Node[];
+    public readonly nodes: Nodes;
 
     /**
      * Creates a new model.
      *
-     * @param {Node[]} nodes A set of nodes which, if passed in, are used to initialize the model.
+     * @param {Nodes} nodes A set of nodes which, if passed in, are used to initialize the model.
      */
-    constructor(nodes: Node[] = []) {
+    constructor(nodes: Nodes = new Nodes()) {
         this.nodes = nodes;
     }
 
@@ -58,16 +166,21 @@ export class Model {
     public static importObj(objData: string, mtlData: string): Model {
         const nodes = importObj(objData, mtlData);
 
-        return new Model(nodes);
+        const model = new Model();
+        model.root().addChild(nodes[0]);
+        nodes.forEach((node: Node) => model.add(node));
+
+        return model;
     }
 
     /**
      * Creates a new model.
      *
-     * @param {Node[]} nodes A set of nodes which, if passed in, are used to initialize the model.
+     * @param {Nodes | undefined} nodes A set of nodes which, if passed in, are used to initialize
+     * the model.
      * @returns {Model} The new model.
      */
-    public static create(...nodes: Node[]): Model {
+    public static create(nodes?: Nodes): Model {
         return new Model(nodes);
     }
 
@@ -75,38 +188,14 @@ export class Model {
      * @returns A copy of the current model that has all the same nodes, but can be added to.
      */
     public clone() {
-        return new Model([...this.nodes]);
+        return new Model(this.nodes.clone());
     }
 
     /**
      * @returns A deep copy of the current model that has all the same nodes, but can be added to.
      */
     public cloneDeep() {
-        const parentToChildren: Map<Node, Node[]> = new Map<Node, Node[]>();
-        const nodeToClone: Map<Node, Node> = new Map<Node, Node>();
-        this.nodes.forEach((node: Node) => nodeToClone.set(node, node.clone()));
-        this.nodes.forEach((node: Node) => {
-            if (node.parent == null) {
-                return;
-            }
-            let children = parentToChildren.get(node.parent);
-            if (children == null) {
-                children = [];
-            }
-            children.push(<Node>nodeToClone.get(node));
-            parentToChildren.set(node.parent, children);
-        });
-        const nodeClones = this.nodes.map((node: Node) => {
-            const children = parentToChildren.get(node);
-            const clone = <Node>nodeToClone.get(node);
-            if (children != null) {
-                children.forEach((child: Node) => clone.addChild(child));
-            }
-
-            return clone;
-        });
-
-        return new Model([...nodeClones]);
+        return new Model(this.nodes.cloneDeep());
     }
 
     /**
@@ -116,7 +205,7 @@ export class Model {
      * @returns Node The added node, for convenience.
      */
     public add(node: Node): Node {
-        this.nodes.push(node);
+        this.nodes.add(node);
 
         return node;
     }
@@ -125,14 +214,14 @@ export class Model {
      * @returns {Node} The first node added to the model, which is therefore the root node.
      */
     public root(): Node {
-        return this.nodes[0];
+        return this.nodes.getRoot();
     }
 
     /**
      * @returns {Node} The most recently added node to the model.
      */
     public latest(): Node {
-        return this.nodes[this.nodes.length - 1];
+        return this.nodes.getLatest();
     }
 
     /**
@@ -149,7 +238,8 @@ export class Model {
         const renderCache: Map<Node, RenderInfo> = new Map<Node, RenderInfo>();
 
         // Nodes yet to be added to the `NodeRenderObject` result.
-        const renderStack = [...this.nodes];
+        const renderStack: Node[] = [];
+        this.nodes.forEach((node: Node) => renderStack.unshift(node));
 
         const result: NodeRenderObject = { geometry: [], bones: [] };
 

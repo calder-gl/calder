@@ -112,15 +112,10 @@ export class Silhouette implements CostFn {
     }
 
     public getCost(instance: GeneratorInstance, added: Node[]): Cost {
-        const startIndex = instance.getModel().nodes.length - added.length;
-
         const data = new Uint8Array(this.target.width * this.target.height * 4);
 
         const addedGeometry: GeometryNode[] = [];
-        instance
-            .getModel()
-            .nodes.slice(startIndex)
-            .forEach((n: Node) => n.geometryCallback((g: GeometryNode) => addedGeometry.push(g)));
+        added.forEach((n: Node) => n.geometryCallback((g: GeometryNode) => addedGeometry.push(g)));
 
         this.fbo.use(() => {
             this.regl.clear({
@@ -149,7 +144,9 @@ export class Silhouette implements CostFn {
             this.regl.read(data);
         });
 
-        const lastNodeInParent = instance.getModel().nodes[startIndex - 1];
+        const lastNodeInParent = instance.getModel().nodes.nMostRecent(added.length + 1)[
+            added.length
+        ];
         const parentImage = this.lastImage.get(lastNodeInParent);
 
         let difference = 0;
@@ -188,7 +185,7 @@ export class Silhouette implements CostFn {
             }
         }
 
-        this.lastImage.set(instance.getModel().nodes[instance.getModel().nodes.length - 1], data);
+        this.lastImage.set(instance.getModel().latest(), data);
 
         if (costViz !== undefined) {
             this.ctx.putImageData(

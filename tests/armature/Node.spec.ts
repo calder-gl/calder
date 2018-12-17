@@ -11,10 +11,11 @@ import {
 } from '../../src/calder';
 import '../glMatrix';
 
-const bone = Armature.define((root: Node) => {
+const makeBone = (root: Node) => {
     root.createPoint('base', { x: 0, y: 0, z: 0 });
     root.createPoint('tip', { x: 0, y: 1, z: 0 });
-});
+};
+const bone = Armature.define(makeBone);
 
 describe('Node', () => {
     describe('globalToLocalTransform', () => {
@@ -525,10 +526,12 @@ describe('Node', () => {
                 controlPoints: [vec3.create()],
                 material: defaultMaterial
             });
-            const root = new Node();
+            const model = Model.create();
+            const root = model.root();
             const nodeChild = new Node(root);
+            model.add(nodeChild);
             const geometryChild = new GeometryNode(geometry, nodeChild);
-            const model = Model.create(root, nodeChild, geometryChild);
+            model.add(geometryChild);
 
             // Translate the root node 1 unit in the x-direction.
             root.setPosition({ x: 1, y: 0, z: 0 });
@@ -566,10 +569,12 @@ describe('Node', () => {
                 controlPoints: [vec3.create()],
                 material: defaultMaterial
             });
-            const root = new Node();
+            const model = Model.create();
+            const root = model.root();
             const nodeChild = new Node(root);
+            model.add(nodeChild);
             const geometryChild = new GeometryNode(geometry, nodeChild);
-            const model = Model.create(root, nodeChild, geometryChild);
+            model.add(geometryChild);
 
             /**
              * Here we're defining a test point and what we expect the result of
@@ -593,8 +598,9 @@ describe('Node', () => {
         });
 
         it('shows bones when asked', () => {
-            const root = bone();
-            root.scale(2);
+            const model = Model.create();
+            makeBone(model.root());
+            model.root().scale(2);
 
             /**
              * The bone should start at the root position (0, 0, 0) and stretch to the base of the
@@ -609,7 +615,7 @@ describe('Node', () => {
             const expectedWorldSpaceBase = vec4.fromValues(0, 0, 0, 1);
             const expectedWorldSpaceTip = vec4.fromValues(0, 2, 0, 1);
 
-            const bones: RenderObject[] = Model.create(root).computeRenderInfo(true).bones;
+            const bones: RenderObject[] = model.computeRenderInfo(true).bones;
             expect(bones.length).toBe(2);
 
             // Check base and tip of bone 1

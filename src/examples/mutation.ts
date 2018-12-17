@@ -3,7 +3,6 @@ import {
     Armature,
     Generator,
     GeneratorInstance,
-    GeometryNode,
     Light,
     Material,
     Model,
@@ -40,10 +39,7 @@ renderer.addLight(light1);
 
 // Setup leaf
 const leafColor = RGBColor.fromRGB(204, 255, 204);
-const leafSphere: Node = new GeometryNode(
-    Shape.sphere(Material.create({ color: leafColor, shininess: 100 }))
-);
-const leafModel = new Model([leafSphere]);
+const leafSphere = Shape.sphere(Material.create({ color: leafColor, shininess: 100 }));
 
 // Setup branch
 const branchColor = RGBColor.fromRGB(102, 76.5, 76.5);
@@ -92,7 +88,7 @@ treeGen
         Generator.addDetail({ component: 'maybeBranch', at: root });
     })
     .define('leaf', (root: Point) => {
-        const leaf = root.attachModel(leafModel);
+        const leaf = root.attach(leafSphere);
         leaf.scale(Math.random() * 0.5 + 0.5);
     })
     .maybe('maybeBranch', (root: Point) => {

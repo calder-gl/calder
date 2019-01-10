@@ -376,15 +376,22 @@ export class Renderer {
      */
     public eachFrame(drawCallback: () => RenderParams) {
         const draw = () => {
-            const { objects, debugParams } = drawCallback();
-            Animation.tick();
-            Constraints.getInstance().applyAll();
-            this.draw(
-                objects,
-                debugParams !== undefined
-                    ? debugParams
-                    : { drawAxes: false, drawArmatureBones: false }
-            );
+            try {
+                const { objects, debugParams } = drawCallback();
+                Animation.tick();
+                Constraints.getInstance().applyAll();
+                this.draw(
+                    objects,
+                    debugParams !== undefined
+                        ? debugParams
+                        : { drawAxes: false, drawArmatureBones: false }
+                );
+            } catch (e) {
+                // Log errors, but make sure requestAnimationFrame gets
+                // called again.
+                // tslint:disable-next-line:no-console
+                console.log(e);
+            }
 
             // Your callback routine must itself call requestAnimationFrame() if
             // you want to animate another frame at the next repaint.

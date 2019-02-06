@@ -114,8 +114,19 @@ const curves = [
         bezier: new Bezier([
             { x: 0, y: 0, z: 0 },
             { x: 0, y: 1, z: 0 },
-            { x: 1, y: 1, z: 1 },
-            { x: 2, y: 2, z: 1 }
+            { x: 1, y: 1, z: -1 },
+            { x: 2, y: 2, z: -1 }
+        ]),
+        distanceMultiplier: scale,
+        alignmentMultiplier: 400,
+        alignmentOffset: 0.6
+    },
+    {
+        bezier: new Bezier([
+            { x: 1.5, y: 2, z: -1 },
+            { x: 1.5, y: 2.25, z: -1 },
+            { x: 1.5, y: 2.75, z: -1 },
+            { x: 1.5, y: 3, z: -1 }
         ]),
         distanceMultiplier: scale,
         alignmentMultiplier: 400,

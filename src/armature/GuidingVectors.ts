@@ -11,6 +11,7 @@ import { minBy, range } from 'lodash';
 
 type Closest = {
     curve: GuidingCurve;
+    index: number;
     point: BezierJs.Projection;
     guidingVector: vec3;
 };
@@ -75,6 +76,8 @@ export class GuidingVectors implements CostFn {
     public static QUADRATIC: DistanceMultiplier = [0, 0, 100];
 
     private vectors: GuidingCurve[];
+    private firstClosestBonus: number = -100;
+    private anyClosest: Map<Node, boolean[]> = new Map<Node, boolean[]>();
     private nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();
     private expectedVectors: Map<string, vec4> = new Map<string, vec4>();
     private spawnPointVectors: Map<SpawnPoint, vec4> = new Map<SpawnPoint, vec4>();
@@ -160,6 +163,13 @@ export class GuidingVectors implements CostFn {
         let lastClosest: Closest | null = null;
         let lastLocation: vec3 | null = null;
 
+        // If this is the initial cost for the model, start with an upfront cost
+        // for having no nodes using any guides. This will be incrementally taken
+        // away later.
+        if (added.length + 1 === instance.getModel().nodes.length) {
+            totalCost -= this.firstClosestBonus * this.vectors.length;
+        }
+
         // For each added shape and each influence point, add the resulting cost to the
         // instance's existing cost.
         addedStructure.forEach((node: Node) => {
@@ -201,6 +211,14 @@ export class GuidingVectors implements CostFn {
             lastClosest = closest;
 
             totalCost += this.computeCost(closest, vector, vec3From4(parentPosition));
+
+            // To incentivize exploring yet unused guides, give a bonus for being
+            // closest to a guide that no other structure has used yet
+            const instanceAnyClosest = this.getOrCreateAnyClosest(instance, added);
+            if (!instanceAnyClosest[closest.index]) {
+                instanceAnyClosest[closest.index] = true;
+                totalCost -= this.firstClosestBonus;
+            }
         });
 
         let heuristicCost = 0;
@@ -217,6 +235,36 @@ export class GuidingVectors implements CostFn {
         }
 
         return { realCost: totalCost, heuristicCost };
+    }
+
+    /**
+     * Returns an array representing whether or not each guiding curve has been the
+     * closest one to a bone yet.
+     *
+     * @param {GeneratorInstance} instance The instance that we are checking.
+     * @param {Node[]} added The nodes that were added to this instance since the last round.
+     * @returns {boolean[]} An array representing whether guide i has been closest to any
+     * bone yet.
+     */
+    private getOrCreateAnyClosest(instance: GeneratorInstance, added: Node[]): boolean[] {
+        const lastNode = instance.getModel().nodes[instance.getModel().nodes.length - 1];
+        let instanceAnyClosest = this.anyClosest.get(lastNode);
+
+        if (instanceAnyClosest === undefined) {
+            const parentAnyClosest = this.anyClosest.get(
+                instance.getModel().nodes[instance.getModel().nodes.length - 1 - added.length]
+            );
+
+            if (parentAnyClosest === undefined) {
+                instanceAnyClosest = [];
+            } else {
+                instanceAnyClosest = [...parentAnyClosest];
+            }
+
+            this.anyClosest.set(lastNode, instanceAnyClosest);
+        }
+
+        return instanceAnyClosest;
     }
 
     /**
@@ -326,14 +374,16 @@ export class GuidingVectors implements CostFn {
     private closest(point: vec4): Closest {
         type PartialClosest = {
             curve: GuidingCurve;
+            index: number;
             point: BezierJs.Projection;
         };
 
         const closestPoint = <PartialClosest>minBy(
-            this.vectors.map((c: GuidingCurve) => {
+            this.vectors.map((c: GuidingCurve, index: number) => {
                 return {
                     curve: c,
-                    point: c.bezier.project(Mapper.vectorToCoord(vec3From4(point)))
+                    point: c.bezier.project(Mapper.vectorToCoord(vec3From4(point))),
+                    index
                 };
             }),
             (c: PartialClosest) => c.point.d

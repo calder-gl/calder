@@ -7,7 +7,8 @@ module.exports = {
       silhouette: './src/examples/silhouette.ts',
       forest: './src/examples/forest.ts',
       benchmark: './src/examples/benchmark.ts',
-      mutation: './src/examples/mutation.ts'
+      mutation: './src/examples/mutation.ts',
+      sosmc: './src/examples/sosmc.ts'
   },
   output: {
     path: __dirname + '/public',

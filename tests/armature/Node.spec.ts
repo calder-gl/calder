@@ -596,38 +596,33 @@ describe('Node', () => {
             const root = bone();
             root.scale(2);
 
-            /**
-             * The bone should start at the root position (0, 0, 0) and stretch to the base of the
-             * geometry node (1, 1, 0). Here we create a point representing the base of the bone
-             * (which is (0, 0, 0) in its relative coordinate space) and the tip of the bone (which
-             * is (1, 0, 0)), and the expected positions for these points in world space so that we
-             * can assert that the endpoints get transformed to the expected world space points.
-             */
+            // There should not be bones when there is only one node
+            expect(Model.create(root).computeRenderInfo(true).bones.length).toBe(0);
+
+            const child = bone();
+            child.point('base').stickTo(root.point('tip'));
+
+            // There should be a bone now that there is a child
+            const bones = Model.create(root, child).computeRenderInfo(true).bones;
+            expect(bones.length).toBe(1);
+
+            // In its their own coordinate space, bones always have a length of 1, along
+            // the x axis
             const boneSpaceBase = vec4.fromValues(0, 0, 0, 1);
             const boneSpaceTip = vec4.fromValues(1, 0, 0, 1);
 
+            // Since the root is scaled, in world space, the bone should have a length of 2,
+            // and should be oriented vertically
             const expectedWorldSpaceBase = vec4.fromValues(0, 0, 0, 1);
             const expectedWorldSpaceTip = vec4.fromValues(0, 2, 0, 1);
 
-            const bones: RenderObject[] = Model.create(root).computeRenderInfo(true).bones;
-            expect(bones.length).toBe(2);
-
-            // Check base and tip of bone 1
+            // Check base and tip of the bone
             const transformedBase = vec4.create();
             vec4.transformMat4(transformedBase, boneSpaceBase, bones[0].transform);
             expect(transformedBase).toEqualVec4(expectedWorldSpaceBase);
 
             const transformedTip = vec4.create();
             vec4.transformMat4(transformedTip, boneSpaceTip, bones[0].transform);
-            expect(transformedTip).toEqualVec4(
-                vec4.add(vec4.create(), expectedWorldSpaceBase, vec4.fromValues(1e-6, 0, 0, 0))
-            );
-
-            // Check base and tip of bone 2
-            vec4.transformMat4(transformedBase, boneSpaceBase, bones[1].transform);
-            expect(transformedBase).toEqualVec4(expectedWorldSpaceBase);
-
-            vec4.transformMat4(transformedTip, boneSpaceTip, bones[1].transform);
             expect(transformedTip).toEqualVec4(expectedWorldSpaceTip);
         });
     });

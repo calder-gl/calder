@@ -61,6 +61,6 @@ export class Material implements Bakeable {
 }
 
 export const defaultMaterial: Material = Material.create({
-    color: RGBColor.fromHex('#EEEEEE'),
+    color: RGBColor.fromHex('#FFFFFF'),
     shininess: 1
 });

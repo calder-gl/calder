@@ -77,7 +77,7 @@ export class GuidingVectors implements CostFn {
 
     private vectors: GuidingCurve[];
     private guideDivisions: number[] = [];
-    private firstClosestBonus: number = -500;
+    private firstClosestBonus: number = -20;
     private lengthPerDivision: number = 0.2;
     private anyClosest: Map<Node, number[][]> = new Map<Node, number[][]>();
     private nodeLocations: Map<Node, vec4> = new Map<Node, vec4>();
@@ -173,6 +173,10 @@ export class GuidingVectors implements CostFn {
         let lastClosest: Closest | null = null;
         let lastLocation: vec3 | null = null;
 
+        // To incentivize exploring yet unused guides, give a bonus for covering all of a
+        // guiding curve
+        const instanceAnyClosest = this.getOrCreateAnyClosest(instance, added);
+
         // For each added shape and each influence point, add the resulting cost to the
         // instance's existing cost.
         addedStructure.forEach((node: Node) => {
@@ -214,10 +218,6 @@ export class GuidingVectors implements CostFn {
             lastClosest = closest;
 
             totalCost += this.computeCost(closest, vector, vec3From4(parentPosition));
-
-            // To incentivize exploring yet unused guides, give a bonus for covering all of a
-            // guiding curve
-            const instanceAnyClosest = this.getOrCreateAnyClosest(instance, added);
 
             // tslint:disable-next-line:strict-boolean-expressions
             instanceAnyClosest[closest.index] = instanceAnyClosest[closest.index] || [];
@@ -319,7 +319,8 @@ export class GuidingVectors implements CostFn {
         let alignmentCost = 0;
         if (vec4.squaredLength(added) > 0) {
             alignmentCost =
-                Math.max(0, -vec3.dot(closest.guidingVector, vec3From4(added)) + 1) *
+                (-vec3.dot(closest.guidingVector, vec3From4(added)) +
+                    closest.curve.alignmentOffset) *
                 closest.curve.alignmentMultiplier;
         }
 

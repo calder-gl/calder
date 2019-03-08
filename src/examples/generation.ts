@@ -108,18 +108,29 @@ treeGen
     .wrapUpMany(['branch', 'branchOrLeaf', 'maybeBranch'], Generator.replaceWith('leaf'))
     .thenComplete(['leaf']);
 
-const scale: [number, number, number] = [0, 0, 100];
+const scale: [number, number, number] = [0, 0, 150];
 const curves = [
     {
         bezier: new Bezier([
             { x: 0, y: 0, z: 0 },
             { x: 0, y: 1, z: 0 },
-            { x: 1, y: 1, z: 1 },
-            { x: 2, y: 2, z: 1 }
+            { x: 1, y: 1, z: -1 },
+            { x: 2, y: 2, z: -1 }
         ]),
         distanceMultiplier: scale,
-        alignmentMultiplier: 400,
-        alignmentOffset: 0.6
+        alignmentMultiplier: 300,
+        alignmentOffset: 0.8
+    },
+    {
+        bezier: new Bezier([
+            { x: 1.5, y: 2, z: -1 },
+            { x: 1.5, y: 2.25, z: -1 },
+            { x: 1.5, y: 2.75, z: -1 },
+            { x: 1.5, y: 3, z: -1 }
+        ]),
+        distanceMultiplier: scale,
+        alignmentMultiplier: 300,
+        alignmentOffset: 0.8
     },
     {
         bezier: new Bezier([
@@ -218,11 +229,11 @@ renderer.camera.lookAt({ x: 0, y: 1, z: 0 });
 // Draw the armature
 let angle = 0;
 const draw = () => {
-    angle += 0.001;
+    angle += 0.005;
     renderer.camera.moveToWithFixedTarget({
-        x: Math.cos(angle) * 8,
+        x: Math.cos(angle) * 12,
         y: 1,
-        z: -Math.sin(angle) * 8
+        z: -Math.sin(angle) * 12
     });
     //tree.root().setRotation(Matrix.fromQuat4(Quaternion.fromEuler(0, angle, 0)));
 

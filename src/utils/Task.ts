@@ -42,11 +42,11 @@ export class Task<T> {
             if (!this.cancelled && this.result !== undefined) {
                 this.finish(this.result);
             } else if (!this.cancelled) {
-                requestAnimationFrame(incrementalWork);
+                window.requestAnimationFrame(incrementalWork);
             }
         };
 
-        requestAnimationFrame(incrementalWork);
+        window.requestAnimationFrame(incrementalWork);
     }
 
     public then(onComplete: (res: T, stats: PerfStats) => void): Task<T> {

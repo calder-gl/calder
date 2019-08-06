@@ -248,6 +248,13 @@ export class GeneratorInstance {
             this.growIfPossible(true);
         });
 
+        this.finishGeneration();
+    }
+
+    /*
+     * After generating a skeleton, adds geometry to the instance.
+     */
+    public finishGeneration() {
         // Grow all non-skeleton spawn points
         while (this.skeletonSpawnPoints.length > 0) {
             const spawnPoint: SpawnPoint = <SpawnPoint>this.skeletonSpawnPoints.pop();
@@ -302,6 +309,34 @@ type SOSMCParams = {
 
     timeBudget?: number;
 };
+
+/**
+ * A wrapper class used for the generateSOSMC generator
+ * to maintain and reload context. Used to pass into tasks.
+ */
+class GenerationIterator implements IterableIterator<Model | undefined> {
+    private lastContext: GeneratorInstance | null = null;
+    private iterator: IterableIterator<Model | undefined>;
+    constructor(iterator: IterableIterator<Model | undefined>) {
+        this.iterator = iterator;
+    }
+
+    public next(): IteratorResult<Model | undefined> {
+        let res: IteratorResult<Model | undefined> = { value: undefined, done: false };
+        Generator.withContext(this.lastContext, () => {
+            res = this.iterator.next();
+            this.lastContext = Generator.maybeContext();
+
+            return res;
+        });
+
+        return res;
+    }
+
+    public [Symbol.iterator](): IterableIterator<Model | undefined> {
+        return this;
+    }
+}
 
 /**
  * A way of representing a structure made of connected components, facilitating procedural
@@ -505,7 +540,6 @@ export class Generator {
      *
      * @param {string} start The name of the rule to start generating from.
      * @param {number} depth How many iterations to run before stopping.
-     * @returns {Model} The model that was generated.
      */
     public generate(params: { start: string; depth?: number }): Model {
         const instance = new GeneratorInstance(this, { getCost: () => emptyCost });
@@ -527,15 +561,10 @@ export class Generator {
      * heuristic in each generation.
      * @returns {GeneratorTask} A task to keep track of progress and get the result from.
      */
-    public generateSOSMC(
-        params: SOSMCParams,
-        timeBudget: number = 1 / 60
-    ): Task<Model, GeneratorInstance> {
-        return new Task<Model, GeneratorInstance>(
-            this.generateSOSMCIterator(params),
-            timeBudget,
-            Generator.withContext,
-            Generator.maybeContext
+    public generateSOSMC(params: SOSMCParams, timeBudget: number = 1 / 60): Task<Model> {
+        return new Task<Model>(
+            new GenerationIterator(this.generateSOSMCIterator(params)),
+            timeBudget
         );
     }
 

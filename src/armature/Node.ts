@@ -532,11 +532,9 @@ export class Node {
 
         const objects: NodeRenderObject = { geometry: [], bones: [] };
 
-        if (makeBones) {
+        if (this.parent !== null && makeBones) {
             objects.bones.push(
-                ...Object.keys(this.points).map((name: string): RenderObject =>
-                    this.boneRenderObject(this.points[name], currentMatrix, currentNormalMatrix)
-                )
+                this.boneRenderObject(this.getPosition(), parentMatrix, parentNormalMatrix)
             );
         }
 
@@ -546,7 +544,7 @@ export class Node {
     /**
      * Create a RenderObject visualizing this armature node relative to its parent.
      *
-     * @param {Point} point The point to make a bone for.
+     * @param {vec3} point The point to make a bone for.
      * @param {mat4} currentMatrix A matrix to translate points into the coordinate space of the
      * current node.
      * @param {mat3} currentNormalMatrix A matrix to transform normals into the current node's
@@ -555,7 +553,7 @@ export class Node {
      * to the current node's origin.
      */
     protected boneRenderObject(
-        point: Point,
+        point: vec3,
         currentMatrix: mat4,
         currentNormalMatrix: mat3
     ): RenderObject {
@@ -569,14 +567,14 @@ export class Node {
                 quat.rotationTo(
                     quat.create(),
                     vec3.fromValues(1, 0, 0),
-                    vec3.normalize(vec3.create(), point.position)
+                    vec3.normalize(vec3.create(), point)
                 )
             ),
 
             // If you have a point that is also at the root of the node, then the bone
             // connecting them has length 0 and its transformation matrix can't be inverted. This
             // `max` is to make sure the bone doesn't entirely disappear into two dimensions.
-            vec3.fromValues(Math.max(1e-6, vec3.length(point.position)), 1, 1)
+            vec3.fromValues(Math.max(1e-6, vec3.length(point)), 1, 1)
         );
         const transformationMatrix = mat4.create();
         mat4.multiply(transformationMatrix, currentMatrix, transform);
@@ -916,19 +914,19 @@ export class GeometryNode extends Node {
      * transformations multiplied by the `coordinateSpace` parameter.
      *
      * @param {mat4} coordinateSpace The coordinate space this node resides in.
-     * @param {boolean} makeBones Whether or not the armature heirarchy should be visualized.
+     * @param {boolean} _makeBones Whether or not the armature heirarchy should be visualized.
      * @returns {NodeRenderObject} The geometry for this armature subtree, and possibly geometry
      * representing the armature itself.
      */
     public computeRenderInfo(
         coordinateSpace: mat4,
         normalTransform: mat3,
-        makeBones: boolean
+        _makeBones: boolean
     ): { currentMatrix: mat4; currentNormalMatrix: mat3; objects: NodeRenderObject } {
         const { currentMatrix, currentNormalMatrix, objects } = super.computeRenderInfo(
             coordinateSpace,
             normalTransform,
-            makeBones
+            false
         );
         objects.geometry.push({
             geometry: this.geometry,

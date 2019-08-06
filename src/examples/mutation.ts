@@ -1,6 +1,7 @@
 import {
     emptyCost,
     Armature,
+    Export,
     Generator,
     GeneratorInstance,
     GeometryNode,
@@ -169,18 +170,18 @@ const exportBtn = document.createElement('button');
 exportBtn.innerText = 'Export .obj';
 exportBtn.addEventListener('click', () => {
     models.forEach((model: Model, i: number) => {
-        const obj = model.exportOBJ('calderExport', ambientLightColor);
+        model.exportOBJ('calderExport', ambientLightColor).then((exp: Export) => {
+            const objLink = document.createElement('a');
+            objLink.style.display = 'none';
+            document.body.appendChild(objLink);
 
-        const objLink = document.createElement('a');
-        objLink.style.display = 'none';
-        document.body.appendChild(objLink);
-
-        // Download obj
-        const blob = new Blob([obj.obj], { type: 'text/plain;charset=utf-8' });
-        objLink.setAttribute('href', URL.createObjectURL(blob));
-        objLink.setAttribute('download', `calderExport${i}.obj`);
-        objLink.click();
-        document.body.removeChild(objLink);
+            // Download obj
+            const blob = new Blob([exp.obj], { type: 'text/plain;charset=utf-8' });
+            objLink.setAttribute('href', URL.createObjectURL(blob));
+            objLink.setAttribute('download', `calderExport${i}.obj`);
+            objLink.click();
+            document.body.removeChild(objLink);
+        });
     });
 });
 document.body.appendChild(exportBtn);
@@ -188,17 +189,17 @@ document.body.appendChild(exportBtn);
 const exportMTLBtn = document.createElement('button');
 exportMTLBtn.innerText = 'Export .mtl';
 exportMTLBtn.addEventListener('click', () => {
-    const obj = currentModel.exportOBJ('calderExport', ambientLightColor);
+    currentModel.exportOBJ('calderExport', ambientLightColor).then((exp: Export) => {
+        const mtlLink = document.createElement('a');
+        mtlLink.style.display = 'non';
+        document.body.appendChild(mtlLink);
 
-    const mtlLink = document.createElement('a');
-    mtlLink.style.display = 'non';
-    document.body.appendChild(mtlLink);
-
-    // Download mtl
-    const blob = new Blob([obj.mtl], { type: 'text/plain;charset=utf-8' });
-    mtlLink.setAttribute('href', URL.createObjectURL(blob));
-    mtlLink.setAttribute('download', 'calderExport.mtl');
-    mtlLink.click();
-    document.body.removeChild(mtlLink);
+        // Download mtl
+        const blob = new Blob([exp.mtl], { type: 'text/plain;charset=utf-8' });
+        mtlLink.setAttribute('href', URL.createObjectURL(blob));
+        mtlLink.setAttribute('download', 'calderExport.mtl');
+        mtlLink.click();
+        document.body.removeChild(mtlLink);
+    });
 });
 document.body.appendChild(exportMTLBtn);

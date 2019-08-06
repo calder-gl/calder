@@ -1,5 +1,6 @@
 import {
     Armature,
+    Export,
     Generator,
     GeneratorInstance,
     Light,
@@ -186,17 +187,20 @@ exportBtn.addEventListener('click', () => {
         return;
     }
 
-    const obj = tree.exportOBJ('calderExport', ambientLightColor);
+    tree.exportOBJ('calderExport', ambientLightColor).then((exp: Export) => {
+        const objLink = document.createElement('a');
+        objLink.style.display = 'none';
+        document.body.appendChild(objLink);
 
-    const objLink = document.createElement('a');
-    objLink.style.display = 'none';
-    document.body.appendChild(objLink);
-
-    // Download obj
-    objLink.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(obj.obj)}`);
-    objLink.setAttribute('download', 'calderExport.obj');
-    objLink.click();
-    document.body.removeChild(objLink);
+        // Download obj
+        objLink.setAttribute(
+            'href',
+            `data:text/plain;charset=utf-8,${encodeURIComponent(exp.obj)}`
+        );
+        objLink.setAttribute('download', 'calderExport.obj');
+        objLink.click();
+        document.body.removeChild(objLink);
+    });
 });
 document.body.appendChild(exportBtn);
 
@@ -207,16 +211,19 @@ exportMTLBtn.addEventListener('click', () => {
         return;
     }
 
-    const obj = tree.exportOBJ('calderExport', ambientLightColor);
+    tree.exportOBJ('calderExport', ambientLightColor).then((exp: Export) => {
+        const mtlLink = document.createElement('a');
+        mtlLink.style.display = 'non';
+        document.body.appendChild(mtlLink);
 
-    const mtlLink = document.createElement('a');
-    mtlLink.style.display = 'non';
-    document.body.appendChild(mtlLink);
-
-    // Download mtl
-    mtlLink.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(obj.mtl)}`);
-    mtlLink.setAttribute('download', 'calderExport.mtl');
-    mtlLink.click();
-    document.body.removeChild(mtlLink);
+        // Download mtl
+        mtlLink.setAttribute(
+            'href',
+            `data:text/plain;charset=utf-8,${encodeURIComponent(exp.mtl)}`
+        );
+        mtlLink.setAttribute('download', 'calderExport.mtl');
+        mtlLink.click();
+        document.body.removeChild(mtlLink);
+    });
 });
 document.body.appendChild(exportMTLBtn);

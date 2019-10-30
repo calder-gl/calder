@@ -44,7 +44,7 @@
     "babel-polyfill": "^6.26.0",
     "bezier-js": "^2.2.14",
     "gl-matrix": "^2.5.1",
-    "lodash": "^4.17.10",
+    "lodash": "^4.17.13",
     "regl": "regl-project/regl",
     "ts-sinon": "1.0.12",
     "tslib": "~1.9.0",
